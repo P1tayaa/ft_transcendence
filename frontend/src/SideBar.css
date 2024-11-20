@@ -1,0 +1,25 @@
+
+/* HighlightButton.css */
+.button-container {
+  position: relative;
+  display: inline-block;
+  margin: 20px;
+}
+
+.highlight-button {
+  opacity: 0; /* Initially hidden */
+  visibility: hidden; /* Prevents interaction when hidden */
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.highlight-button.visible,
+.button-container:hover .highlight-button {
+  opacity: 1;
+  visibility: visible;
+}
