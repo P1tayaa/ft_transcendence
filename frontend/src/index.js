@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import './index.css';
 import reportWebVitals from './reportWebVitals';
-import './App.css';
 
 
 import Page404 from './Pages/404Page.js';
@@ -21,11 +20,8 @@ export default function App() {
     </Routes>
 </BrowserRouter>
 
-
    );
 }
-
-
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
