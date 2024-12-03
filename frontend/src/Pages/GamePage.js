@@ -1,13 +1,13 @@
 
 import SideBar from './SideBar.js';
+import Godot from '../godot/godot.js';
 
 function GamePage() {
   return (
-    <div className="Blogs">
+    <div className="GamePage">
         <SideBar />
-        <h1>
-          Blog
-        </h1>
+      <title> TEST GamePage</title>
+        <Godot />
     </div>
 
   );

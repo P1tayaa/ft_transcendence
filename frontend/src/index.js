@@ -16,6 +16,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/ProfilePage" element={<ProfilePage />} />
+     <Route path="/Game" element={<GamePage />} />
       <Route path="*" element={<Page404 />} />
     </Routes>
 </BrowserRouter>
