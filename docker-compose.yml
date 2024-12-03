@@ -23,17 +23,6 @@ services:
       - db
     volumes:
       - ./backend:/app
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: frontend
-    environment:
-      - PORT=3000
-    ports:
-      - '3000:3000'
-    volumes:
-      - ./frontend:/app
 
   pgadmin:
     image: dpage/pgadmin4
