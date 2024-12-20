@@ -1,0 +1,78 @@
+
+/* Define CSS variables for the color palette */
+:root {
+    --primary-color: #3498db; /* Main blue color */
+    --secondary-color: #2ecc71; /* Main green color */
+    --background-color: #f4f4f4; /* Light grey background */
+    --text-color: #333333; /* Dark text color */
+    --header-background: #1abc9c; /* Header background color */
+    --footer-background: #34495e; /* Footer background color */
+}
+
+/* Apply the color palette */
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: var(--header-background);
+    color: #ffffff;
+    padding: 1rem 0;
+    text-align: center;
+}
+
+header h1 {
+    margin: 0;
+}
+
+nav ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+main {
+    padding: 2rem;
+}
+
+button {
+    background-color: var(--primary-color);
+    color: #ffffff;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+button:hover {
+    background-color: var(--secondary-color);
+}
+
+footer {
+    background-color: var(--footer-background);
+    color: #ffffff;
+    text-align: center;
+    padding: 1rem 0;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+    nav ul {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
