@@ -1,12 +1,39 @@
 
 /* Define CSS variables for the color palette */
 :root {
-    --primary-color: #3498db; /* Main blue color */
-    --secondary-color: #2ecc71; /* Main green color */
-    --background-color: #f4f4f4; /* Light grey background */
-    --text-color: #333333; /* Dark text color */
-    --header-background: #1abc9c; /* Header background color */
-    --footer-background: #34495e; /* Footer background color */
+    --jalapeno-red: #b71540;
+    --tomato-red: #eb2f06;
+    --mandarin-red: #e55039;
+    --carrot-orange: #e58e26;
+    --iceland-poppy: #fa983a;
+    --squash-blossom: #f6b93b;
+    
+    --flat-flesh: #fad390;
+    --melon-melody: #f8c291;
+    
+    --aurora-green: #78e08f;
+    --paradise-green: #b8e994;
+    --reef-encounter: #079992;
+    --waterfall: #38ada9;
+    
+    --dark-sapphire: #0c2461;
+    --forest-blues: #0a3d62;
+    --yue-guang-lan-blue: #1e3799;
+    --azraq-blue: #4a69bd;
+    --livid: #6a89cc;
+    
+    --dupain: #60a3bc;
+    --spray: #82ccdd;
+    --good-samaritan: #3c6382;
+    
+
+
+    --primary-color: var(--tomato-red); /* Main blue color */
+    --secondary-color: var(--mandarin-red); /* Main green color */
+    --background-color: var(--spray); /* Light grey background */
+    --text-color: var(--forest-blues); /* Dark text color */
+    --header-background: var(--livid); /* Header background color */
+    --footer-background: var(--iceland-poppy); /* Footer background color */
 }
 
 /* Apply the color palette */
@@ -63,10 +90,13 @@ button:hover {
 }
 
 footer {
-    background-color: var(--footer-background);
+    background: linear-gradient(to bottom, var(--background-color), var(--footer-background) 50%, transparent 100%);
     color: #ffffff;
     text-align: center;
     padding: 1rem 0;
+    position:relative;
+    bottom: 0;
+    width: 100%;
 }
 
 /* Responsive design for smaller screens */

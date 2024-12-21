@@ -7,19 +7,60 @@ loader.load( 'public/assets/Floor.glb',
   function ( gltf ) { scene.add( gltf.scene ); },
   undefined, function ( error ) { console.error( error ); } );
 
-// Example usage
+let assets_loaded = 0;
+
 const gameScene = new GameScene();
 gameScene.loadModel('Floor', '../public/assets/Floor.glb', (model) => {
     console.log('Floor model loaded.');
 
-    // Example: Move the Floor asset
-    gameScene.moveAsset('Floor', { x: 5, y: 0, z: 0 });
+    gameScene.moveAsset('Floor', { x: 0, y: 0, z: -3 });
 
-    // Example: Rotate the Floor asset
-    gameScene.rotateAsset('Floor', 'y', Math.PI / 4); // Rotate 45 degrees around Y-axis
+    gameScene.rotateAsset('Floor', 'x', Math.PI/ 2 );
+    gameScene.rotateAsset('Floor', 'y', Math.PI/ 2 );
+    assets_loaded++;
 });
 
 const scene = gameScene.getScene();
+const light = new THREE.PointLight( 0xffffff, 100, 10000 );
+light.position.set( 0, 0, 0 );
+scene.add( light );
+
+
+const light_padle1 = new THREE.PointLight( 0xffffff, 100, 10000 );
+light_padle1.position.set( -40, 0, 5 );
+scene.add( light_padle1 );
+
+
+const light_padle2 = new THREE.PointLight( 0xffffff, 100, 10000 );
+light_padle2.position.set( 40, 0, 5 );
+scene.add( light_padle2 );
+
+
+
+gameScene.loadModel('Padle1', '../public/assets/padle.glb', (model) => {
+    console.log('pable1 model loaded.');
+
+    gameScene.moveAsset('Padle1', { x: -40, y: 0, z: 0 });
+
+    gameScene.rotateAsset('Padle1', 'x', Math.PI/ 2 );
+    gameScene.rotateAsset('Padle1', 'y', Math.PI/ 2 );
+    assets_loaded++;
+});
+
+gameScene.loadModel('Padle2', '../public/assets/padle.glb', (model) => {
+    console.log('Pable2 model loaded.');
+
+    gameScene.moveAsset('Padle2', { x: 40, y: 0, z: 0 });
+
+    gameScene.rotateAsset('Padle2', 'x', Math.PI/ 2 );
+    gameScene.rotateAsset('Padle2', 'y', Math.PI/ 2 );
+    assets_loaded++;
+});
+
+
+
+
+
 
 
 
@@ -27,12 +68,7 @@ const canvas = document.getElementById('pong-game'); // Get the canvas by its ID
 
 const renderer = new THREE.WebGLRenderer({ canvas }); // Use the specified canvas
 renderer.setSize(canvas.clientWidth, canvas.clientHeight); // Use the size of the canvas element
-const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-
-
-const light = new THREE.PointLight( 0xffffff, 1, 10000 );
-light.position.set( 0, 0, 0 );
-scene.add( light );
+const camera = new THREE.PerspectiveCamera(120, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
 
 
 //const renderer = new THREE.WebGLRenderer();
@@ -191,7 +227,11 @@ window.addEventListener('keydown', onKeyDown);
 window.addEventListener('keyup', onKeyUp);
 
 function animate() {
+    if (assets_loaded != 3) return ;
     dumpAi();
+    gameScene.moveAssetBy('Padle1', {x : 0, y : leftPaddleSpeed, z : 0,})
+
+    gameScene.moveAssetBy('Padle2', {x : 0, y : rightPaddleSpeed, z : 0,})
     leftPaddle.position.y += leftPaddleSpeed;
     rightPaddle.position.y += rightPaddleSpeed;
     

@@ -37,7 +37,14 @@ class GameScene {
             console.warn(`Asset with name "${name}" not found.`);
         }
     }
-
+    moveAssetBy(name, position) {
+        const asset = this.assets[name];
+        if (asset) {
+            asset.position.set(asset.position.x + position.x,asset.position.y +  position.y,asset.position.z +  position.z);
+        } else {
+            console.warn(`Asset with name "${name}" not found.`);
+        }
+    }
     // Method to rotate a specific asset
     rotateAsset(name, axis, angle) {
         const asset = this.assets[name];
