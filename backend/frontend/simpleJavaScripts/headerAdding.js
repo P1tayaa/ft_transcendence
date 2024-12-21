@@ -11,13 +11,14 @@ const headerContent = `
             <li><a href="${url}pages/chat.html">Chat</a></li>
             <li><a href="${url}pages/gameplay.html">Gameplay</a></li>
             <li><a href="${url}pages/friendList.html">Friend</a></li>
-        </ul>
-    </nav>
-</header>
-`;
+            <li><a href=${url}pages/login.html>Login</a></li>
+          </ul>
+      </nav>
+  </header>
+  `;
 
 function addHeader() {
-    document.body.insertAdjacentHTML('afterbegin', headerContent);
+  document.body.insertAdjacentHTML('afterbegin', headerContent);
 }
 
 addHeader();
