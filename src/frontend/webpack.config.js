@@ -2,9 +2,9 @@
 const path = require('path');
 
 module.exports = {
-  entry: './js/main.js',  // Your Three.js entry point
+  entry: './threejs/main.js',  // Your Three.js entry point
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname),
     filename: 'bundle.js'
   },
   mode: 'development',
