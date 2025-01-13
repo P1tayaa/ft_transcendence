@@ -1,8 +1,12 @@
 {
   "dependencies": {
-    "three": "^0.171.0"
+    "three": "^0.160.0"
   },
   "devDependencies": {
-    "vite": "^6.0.3"
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "scripts": {
+    "build": "webpack"
   }
 }

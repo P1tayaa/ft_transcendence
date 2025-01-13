@@ -4,4 +4,6 @@ from . import views
 urlpatterns = [
     path('hello/', views.hello_world, name='hello_world'),
     path('profile/', views.create_profile, name='create_profile'),
+    path('bundle.js', views.get_bundle),  # Add this route
+
 ]
