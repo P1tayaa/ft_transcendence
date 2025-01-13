@@ -1,7 +1,0 @@
-django-admin
-
-django-cors-headers
-
-djangorestframework
-
-
