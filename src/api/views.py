@@ -3,6 +3,17 @@ import os
 from rest_framework.decorators import api_view
 
 
+
+# pattern for single page application
+def home(request):
+    return render(request, 'home.html')
+
+# def game(request):
+#     return render(request, 'game.html')
+
+# def profile(request):
+#     return render(request, 'profile.html')
+
 @api_view(["GET"])
 def hello_world(request):
     return Response({"message": "Hello from Django!"})

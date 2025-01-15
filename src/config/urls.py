@@ -21,6 +21,8 @@ import os
 from django.http import FileResponse, Http404
 from django.conf import settings
 from urllib.parse import urlparse, unquote
+from api.views import home
+
 
 
 def serve_frontend(request, filename="index.html"):
@@ -44,11 +46,22 @@ def serve_frontend(request, filename="index.html"):
         raise Http404("File not found")
 
 
+
+# this pattern to serve single page application
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("api/", include("api.urls")),
-    # Route for frontend files
-    path("<path:filename>", serve_frontend),
-    # Default to index.html if no file is specified
-    path("", serve_frontend),
+    path('api/', include('api.urls')),  # API endpoints
+    path('', home, name='home'),
+    # path('game/', views.game, name='game'),
+    # path('profile/', views.profile, name='profile'),
+    # ... other paths
 ]
+
+
+# urlpatterns = [
+#     path("admin/", admin.site.urls),
+#     path("api/", include("api.urls")),
+#     # Route for frontend files
+#     path("<path:filename>", serve_frontend),
+#     # Default to index.html if no file is specified
+#     path("", serve_frontend),
+# ]

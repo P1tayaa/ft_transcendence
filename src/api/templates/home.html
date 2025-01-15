@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Matchmaking Pong</title>
+</head>
+
+<body>
+  <header>
+
+    <script src="simpleJavaScripts/headerAdding.js"></script>
+  </header>
+
+  <main>
+    <section id="home">
+      <h2>About Matchmaking Pong</h2>
+      <p>Welcome to the ultimate pong matchmaking platform! Connect with players around the world, chat, and engage in
+        exciting pong matches.</p>
+      <button onclick="window.location.href='pages/gameplay.html'">Play Now</button>
+    </section>
+  </main>
+
+  <script src="simpleJavaScripts/footerAdding.js"></script>
+  <script src="{% static 'bundle.js' %}"></script>
+</body>
+
+</html>
