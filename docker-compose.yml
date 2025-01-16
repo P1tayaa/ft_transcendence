@@ -11,6 +11,11 @@ services:
       - db
     env_file:
       - .env
+    develop:
+      watch:
+        - action: sync
+          path: ./src/
+          target: app/src/ 
   db:
     image: postgres:13
     volumes:

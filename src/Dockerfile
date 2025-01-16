@@ -23,6 +23,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . .
 
-RUN cd src/frontend && npm install --save-dev webpack webpack-cli three
-RUN cd src/frontend && npx webpack
+RUN cd src/api/static/js/threejs/ && npm install --save-dev webpack webpack-cli three
+RUN cd src/api/static/js/threejs/ && npx webpack
 CMD ["python", "src/manage.py", "runserver", "0.0.0.0:8000"]

@@ -21,7 +21,7 @@ import os
 from django.http import FileResponse, Http404
 from django.conf import settings
 from urllib.parse import urlparse, unquote
-from api.views import home
+from api.views import home, game, profile, chat, login, friendlist
 
 
 
@@ -51,8 +51,11 @@ def serve_frontend(request, filename="index.html"):
 urlpatterns = [
     path('api/', include('api.urls')),  # API endpoints
     path('', home, name='home'),
-    # path('game/', views.game, name='game'),
-    # path('profile/', views.profile, name='profile'),
+    path('game/', game, name='game'),
+    path('profile/', profile, name='profile'),
+    path('chat/', chat, name='chat'),
+    path('login/', login, name='login'),
+    path('friendlist/', friendlist, name='friendlist'),
     # ... other paths
 ]
 

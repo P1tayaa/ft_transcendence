@@ -6,13 +6,35 @@ from rest_framework.decorators import api_view
 
 # pattern for single page application
 def home(request):
-    return render(request, 'home.html')
+    return render(request, 'base.html', {
+                      'template_name' : 'pages/home.html'
+                  })
 
-# def game(request):
-#     return render(request, 'game.html')
+def game(request):
+    return render(request, 'base.html', {
+                          'template_name' : 'pages/gameplay.html' 
+                      })
 
-# def profile(request):
-#     return render(request, 'profile.html')
+def profile(request):
+    return render(request, 'base.html', {
+                              'template_name' : 'pages/profile.html'
+                          })
+
+def chat(request):
+    return render(request, 'base.html', {
+                                  'template_name': 'pages/chat.html'
+                              })
+
+def friendlist(request):
+    return render(request, 'base.html', {
+                                  'template_name': 'pages/friendlist.html'
+                              })
+
+def login(request):
+    return render(request, 'base.html', {
+                                  'template_name': 'pages/login.html'
+                              })
+    
 
 @api_view(["GET"])
 def hello_world(request):
