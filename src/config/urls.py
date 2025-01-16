@@ -21,8 +21,7 @@ import os
 from django.http import FileResponse, Http404
 from django.conf import settings
 from urllib.parse import urlparse, unquote
-from api.views import home, game, profile, chat, login, friendlist
-
+from api.views import home, game, profile, chat, login, friendlist, dashboard
 
 
 def serve_frontend(request, filename="index.html"):
@@ -46,16 +45,16 @@ def serve_frontend(request, filename="index.html"):
         raise Http404("File not found")
 
 
-
 # this pattern to serve single page application
 urlpatterns = [
-    path('api/', include('api.urls')),  # API endpoints
-    path('', home, name='home'),
-    path('game/', game, name='game'),
-    path('profile/', profile, name='profile'),
-    path('chat/', chat, name='chat'),
-    path('login/', login, name='login'),
-    path('friendlist/', friendlist, name='friendlist'),
+    path("api/", include("api.urls")),  # API endpoints
+    path("", home, name="home"),
+    path("game/", game, name="game"),
+    path("profile/", profile, name="profile"),
+    path("chat/", chat, name="chat"),
+    path("login/", login, name="login"),
+    path("friendlist/", friendlist, name="friendlist"),
+    path("dashboard/", dashboard, name="dashboard"),
     # ... other paths
 ]
 
