@@ -1,9 +1,5 @@
 FROM python:3.11-slim
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-
 # Set work directory
 WORKDIR /app
 
@@ -25,4 +21,7 @@ COPY . .
 
 RUN cd src/api/static/js/threejs/ && npm install --save-dev webpack webpack-cli three
 RUN cd src/api/static/js/threejs/ && npx webpack
-CMD ["python", "src/manage.py", "runserver", "0.0.0.0:8000"]
+
+RUN chmod +x src/entrypoint.sh
+CMD ["./src/entrypoint.sh"]
+# CMD ["python", "src/manage.py", "runserver", "0.0.0.0:8000"]
