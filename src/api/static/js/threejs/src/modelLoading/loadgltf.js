@@ -1,6 +1,6 @@
 // Import necessary modules from Three.js
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 class GameScene {
   constructor() {
@@ -9,25 +9,44 @@ class GameScene {
     this.assets = {}; // Store loaded assets for easy access
   }
 
-  // Method to load a GLTF model
-  loadModel(name, modelPath, onLoadCallback = null, onErrorCallback = null) {
-    this.loader.load(
-      modelPath,
-      (gltf) => {
-        const model = gltf.scene;
-        model.name = name;
-        this.scene.add(model);
-        this.assets[name] = model;
-        if (onLoadCallback)
-          onLoadCallback(model);
-      },
-      undefined,
-      (error) => {
-        console.error(`An error occurred while loading the model: ${modelPath}`, error);
-        if (onErrorCallback)
-          onErrorCallback(error);
+  // Method to load a GLTF model using fetch
+  async loadModel(name, url, onLoadCallback = null, onErrorCallback = null) {
+    try {
+      // Fetch the GLB file
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch the model: ${response.statusText}`);
       }
-    );
+
+      // Read the response as an ArrayBuffer
+      const arrayBuffer = await response.arrayBuffer();
+
+      this.loader.parse(
+        arrayBuffer,
+        '',
+        (gltf) => {
+          const model = gltf.scene;
+          model.name = name;
+          this.scene.add(model);
+          this.assets[name] = model;
+
+          if (onLoadCallback) {
+            onLoadCallback(model);
+          }
+        },
+        (error) => {
+          console.error(`An error occurred while parsing the model: ${url}`, error);
+          if (onErrorCallback) {
+            onErrorCallback(error);
+          }
+        }
+      );
+    } catch (error) {
+      console.error(`An error occurred while fetching the model: ${url}`, error);
+      if (onErrorCallback) {
+        onErrorCallback(error);
+      }
+    }
   }
 
   // Method to move a specific asset

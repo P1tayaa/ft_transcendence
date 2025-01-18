@@ -18,9 +18,17 @@ COPY src/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . .
+# Set up Webpack dependencies
+WORKDIR /app/src/api/static/js/threejs
+COPY src/api/static/js/threejs/package.json ./package.json
 
-RUN cd src/api/static/js/threejs/ && npm install --save-dev webpack webpack-cli three
-RUN cd src/api/static/js/threejs/ && npx webpack
+# Install npm dependencies
+RUN npm install
+
+# Build Webpack bundle
+RUN npm run build
+
+WORKDIR /app
 
 RUN chmod +x src/entrypoint.sh
 CMD ["./src/entrypoint.sh"]

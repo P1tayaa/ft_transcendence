@@ -1,4 +1,4 @@
 __pycache__/
 pgdata/
 .secret
-src/frontend/node_modules/
+src/api/static/js/threejs/node_modules
