@@ -1,42 +1,55 @@
-
 document.addEventListener("DOMContentLoaded", () => {
-  const loginForm = document.getElementById("loginForm");
-  const errorMessage = document.getElementById("errorMessage");
+    const loginForm = document.getElementById("loginForm");
+    const errorMessage = document.getElementById("errorMessage");
 
-  loginForm.addEventListener("submit", async (event) => {
-    event.preventDefault(); // Prevent the form from submitting the traditional way
-
-    errorMessage.textContent = "";
-
-    const formData = new FormData(loginForm);
-    const data = {
-      username: formData.get("username"),
-      password: formData.get("password"),
-    };
-
-    try {
-      const response = await fetch("../api/register/", { // Replace "/api/login" with your actual backend endpoint
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error("Login failed. Please check your credentials and try again.");
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        window.location.href = "/dashboard";
-      } else {
-        throw new Error(result.message || "Login failed. Please try again.");
-      }
-    } catch (error) {
-      errorMessage.textContent = error.message;
-      errorMessage.style.color = "red";
+    function getCSRFToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+               document.cookie.split('; ')
+                            .find(row => row.startsWith('csrftoken='))
+                            ?.split('=')[1];
     }
-  });
+
+    loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        errorMessage.textContent = "";
+        
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        try {
+            const csrfToken = getCSRFToken();
+            
+            if (!csrfToken) {
+                throw new Error('CSRF token not found');
+            }
+
+            const response = await fetch("/api/login/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            });
+
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                // Successful login
+                window.location.href = "/dashboard";  // or wherever you want to redirect
+            } else {
+                // Failed login
+                errorMessage.textContent = result.message || "Login failed. Please try again.";
+                errorMessage.style.color = "red";
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            errorMessage.textContent = "An error occurred. Please try again.";
+            errorMessage.style.color = "red";
+        }
+    });
 });
