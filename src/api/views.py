@@ -11,6 +11,9 @@ def home(request):
 def game(request):
     return render(request, "base.html", {"template_name": "pages/gameplay.html"})
 
+def register(request):
+    return render(request, "base.html", {"template_name" : "pages/register.html"})
+
 
 def profile(request):
     return render(request, "base.html", {"template_name": "pages/profile.html"})
