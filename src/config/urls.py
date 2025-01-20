@@ -21,7 +21,7 @@ import os
 from django.http import FileResponse, Http404
 from django.conf import settings
 from urllib.parse import urlparse, unquote
-from api.views import home, game, profile, chat, login, friendlist, dashboard
+from api.views import home, game, profile, chat, login, friendlist, dashboard, register
 
 
 def serve_frontend(request, filename="index.html"):
@@ -55,6 +55,7 @@ urlpatterns = [
     path("login/", login, name="login"),
     path("friendlist/", friendlist, name="friendlist"),
     path("dashboard/", dashboard, name="dashboard"),
+    path("register/", register, name="register"),
     # ... other paths
 ]
 

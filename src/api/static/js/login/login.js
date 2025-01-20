@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     try {
-      const response = await fetch("../api/register_user/", { // Replace "/api/login" with your actual backend endpoint
+      const response = await fetch("../api/register/", { // Replace "/api/login" with your actual backend endpoint
         method: "POST",
         headers: {
           "Content-Type": "application/json",

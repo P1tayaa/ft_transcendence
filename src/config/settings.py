@@ -52,7 +52,12 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "api.middleware.CSRFMiddleware",
 ]
+
+CSRF_USE_SESSIONS = False
+CSRF_COOKIE_HTTPONLY = False  # Important for JS access
+CSRF_COOKIE_SAMESITE = 'Lax'  # Or 'Strict' depending on your needs
 
 ROOT_URLCONF = "config.urls"
 
