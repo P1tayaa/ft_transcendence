@@ -14,6 +14,17 @@
     <button type="submit">Login</button>
   </form>
   <p id="errorMessage" class="error-message"></p>
+  <div class="register-redirect">
+    <p>Don't have an account?</p>
+    <button id="registerButton">Register</button>
+  <script>
+    document.getElementById("registerButton").addEventListener("click", function() {
+      window.location.href = "../register"; 
+    });
+  </script>
+
+  </div>
+
 <script src="../static/js/login/login.js">
 </script>
 </div>
