@@ -21,7 +21,18 @@ import os
 from django.http import FileResponse, Http404
 from django.conf import settings
 from urllib.parse import urlparse, unquote
-from api.views import home, game, profile, chat, login, friendlist, dashboard, register
+from api.views import (
+    home,
+    game,
+    profile,
+    chat,
+    login,
+    friendlist,
+    dashboard,
+    register,
+    configGame,
+    gameStarting,
+)
 
 
 def serve_frontend(request, filename="index.html"):
@@ -56,6 +67,8 @@ urlpatterns = [
     path("friendlist/", friendlist, name="friendlist"),
     path("dashboard/", dashboard, name="dashboard"),
     path("register/", register, name="register"),
+    path("configGame/", configGame, name="configGame"),
+    path("gameStarting/", gameStarting, name="gameStarting"),
     # ... other paths
 ]
 

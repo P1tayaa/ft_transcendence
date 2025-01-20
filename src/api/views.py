@@ -11,8 +11,9 @@ def home(request):
 def game(request):
     return render(request, "base.html", {"template_name": "pages/gameplay.html"})
 
+
 def register(request):
-    return render(request, "base.html", {"template_name" : "pages/register.html"})
+    return render(request, "base.html", {"template_name": "pages/register.html"})
 
 
 def profile(request):
@@ -33,6 +34,14 @@ def login(request):
 
 def dashboard(request):
     return render(request, "base.html", {"template_name": "pages/dashboard.html"})
+
+
+def configGame(request):
+    return render(request, "base.html", {"template_name": "pages/configGame.html"})
+
+
+def gameStarting(request):
+    return render(request, "base.html", {"template_name": "pages/gameStarting.html"})
 
 
 @api_view(["GET"])
