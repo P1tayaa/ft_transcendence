@@ -21,7 +21,7 @@ def chat(request):
 
 
 def friendlist(request):
-    return render(request, "base.html", {"template_name": "pages/friendlist.html"})
+    return render(request, "base.html", {"template_name": "pages/friendList.html"})
 
 
 def login(request):
