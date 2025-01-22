@@ -158,9 +158,14 @@ def get_current_user(request):
         return JsonResponse({'error': 'Wrong request method in get_current_user'}, status=405)
 
     user = request.user
+    profile = user.profile
     return JsonResponse({
+                # user fields
                 'username': user.username,
                 'date_joined': user.date_joined.isoformat(),
+
+                # profile fields
+                'highscore': profile.highscore,
                 # 'blabla' : usr.blabla
                 
             })
