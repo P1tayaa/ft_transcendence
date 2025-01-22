@@ -1,5 +1,7 @@
 #!/bin/bash
 
+python src/manage.py makemigrations
+
 # Apply migrations
 python src/manage.py migrate
 
