@@ -50,7 +50,7 @@ def register_user(request):
             )
 
         user = User.objects.create_user(
-            username=username, email=email if email else None, password=password
+            username=username, email=email if email else "", password=password
         )
 
         return JsonResponse(

@@ -214,12 +214,12 @@ async function getChatData(chatId = null) {
   // Check login status first
   // const authResponse = await fetch('../api/get_chat_data/', { method: 'GET', credentials: 'include' });
   const authData = await authResponse.json();
+  console.log('response:', authResponse);
   console.log('Auth status:', authData);
 
   // Then get chat data
-  const chatData = await getChatData();
-  console.log('Chat data:', chatData);
-  console.error('User not authenticated');
+  // console.log('Chat data:', chatData);
+  // console.error('User not authenticated');
 
 }
 
