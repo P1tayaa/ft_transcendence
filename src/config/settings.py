@@ -43,8 +43,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "api",
 ]
-
 MIDDLEWARE = [
+    # "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -55,9 +55,11 @@ MIDDLEWARE = [
     "api.middleware.CSRFMiddleware",
 ]
 
+# CORS_ALLOW_ALL_ORIGINS = True
+
 CSRF_USE_SESSIONS = False
 CSRF_COOKIE_HTTPONLY = False  # Important for JS access
-CSRF_COOKIE_SAMESITE = 'Lax'  # Or 'Strict' depending on your needs
+CSRF_COOKIE_SAMESITE = "Lax"  # Or 'Strict' depending on your needs
 
 ROOT_URLCONF = "config.urls"
 
@@ -97,13 +99,13 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ]
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
 }
 
 AUTH_PASSWORD_VALIDATORS = [

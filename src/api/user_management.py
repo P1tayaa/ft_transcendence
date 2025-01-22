@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 import json
-
+import logging
 from rest_framework.response import Response
 
 
@@ -28,144 +28,147 @@ def create_user(user_data):
 @ensure_csrf_cookie
 def register_user(request):
     if request.method != "POST":
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-    
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
     try:
         # Use request.body instead of request.data
         data = json.loads(request.body)
-        username = data.get('username')
-        password = data.get('password')
-        email = data.get('email')
-        
+        username = data.get("username")
+        password = data.get("password")
+        email = data.get("email")
+
         if not all([username, password]):
-            return JsonResponse({
-                'success': False,
-                'message': 'Username and password are required.'
-            }, status=400)
+            return JsonResponse(
+                {"success": False, "message": "Username and password are required."},
+                status=400,
+            )
 
         # Check if user already exists
         if User.objects.filter(username=username).exists():
-            return JsonResponse({
-                'success': False,
-                'message': 'Username already exists.'
-            }, status=400)
+            return JsonResponse(
+                {"success": False, "message": "Username already exists."}, status=400
+            )
 
         user = User.objects.create_user(
-            username=username,
-            email=email if email else None,
-            password=password
+            username=username, email=email if email else None, password=password
         )
 
-        return JsonResponse({
-            'success': True,
-            'message': 'User registered successfully.',
-            'username': user.username
-        })
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "User registered successfully.",
+                "username": user.username,
+            }
+        )
 
     except json.JSONDecodeError:
-        return JsonResponse({
-            'success': False,
-            'message': 'Invalid JSON data'
-        }, status=400)
+        return JsonResponse(
+            {"success": False, "message": "Invalid JSON data"}, status=400
+        )
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'message': str(e)
-        }, status=500)
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
+
 
 @ensure_csrf_cookie
 def login_user(request):
     if request.method != "POST":
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-    
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
     try:
         data = json.loads(request.body)
-        username = data.get('username')
-        password = data.get('password')
-        
+        username = data.get("username")
+        password = data.get("password")
+
         if not all([username, password]):
-            return JsonResponse({
-                'success': False,
-                'message': 'Username and password are required.'
-            }, status=400)
+            return JsonResponse(
+                {"success": False, "message": "Username and password are required."},
+                status=400,
+            )
 
         # authenticate() checks if username/password combination exists
         user = authenticate(request, username=username, password=password)
-        
+
         if user is not None:
             # login() creates the session
             login(request, user)
-            return JsonResponse({
-                'success': True,
-                'message': 'Login successful',
-                'username': user.username
-            })
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": "Login successful",
+                    "username": user.username,
+                }
+            )
         else:
-            return JsonResponse({
-                'success': False,
-                'message': 'Invalid username or password.'
-            }, status=401)
+            return JsonResponse(
+                {"success": False, "message": "Invalid username or password."},
+                status=401,
+            )
 
     except json.JSONDecodeError:
-        return JsonResponse({
-            'success': False,
-            'message': 'Invalid JSON data'
-        }, status=400)
+        return JsonResponse(
+            {"success": False, "message": "Invalid JSON data"}, status=400
+        )
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'message': str(e)
-        }, status=500)
-    
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
+
 
 @ensure_csrf_cookie
 def check_auth_status(request):
     if request.user.is_authenticated:
-        return JsonResponse({
-                'isAuthenticated': True,
-                'username': request.user.username,
-                'userId': request.user.id,
-            })
+        return JsonResponse(
+            {
+                "isAuthenticated": True,
+                "username": request.user.username,
+                "userId": request.user.id,
+            }
+        )
     else:
-        return JsonResponse({
-            'isAuthenticated': False
-        })
+        return JsonResponse({"isAuthenticated": False})
+
 
 @login_required
 def get_chat_data(request, chat_id=None):
     if request.method != "GET":
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+    logging.debug("Log message goes here.")
     profile = request.user.profile
-
+    print("test2")
     if chat_id:
         chat_data = profile.get_chat_history(
             chat_id,
-            limit=int(request.GET.get('limit', 50)),
-            offset=int(request.GET.get('offset', 0))
+            limit=int(request.GET.get("limit", 50)),
+            offset=int(request.GET.get("offset", 0)),
         )
         if not chat_data:
-            return JsonResponse({'error': 'Chat not found'}, status=404)
+            with open("test.txt", "a") as myfile:
+                myfile.write("appended text")
+            return JsonResponse({"error": "Chat not found"}, status=404)
     else:
+        with open("test.txt", "a") as myfile:
+            myfile.write("appended text")
         chat_data = profile.get_all_chats()
 
+    with open("test.txt", "a") as myfile:
+        myfile.write("appended text")
     return JsonResponse(chat_data, safe=False)
-        
+
 
 @login_required
 def get_current_user(request):
     if request.method != "GET":
-        return JsonResponse({'error': 'Wrong request method in get_current_user'}, status=405)
+        return JsonResponse(
+            {"error": "Wrong request method in get_current_user"}, status=405
+        )
 
     user = request.user
     profile = user.profile
-    return JsonResponse({
-                # user fields
-                'username': user.username,
-                'date_joined': user.date_joined.isoformat(),
-
-                # profile fields
-                'highscore': profile.highscore,
-                # 'blabla' : usr.blabla
-                
-            })
+    return JsonResponse(
+        {
+            # user fields
+            "username": user.username,
+            "date_joined": user.date_joined.isoformat(),
+            # profile fields
+            "highscore": profile.highscore,
+            # 'blabla' : usr.blabla
+        }
+    )
