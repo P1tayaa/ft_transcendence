@@ -10,6 +10,7 @@ RUN apt-get update \
   libpq-dev \
   nodejs \
   npm \
+  netcat-traditional \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
