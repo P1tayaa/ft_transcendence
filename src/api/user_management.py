@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from .models import Profile
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.http import require_http_methods
@@ -131,6 +132,27 @@ def check_auth_status(request):
         })
 
 @login_required
+def get_chat_data(request, chat_id=None):
+    if request.method != "GET":
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+    profile = request.user.profile
+
+    if chat_id:
+        chat_data = profile.get_chat_history(
+            chat_id,
+            limit=int(request.GET.get('limit', 50)),
+            offset=int(request.GET.get('offset', 0))
+        )
+        if not chat_data:
+            return JsonResponse({'error': 'Chat not found'}, status=404)
+    else:
+        chat_data = profile.get_all_chats()
+
+    return JsonResponse(chat_data, safe=False)
+        
+
+@login_required
 def get_current_user(request):
     if request.method != "GET":
         return JsonResponse({'error': 'Wrong request method in get_current_user'}, status=405)
@@ -138,6 +160,7 @@ def get_current_user(request):
     user = request.user
     return JsonResponse({
                 'username': user.username,
+                'date_joined': user.date_joined.isoformat(),
                 # 'blabla' : usr.blabla
                 
             })
