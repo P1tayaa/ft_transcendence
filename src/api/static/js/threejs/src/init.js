@@ -44,6 +44,7 @@ export default class Init {
     this.lightManager = new LightManager(this.gameScene.getScene());
     this.controlHandler = new ControlHandler();
     this.pongLogic = new Pong();
+    this.pongLogic.initialize();
     this.score = new Score(this.gameScene.getScene());
   }
 

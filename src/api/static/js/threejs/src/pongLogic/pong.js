@@ -19,6 +19,8 @@ class Pong {
     this.multiSidePush = 0.2; // Multiplier for side pushes
 
     // Settings and mode
+    // this.setterUrlPath = "../static/js/threejs/settings/test.json"
+    this.setterUrlPath = "../static/js/threejs/settings/tet.json" // this will fail
     this.settings = null;
     this.mode = 'local'; // Default mode
     this.serverUrl = '';
@@ -59,7 +61,7 @@ class Pong {
    * Loads settings from a JSON file.
    */
   async loadSettings() {
-    const response = await fetch('/path/to/settings.json'); // Update the path as needed
+    const response = await fetch(this.setterUrlPath); // Update the path as needed
     if (!response.ok) {
       throw new Error('Failed to load settings.json');
     }
@@ -75,7 +77,7 @@ class Pong {
 
     // Post data every 100ms
     this.postInterval = setInterval(() => this.postPaddlePosition(), 100);
-  }
+  };
 
   /**
    * Fetches the current game data (ball and opponent paddle positions) from the server.
