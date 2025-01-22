@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     highscore = models.IntegerField(default=0)
-    most_recent_game_score = models.InterField(default=0)
+    most_recent_game_score = models.IntegerField(default=0)
 
     def add_friend(self, friend_user):
         return Friendship.objects.create(profile=self, friend=friend_user)
@@ -104,7 +104,7 @@ class Chat(models.Model):
 
 class Message(models.Model):
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='messages')
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_names='sent_messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
