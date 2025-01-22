@@ -1,6 +1,12 @@
 from django.urls import path
 from . import views
-from .user_management import get_current_user, register_user, login_user, check_auth_status
+from .user_management import (
+    get_current_user,
+    register_user,
+    login_user,
+    check_auth_status,
+    get_chat_data,
+)
 
 # here for API endpoints, pages are routed through templates
 urlpatterns = [
@@ -10,4 +16,5 @@ urlpatterns = [
     path("login/", login_user, name="login_user"),
     path("auth-status/", check_auth_status, name="check_auth_status"),
     path("me/", get_current_user, name="current_user"),
+    path("get_chat_data/", get_chat_data, name="get_chat_data"),
 ]

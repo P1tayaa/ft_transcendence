@@ -65,11 +65,17 @@ class ChatPage {
     this.chatContentElement = document.getElementById(chatContentId);
     this.currentConversationId = null;
     this.lastMessageTime = null;
+    this.url = "../api/get_chat_data/"
   }
 
   async fetchConversationsList(url) {
     try {
-      const response = await fetch(url);
+      console.log("test")
+      const response = await fetch(url, {
+        method: 'GET',
+        credentials: 'include'  // Important for auth
+
+      }); console.log(response.json())
       return await response.json();
     } catch (error) {
       console.error('Error fetching conversations list:', error);
@@ -77,9 +83,18 @@ class ChatPage {
     }
   }
 
+
+
+
   async fetchConversationDetails(url, conversationId) {
     try {
-      const response = await fetch(`${url}?id=${conversationId}`);
+      const response = await fetch(url, {
+        method: 'GET',
+        credentials: 'include',  // Important for auth
+        headers: {
+          'X-CSRFToken': getCsrfToken()
+        }
+      });
       return await response.json();
     } catch (error) {
       console.error('Error fetching conversation details:', error);
@@ -112,7 +127,7 @@ class ChatPage {
   }
 
   async loadConversationDetails() {
-    const url = 'https://api.example.com/conversation-details'; // Replace with your API endpoint
+    const url = '../api/get_chat_data/'; // Replace with your API endpoint
     const details = await this.fetchConversationDetails(url, this.currentConversationId);
     if (details) {
       this.chatContentElement.innerHTML = '';
@@ -127,7 +142,7 @@ class ChatPage {
 
   async updateNewMessages() {
     if (!this.currentConversationId || !this.lastMessageTime) return;
-    const url = 'https://api.example.com/new-messages'; // Replace with your API endpoint
+    const url = '../api/get_chat_data/'; // Replace with your API endpoint
     const newMessages = await this.fetchNewMessages(url, this.currentConversationId, this.lastMessageTime);
     if (newMessages.length > 0) {
       newMessages.forEach(message => {
@@ -140,12 +155,77 @@ class ChatPage {
   }
 
   async initialize() {
-    const url = 'https://api.example.com/conversations-list'; // Replace with your API endpoint
+    console.log("init class")
+    const url = '../api/get_chat_data/'; // Replace with your API endpoint
     const conversations = await this.fetchConversationsList(url);
     this.populateConversationsList(conversations);
     setInterval(() => this.updateNewMessages(), 1000); // Check for new messages every second
   }
 }
 
-const chatPage = new ChatPage('conversations', 'chat-content');
-chatPage.initialize();
+
+
+
+
+
+
+async function getChatData(chatId = null) {
+  try {
+    const url = chatId ? `/api/chat/${chatId}/` : '/api/chat/';
+    const response = await fetch(url, {
+      method: 'GET',
+      credentials: 'include',  // Important for sending cookies
+      headers: {
+        'X-CSRFToken': getCsrfToken()
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Chat data:', data);
+    return data;
+  } catch (error) {
+    console.error('Error fetching chat data:', error);
+    throw error;
+  }
+}
+
+// Helper function to get CSRF token
+function getCsrfToken() {
+  return document.cookie
+    .split('; ')
+    .find(row => row.startsWith('csrftoken='))
+    ?.split('=')[1];
+}
+
+
+
+async function getChatData(chatId = null) {
+  const authResponse = await fetch("../api/get_chat_data", {
+    method: 'GET',
+    credentials: 'include',  // Important for sending cookies
+    headers: {
+      'X-CSRFToken': getCsrfToken()
+    }
+  });
+  // Check login status first
+  // const authResponse = await fetch('../api/get_chat_data/', { method: 'GET', credentials: 'include' });
+  const authData = await authResponse.json();
+  console.log('Auth status:', authData);
+
+  // Then get chat data
+  const chatData = await getChatData();
+  console.log('Chat data:', chatData);
+  console.error('User not authenticated');
+
+}
+
+getChatData();
+
+
+// const chatPage = new ChatPage('conversations', 'chat-content');
+// chatPage.initialize();
+console.log("you exist?")
