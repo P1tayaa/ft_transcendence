@@ -103,7 +103,19 @@
         }
     </style>
 <script src="../static/js/chat/load_chat.js"></script>
-<body>
+<script src="../static/js/friends.js"></script>
+<body>a
+    <input 
+        type="text" 
+        id="friendSearchInput" 
+        placeholder="Enter username to add friend..."
+        class="search-input">
+    <div id="searchResults" class="search-results"></div>
+    <div id="friendStatus"></div>
+    <button id="addFriendButton" onclick="addFriend(document.getElementById('friendSearchInput').value)">Add Friend</button>
+
+
+ <button id="addFriendButton" onclick="addFriend(username)">Add Friend</button>
     <div class="container">
         <div class="sidebar">
             <div class="search-bar">

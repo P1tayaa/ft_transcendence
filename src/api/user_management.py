@@ -126,31 +126,28 @@ def check_auth_status(request):
         return JsonResponse({"isAuthenticated": False})
 
 
-@login_required
-def get_chat_data(request, chat_id=None):
-    if request.method != "GET":
-        return JsonResponse({"error": "Method not allowed"}, status=405)
-    logging.debug("Log message goes here.")
-    profile = request.user.profile
-    print("test2")
-    if chat_id:
-        chat_data = profile.get_chat_history(
-            chat_id,
-            limit=int(request.GET.get("limit", 50)),
-            offset=int(request.GET.get("offset", 0)),
-        )
-        if not chat_data:
-            with open("test.txt", "a") as myfile:
-                myfile.write("appended text")
-            return JsonResponse({"error": "Chat not found"}, status=404)
-    else:
-        with open("test.txt", "a") as myfile:
-            myfile.write("appended text")
-        chat_data = profile.get_all_chats()
+# @login_requied
+# def get_chat_data(request, chat_id=None):
+#     profile = request.user.profile
+#     print("test2")
+#     if chat_id:
+#         chat_data = profile.get_chat_history(
+#             chat_id,
+#             limit=int(request.GET.get("limit", 50)),
+#             offset=int(request.GET.get("offset", 0)),
+#         )
+#         if not chat_data:
+#             with open("test.txt", "a") as myfile:
+#                 myfile.write("appended text")
+#             return JsonResponse({"error": "Chat not found"}, status=404)
+#     else:
+#         with open("test.txt", "a") as myfile:
+#             myfile.write("appended text")
+#         chat_data = profile.get_all_chats()
 
-    with open("test.txt", "a") as myfile:
-        myfile.write("appended text")
-    return JsonResponse(chat_data, safe=False)
+#     with open("test.txt", "a") as myfile:
+#         myfile.write("appended text")
+#     return JsonResponse(chat_data, safe=False)
 
 
 @login_required
@@ -172,3 +169,30 @@ def get_current_user(request):
             # 'blabla' : usr.blabla
         }
     )
+
+
+@api_view(['GET'])
+def fetch_user_from_username(username):
+    blabla
+
+@api_view(['POST'])
+def add_friend(request):
+    try:
+        username = request.data.get('friend_username')
+        friend_id = fetch_users(uername);
+        if not friend_id:
+            return Response({"error": "did not fetch friend_username from request.data"}, status=400)
+    
+        friend_user = User.objects.get(id=friend_id)
+        friend_profile = friend_user.profile  # Get the profile instance
+        profile = request.user.profile
+        friendship = profile.add_friend(friend_profile)  # Pass profile instead of user
+    
+        return Response({
+            "message": f"Successfully added {friend_user.username} as friend",
+            "friendship_id": friendship.id
+        }, status=201)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=404)
+    except Exception as e:
+        return Response({"error": str(e)}, status=400)
