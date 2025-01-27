@@ -11,7 +11,10 @@ from .user_management import (
     get_friends,
     remove_friend
 )
-from .chat_management import get_chat_data
+from .chat_management import (
+    get_chat_data,
+    add_message,
+)
 from .score_management import (
     add_score,
     get_score_history,
@@ -35,5 +38,6 @@ urlpatterns = [
     path("score/add", add_score, name="add_score"),
     path("score/recent", get_recent_score, name="get_recent_score"),
     path("score/highscore", get_highscore, name="get_highscore"),
+    path("add_message/", add_message, name="add_message"),
 
 ]
