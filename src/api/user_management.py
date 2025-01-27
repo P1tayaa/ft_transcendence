@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from .models import Profile
 from rest_framework.decorators import api_view, permission_classes
+from django.contrib.auth import logout
 from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -113,6 +114,22 @@ def login_user(request):
 
 
 @ensure_csrf_cookie
+@require_http_methods(['POST'])
+def logout_user(request):
+    try:
+        logout(request)
+        return JsonResponse({
+            "success": True,
+            "message": "Succesfully logged out",
+        })
+    except Exception as e:
+        return JsonResponse({
+                "success": False,
+                "message": str(e)
+            }, status = 500)
+
+
+@ensure_csrf_cookie
 def check_auth_status(request):
     if request.user.is_authenticated:
         return JsonResponse(
@@ -172,26 +189,75 @@ def get_current_user(request):
 
 
 @api_view(['GET'])
-def fetch_user_from_username(username):
-    blabla
+def fetch_matching_usernames(request):
+    try:
+        search = request.GET.get('username', '')
+        if not search:
+            return Response({
+                "success": False,
+                "error": "Username search term is required"
+            }, status=400)
+
+        matching_users = User.objects.filter(username__icontains=search).values('id', 'username')
+
+        results = [
+            {
+                'user_id': user['id'],
+                'username': user['username']
+            }
+            for user in matching_users
+        ]
+
+        return Response({
+            'success': True,
+            'results': results,
+            'count': len(results)
+        })
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e),
+        }, status=500)
+
 
 @api_view(['POST'])
 def add_friend(request):
     try:
-        username = request.data.get('friend_username')
-        friend_id = fetch_users(uername);
+        friend_id = request.data.get('friend_id')
         if not friend_id:
-            return Response({"error": "did not fetch friend_username from request.data"}, status=400)
-    
-        friend_user = User.objects.get(id=friend_id)
-        friend_profile = friend_user.profile  # Get the profile instance
+            return Response({
+                "error": "friend username is required"
+            }, status=400)
+
+        try:
+            friend_user = User.objects.get(id=friend_id)
+        except User.DoesNotExist:
+            return Response({
+                "error": f"User '{friend_id}' not found"
+            }, status=404)
+
+        if friend_id == request.user.id:
+            return Response({
+                    "success": False,
+                    "error": "Cannot add yourself as friend"
+                }, status=400)
+
+        friend_profile = friend_user.profile
         profile = request.user.profile
-        friendship = profile.add_friend(friend_profile)  # Pass profile instead of user
+
+        if profile.is_friend(friend_profile):
+            return Response({
+                                "success": False,
+                                "error:": f"Already friends with{friend_user.username}"
+                            }, status=400)
+
+        friendship = profile.add_friend(friend_profile)
     
         return Response({
             "message": f"Successfully added {friend_user.username} as friend",
             "friendship_id": friendship.id
         }, status=201)
+
     except User.DoesNotExist:
         return Response({"error": "User not found"}, status=404)
     except Exception as e:
