@@ -19,6 +19,6 @@ urlpatterns = [
     path("auth-status/", check_auth_status, name="check_auth_status"),
     path("me/", get_current_user, name="current_user"),
     path("get_chat_data/", get_chat_data, name="get_chat_data"),
-    path("fetch_matching_usernames", fetch_matching_usernames, name="fetch_matching_usernames"),
+    path("fetch_matching_usernames/", fetch_matching_usernames, name="fetch_matching_usernames"),
     path("add_friend/", add_friend, name="add_friend"),
 ]
