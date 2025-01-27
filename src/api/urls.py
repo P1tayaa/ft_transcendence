@@ -15,12 +15,12 @@ from .chat_management import get_chat_data
 from .score_management import (
     add_score,
     get_score_history,
+    get_recent_score,
+    get_highscore,
 )
 
 # here for API endpoints, pages are routed through templates
 urlpatterns = [
-    # path('hello/', views.hello_world, name='hello_world'),               # to comment out
-    # path('profile/', views.create_profile, name='create_profile'),       # to comment out
     path("register/", register_user, name="register_user"),
     path("login/", login_user, name="login_user"),
     path("logout/", logout_user, name="logout_user"),
@@ -33,4 +33,7 @@ urlpatterns = [
     path("remove_friend/", remove_friend, name="remove_friend"),
     path("score/", get_score_history, name="get_score_history"),
     path("score/add", add_score, name="add_score"),
+    path("score/recent", get_recent_score, name="get_recent_score"),
+    path("score/highscore", get_highscore, name="get_highscore"),
+
 ]
