@@ -7,6 +7,8 @@ from .user_management import (
     check_auth_status,
     fetch_matching_usernames,
     add_friend,
+    get_friends,
+    remove_friend
 )
 from .chat_management import get_chat_data
 
@@ -21,4 +23,6 @@ urlpatterns = [
     path("get_chat_data/", get_chat_data, name="get_chat_data"),
     path("fetch_matching_usernames/", fetch_matching_usernames, name="fetch_matching_usernames"),
     path("add_friend/", add_friend, name="add_friend"),
+    path("get_friends/", get_friends, name="get_friends"),
+    path("remove_friend/", remove_friend, name="remove_friend"),
 ]
