@@ -9,7 +9,7 @@ from .user_management import (
     fetch_matching_usernames,
     add_friend,
     get_friends,
-    remove_friend
+    remove_friend,
 )
 from .chat_management import get_chat_data
 from .score_management import (
@@ -27,7 +27,11 @@ urlpatterns = [
     path("auth-status/", check_auth_status, name="check_auth_status"),
     path("me/", get_current_user, name="current_user"),
     path("get_chat_data/", get_chat_data, name="get_chat_data"),
-    path("fetch_matching_usernames/", fetch_matching_usernames, name="fetch_matching_usernames"),
+    path(
+        "fetch_matching_usernames/",
+        fetch_matching_usernames,
+        name="fetch_matching_usernames",
+    ),
     path("add_friend/", add_friend, name="add_friend"),
     path("get_friends/", get_friends, name="get_friends"),
     path("remove_friend/", remove_friend, name="remove_friend"),

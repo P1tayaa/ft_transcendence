@@ -114,19 +114,18 @@ def login_user(request):
 
 
 @ensure_csrf_cookie
-@require_http_methods(['POST'])
+@require_http_methods(["POST"])
 def logout_user(request):
     try:
         logout(request)
-        return JsonResponse({
-            "success": True,
-            "message": "Succesfully logged out",
-        })
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Succesfully logged out",
+            }
+        )
     except Exception as e:
-        return JsonResponse({
-                "success": False,
-                "message": str(e)
-            }, status = 500)
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
 
 
 @ensure_csrf_cookie
@@ -188,82 +187,82 @@ def get_current_user(request):
     )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 def fetch_matching_usernames(request):
     try:
-        search = request.GET.get('username', '')
+        search = request.GET.get("username", "")
         if not search:
-            return Response({
-                "success": False,
-                "error": "Username search term is required"
-            }, status=400)
+            return Response(
+                {"success": False, "error": "Username search term is required"},
+                status=400,
+            )
 
-        matching_users = User.objects.filter(username__icontains=search).values('id', 'username')
+        matching_users = User.objects.filter(username__icontains=search).values(
+            "id", "username"
+        )
 
         results = [
-            {
-                'user_id': user['id'],
-                'username': user['username']
-            }
+            {"user_id": user["id"], "username": user["username"]}
             for user in matching_users
         ]
 
-        return Response({
-            'success': True,
-            'results': results,
-            'count': len(results)
-        })
+        return Response({"success": True, "results": results, "count": len(results)})
     except Exception as e:
-        return Response({
-            'success': False,
-            'error': str(e),
-        }, status=500)
+        return Response(
+            {
+                "success": False,
+                "error": str(e),
+            },
+            status=500,
+        )
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 def add_friend(request):
     try:
-        friend_id = request.data.get('friend_id')
+        friend_id = request.data.get("friend_id")
         if not friend_id:
-            return Response({
-                "error": "friend username is required"
-            }, status=400)
+            return Response({"error": "friend username is required"}, status=400)
 
         try:
             friend_user = User.objects.get(id=friend_id)
         except User.DoesNotExist:
-            return Response({
-                "error": f"User '{friend_id}' not found"
-            }, status=404)
+            return Response({"error": f"User '{friend_id}' not found"}, status=404)
 
         if friend_id == request.user.id:
-            return Response({
-                    "success": False,
-                    "error": "Cannot add yourself as friend"
-                }, status=400)
+            return Response(
+                {"success": False, "error": "Cannot add yourself as friend"}, status=400
+            )
 
         friend_profile = friend_user.profile
         profile = request.user.profile
 
         if profile.is_friend(friend_profile):
-            return Response({
-                                "success": False,
-                                "error:": f"Already friends with{friend_user.username}"
-                            }, status=400)
+            return Response(
+                {
+                    "success": False,
+                    "error:": f"Already friends with{friend_user.username}",
+                },
+                status=400,
+            )
 
         friendship = profile.add_friend(friend_profile)
-    
-        return Response({
-            "message": f"Successfully added {friend_user.username} as friend",
-            "friendship_id": friendship.id
-        }, status=201)
+
+        return Response(
+            {
+                "message": f"Successfully added {friend_user.username} as friend",
+                "friendship_id": friendship.id,
+            },
+            status=201,
+        )
 
     except User.DoesNotExist:
         return Response({"error": "User not found"}, status=404)
     except Exception as e:
         return Response({"error": str(e)}, status=400)
 
-@api_view(['GET'])
+
+@api_view(["GET"])
 @login_required
 def get_friends(request):
     try:
@@ -272,58 +271,51 @@ def get_friends(request):
 
         friend_list = [
             {
-                'user_id': friendships.user.id,
-                'username': friendships.user.username,
-                'friendship_id': friendships.id,
-                'created_at': friendships.created_at.isoformat() if hasattr(friendships, 'created_at') else None
+                "user_id": friendships.user.id,
+                "username": friendships.user.username,
+                "friendship_id": friendships.id,
+                "created_at": friendships.created_at.isoformat()
+                if hasattr(friendships, "created_at")
+                else None,
             }
             for friendship in friendships
         ]
-        return Response({
-            'success': True,
-            'friends': friend_list
-        })
+        return Response({"success": True, "friends": friend_list})
     except Exception as e:
-        return Response({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+        return Response({"success": False, "error": str(e)}, status=500)
 
-@api_view('POST')
+
+@api_view(["POST"])
 @login_required
 def remove_friend(request):
     try:
-        friend_id = request.data.get('friend_id')
+        friend_id = request.data.get("friend_id")
         if not friend_id:
-            return Response({
-                'success': False,
-                'error': 'User not found'
-            }, status=404)
+            return Response({"success": False, "error": "User not found"}, status=404)
 
         try:
             friend_user = User.objects.get(id=friend_id)
         except User.DoesNotExist:
-            return Response({
-                'success': False,
-                'error': 'User not found'
-            }, status=404)
+            return Response({"success": False, "error": "User not found"}, status=404)
 
         profile = request.user.profile
         deleted_count = profile.remove_friend(friend_user)
 
         if deleted_count > 0:
-            return Response({
-                'success': True,
-                'message': f'Successfully removed {friend_user.name} from friends'
-            })
+            return Response(
+                {
+                    "success": True,
+                    "message": f"Successfully removed {friend_user.name} from friends",
+                }
+            )
         else:
-            return Response({
-                    'success': False,
-                    'error': f'No Friendship found with {friend_user.username} from friends'
-                }, status=404)
+            return Response(
+                {
+                    "success": False,
+                    "error": f"No Friendship found with {friend_user.username} from friends",
+                },
+                status=404,
+            )
 
     except Exception as e:
-        return Response({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+        return Response({"success": False, "error": str(e)}, status=500)
