@@ -262,3 +262,68 @@ def add_friend(request):
         return Response({"error": "User not found"}, status=404)
     except Exception as e:
         return Response({"error": str(e)}, status=400)
+
+@api_view(['GET'])
+@login_required
+def get_friends(request):
+    try:
+        profile = request.user.profile
+        friendships = profile.get_friends()
+
+        friend_list = [
+            {
+                'user_id': friendships.user.id,
+                'username': friendships.user.username,
+                'friendship_id': friendships.id,
+                'created_at': friendships.created_at.isoformat() if hasattr(friendships, 'created_at') else None
+            }
+            for friendship in friendships
+        ]
+        return Response({
+            'success': True,
+            'friends': friend_list
+        })
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@api_view('POST')
+@login_required
+def remove_friend(request):
+    try:
+        friend_id = request.data.get('friend_id')
+        if not friend_id:
+            return Response({
+                'success': False,
+                'error': 'User not found'
+            }, status=404)
+
+        try:
+            friend_user = User.objects.get(id=friend_id)
+        except User.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'User not found'
+            }, status=404)
+
+        profile = request.user.profile
+        deleted_count = profile.remove_friend(friend_user)
+
+        if deleted_count > 0:
+            return Response({
+                'success': True,
+                'message': f'Successfully removed {friend_user.name} from friends'
+            })
+        else:
+            return Response({
+                    'success': False,
+                    'error': f'No Friendship found with {friend_user.username} from friends'
+                }, status=404)
+
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
