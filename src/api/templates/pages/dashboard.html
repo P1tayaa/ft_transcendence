@@ -1,10 +1,7 @@
 
 <body>
-<div class="logoutButton">
-  <button id="logoutButton">Logout</button>
   <script type="module" src="../static/js/login/dashboard.js">
   </script>
-</div>
 
 
 
@@ -12,42 +9,22 @@
     <div class="header">
       <div class="profile">
         <img src="https://via.placeholder.com/60" alt="Profile Picture">
-        <div>
-          <h2>Username</h2>
-          <p>Welcome back!</p>
-        </div>
-      </div>
-      <div>
-        <button onclick="logout()">Logout</button>
+        <h2 id="userName">Username</h2>
+        <p>Welcome back!</p>
+        <button id="logoutButton">Logout</button>
       </div>
     </div>
 
     <h3>Recent Matches</h3>
-    <div class="match-list">
-      <div class="match-item">
-        <div class="match-details">
-       </div>
-      </div>
-      <div class="match-item">
-        <div class="match-details">
-       </div>
-      </div>
+    <div class="recent-match-list">
+    </div>
+
+    <h3>HightScore</h3>
+    <div class="highscore-match-list">
     </div>
 
     <h3>Friend List</h3>
     <div class="friend-list">
-      <div class="friend-item">
-        <img src="https://via.placeholder.com/40" alt="Friend Avatar">
-        <p>Friend1</p>
-      </div>
-      <div class="friend-item">
-        <img src="https://via.placeholder.com/40" alt="Friend Avatar">
-        <p>Friend2</p>
-      </div>
-      <div class="friend-item">
-        <img src="https://via.placeholder.com/40" alt="Friend Avatar">
-        <p>Friend3</p>
-      </div>
     </div>
   </div>
 </body>
