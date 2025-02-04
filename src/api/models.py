@@ -103,7 +103,7 @@ class ScoreHistory(models.Model):
     profile = models.ForeignKey(
         Profile, on_delete=models.CASCADE, related_name="scores"
     )
-    score = models.IntegerField()
+    score = models.IntegerField(default=0)
     date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -137,7 +137,7 @@ class Message(models.Model):
     sender = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="sent_messages"
     )
-    content = models.TextField()
+    content = models.TextField(default="")
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
 

@@ -213,13 +213,20 @@ async function getChatData(chatId = null) {
   });
   // Check login status first
   // const authResponse = await fetch('../api/get_chat_data/', { method: 'GET', credentials: 'include' });
-  const authData = await authResponse.json();
-  console.log('Auth status:', authData);
+  const chatData = await authResponse.json();
+  console.log('response:', authResponse);
+  console.log('Auth status:', chatData);
+  if (Array.isArray(chatData) && chatData.length === 0) {
+    console.log('No chats found');
+    // You might want to update your UI here to show "No chats yet" message
+  } else if (chatData.message === "No chats found") {
+    console.log(chatData.message);
+    // Handle the explicit "no chats" message
+  }
 
   // Then get chat data
-  const chatData = await getChatData();
-  console.log('Chat data:', chatData);
-  console.error('User not authenticated');
+  // console.log('Chat data:', chatData);
+  // console.error('User not authenticated');
 
 }
 
