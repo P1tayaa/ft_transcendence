@@ -31,9 +31,7 @@ class Pong {
     this.postInterval = null;
   }
 
-  /**
-   * Initializes the Pong class by loading settings and setting up modes.
-   */
+
   async initialize() {
     try {
       await this.loadSettings();
@@ -57,9 +55,7 @@ class Pong {
     }
   }
 
-  /**
-   * Loads settings from a JSON file.
-   */
+
   async loadSettings() {
     const response = await fetch(this.setterUrlPath); // Update the path as needed
     if (!response.ok) {
@@ -68,9 +64,7 @@ class Pong {
     this.settings = await response.json();
   }
 
-  /**
-   * Starts network communication by setting up periodic fetch and post.
-   */
+
   startNetworkCommunication() {
     // Fetch data every 100ms
     this.fetchInterval = setInterval(() => this.fetchGameData(), 100);
@@ -79,9 +73,6 @@ class Pong {
     this.postInterval = setInterval(() => this.postPaddlePosition(), 100);
   };
 
-  /**
-   * Fetches the current game data (ball and opponent paddle positions) from the server.
-   */
   async fetchGameData() {
     try {
       const response = await fetch(`${this.serverUrl}/gameState`);
@@ -98,9 +89,6 @@ class Pong {
     }
   }
 
-  /**
-   * Posts the local paddle's position to the server.
-   */
   async postPaddlePosition() {
     try {
       // Determine which paddle the local player controls
@@ -224,10 +212,6 @@ class Pong {
     }
   }
 
-  /**
-   * Networked collision detection logic.
-   * Uses server-fetched positions to perform collision detection.
-   */
   networkedCollisionDetection() {
     if (!this.serverBallPosition || !this.serverPaddle1Position || !this.serverPaddle2Position) {
       // Data not yet fetched
@@ -280,10 +264,6 @@ class Pong {
     }
   }
 
-  /**
-   * Moves the ball based on its current speed.
-   * Should be called every frame or at a regular interval.
-   */
   moveBall() {
     if (this.mode === 'local') {
       this.ballPosition.x += this.ballSpeed.x;
@@ -294,10 +274,6 @@ class Pong {
     }
   }
 
-  /**
-   * Stops network communication and cleans up intervals.
-   * Should be called when the game is terminated or switched to local mode.
-   */
   stopNetworkCommunication() {
     if (this.fetchInterval) {
       clearInterval(this.fetchInterval);

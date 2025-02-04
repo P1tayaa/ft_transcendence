@@ -39,7 +39,7 @@ export function hideLoadingScreen() {
 export default class Init {
   constructor() {
     this.assetsLoaded = 0;
-    this.totalAssets = 4; // Floor, Paddle1, Paddle2, Ball
+    this.totalAssets = 4;
     this.gameScene = new GameScene();
     this.lightManager = new LightManager(this.gameScene.getScene());
     this.controlHandler = new ControlHandler();
