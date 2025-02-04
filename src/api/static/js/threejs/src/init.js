@@ -5,6 +5,7 @@ import LightManager from './modelLoading/light_manage.js';
 import ControlHandler from './control.js';
 import Pong from './pongLogic/pong.js';
 import Score from './pongLogic/score.js';
+import { initPowerUp } from './powerUp/powerUp.js';
 
 const assetsPath = "http://localhost:8000/static/glfw/";
 
@@ -49,6 +50,8 @@ export default class Init {
   }
 
   loadAssets(callback) {
+    initPowerUp(assetsPath, this.gameScene);
+
     this.gameScene.loadModel('Floor', `${assetsPath}Floor.glb`, (model) => {
       console.log('Floor model loaded.');
       this.gameScene.moveAsset('Floor', { x: 0, y: 0, z: -3 });

@@ -1,17 +1,36 @@
 import * as THREE from 'three';
 import Init from "../init.js";
 
+// const PowerUpType = {
+//     Star: "star.glf",
+//     Snail: "snail.glf",
+//     SpeedUp: "speedup.glf",
+//     Grow: "grow.glf",
+//     Magnette: "magnette.glf",
+// };
+
+
 const PowerUpType = {
-    Star: "star.glf",
-    Snail: "snail.glf",
-    SpeedUp: "speedup.glf",
-    Grow: "grow.glf",
-    Magnette: "magnette.glf",
+    Star: "Ball.glf",
+    Snail: "Ball.glf",
+    SpeedUp:"Ball.glf",
+    Grow:"Ball.glf" ,
+    Magnette:"Ball.glf",
+};
+
+// PowerUpRegistry stores all power-ups
+export const PowerUpRegistry = {
+    Star: new PowerUp(PowerUpType.Star, starEffect, simple_slide),
+    Snail: new PowerUp(PowerUpType.Snail, snailEffect, simple_slide),
+    SpeedUp: new PowerUp(PowerUpType.SpeedUp, speedUpEffect, simple_slide),
+    Grow: new PowerUp(PowerUpType.Grow, growEffect, simple_slide)
 };
 
 const offScreen = {x : 200, y: 200, z:200};
+const simple_slide_speed = {x: 0.2, y: 0.1};
+const PowerUpStartPos = {x:0, y:0, z:0};
 
-function initPowerUp(assetsPath, gameScene) {
+export function initPowerUp(assetsPath, gameScene) {
     for (const type in PowerUpType) {
         const modelFile = PowerUpType[type];  
         const modelName = type;
@@ -26,25 +45,48 @@ function initPowerUp(assetsPath, gameScene) {
 
 
 const PowerUpEffect = (paddle) => {}; 
-
+const PowerUpDisplacement = (speed, location) => {}; 
 
 class PowerUp {
 
-    constructor(type, effect) {
+    constructor(type, effect, displacement) {
         this.size = { x: 1, y: 1 };
         this.speed = { x: 0.2, y: 0 };
         this.type = type;
         this.effect = effect;
+        this.active = false;
+        this.displacement = displacement;
+        this.position = {x :0, y:0};
     }
 
-    update() {
-        this.x += this.speed.x;
-        this.y += this.speed.y;
+    update(scene) {
+        if (!this.active)
+            return;
+        this.displacement(this.speed, this.position);
+        scene.doRender(this.type, true);
+        scene.moveAsset(this.type, this.position)
     }
 
-    activateEffect(paddle) {
-        this.effect(paddle);  // Call the effect function
+    init(scene) {
+        this.active = true;
+        this.position.x = PowerUpStartPos.x; 
+        this.position.y = PowerUpStartPos.y;
+        scene.moveAsset(this.type, PowerUpStartPos)
     }
+
+
+    activateEffect(paddle, scene) {
+        this.active = false;
+        scene.doRender(this.type, false);
+        this.effect(paddle);
+        scene.moveAsset(this.type, offScreen)
+    }
+}
+
+const simple_slide = (speed, location) => {
+    if (speed.x == 0 && speed.y == 0)
+        speed = simple_slide_speed (Math.random() < 0.5 ? -1 : 1); 
+    location += speed;
 }
 
 const starEffect = (paddle) => {
@@ -66,9 +108,3 @@ const growEffect = (paddle) => {
     console.log("Grow power-up activated!");
     paddle.size += 20;
 };
-
-// Now create instances of PowerUps with their respective effects
-const starPowerUp = new PowerUp(PowerUpType.Star, starEffect);
-const snailPowerUp = new PowerUp(PowerUpType.Snail, snailEffect);
-const speedUpPowerUp = new PowerUp(PowerUpType.SpeedUp, speedUpEffect);
-const growPowerUp = new PowerUp(PowerUpType.Grow, growEffect);
