@@ -1,8 +1,10 @@
-import { getCSRFToken } from '../utils.js';
+import { getCSRFToken, getUserName } from '../utils.js';
 
 console.log("Please exist");
 const LOGOUT_URL = '../api/logout/';
 const LOGOUT_REDIRECT_URL = '../login';
+
+const ADD_SCORE_URL = '../api/score/add';
 
 const RECENT_SCORE_URL = '../api/score/recent';
 const HIGHSCORE_URL = '../api/score/highscore';
@@ -175,6 +177,40 @@ function displayFriends(friends) {
   friendListDiv.appendChild(ul);
 }
 
+
+
+async function addScore()
+{
+  try {
+    console.log("Adding Score");
+
+    if (!csrfToken) {
+      throw new Error('CSRF token not found');
+    }
+
+    const response = await fetch(ADD_SCORE_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken
+      },
+      credentials: 'include',
+      body: JSON.stringify({score : 1})
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to logout');
+    }
+
+  } catch (error) {
+    console.error('Error: An error occurred. Please try again.', error);
+  }
+
+}
+
+
+
+
 document.addEventListener("DOMContentLoaded", () => {
   const logoutButton = document.getElementById("logoutButton");
   console.log("Test");
@@ -183,6 +219,19 @@ document.addEventListener("DOMContentLoaded", () => {
   } else {
     console.error('Logout button not found in the DOM.');
   }
+  
+  const addScoreButton = document.getElementById("addScoreButton");
+  if (addScoreButton) {
+    addScoreButton.addEventListener("click", addScore);
+  } else {
+    console.error('Add Score button not found in the DOM.');
+  }
+
+  const userName = document.getElementById("userName");
+
+    userName.innerHTML = getUserName()+"<= this is the username that the backend gave up";
+
+
 
   fetchRecentMatches();
 
@@ -190,6 +239,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   fetchFriends();
 });
+
+
+
 
 
 
