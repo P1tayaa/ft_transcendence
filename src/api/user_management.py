@@ -221,8 +221,14 @@ def fetch_matching_usernames(request):
 def add_friend(request):
     try:
         friend_id = request.data.get("friend_id")
+        print("Received friend_id:", friend_id, "type:", type(friend_id))  # Debug print
+
         if not friend_id:
             return Response({"error": "friend username is required"}, status=400)
+        try:
+            friend_id = int(friend_id)
+        except ValueError:
+            return Response({"success": False, "error": "Invalid friend id format"}, status=400)
 
         try:
             friend_user = User.objects.get(id=friend_id)
@@ -241,7 +247,7 @@ def add_friend(request):
             return Response(
                 {
                     "success": False,
-                    "error:": f"Already friends with{friend_user.username}",
+                    "error": f"Already friends with {friend_user.username}",
                 },
                 status=400,
             )
@@ -291,31 +297,34 @@ def remove_friend(request):
     try:
         friend_id = request.data.get("friend_id")
         if not friend_id:
-            return Response({"success": False, "error": "User not found"}, status=404)
-
+            return Response({"success": False, "error": "friend id is required"}, status=400)
+        
+        try:
+            friend_id = int(friend_id)
+        except ValueError:
+            return Response({"success": False, "error": "Invalid friend id format"}, status=400)
+            
         try:
             friend_user = User.objects.get(id=friend_id)
         except User.DoesNotExist:
-            return Response({"success": False, "error": "User not found"}, status=404)
-
+            return Response({"success": False, "error": f"User not found"}, status=404)
+            
+        friend_profile = friend_user.profile
         profile = request.user.profile
-        deleted_count = profile.remove_friend(friend_user)
-
+        
+        # delete() returns (number_deleted, dictionary_with_deletions)
+        deleted_count, _ = profile.remove_friend(friend_profile)  # Unpack the tuple
+        
         if deleted_count > 0:
-            return Response(
-                {
-                    "success": True,
-                    "message": f"Successfully removed {friend_user.name} from friends",
-                }
-            )
+            return Response({
+                "success": True,
+                "message": f"Successfully removed {friend_user.username} from friends"
+            })
         else:
-            return Response(
-                {
-                    "success": False,
-                    "error": f"No Friendship found with {friend_user.username} from friends",
-                },
-                status=404,
-            )
-
+            return Response({
+                "success": False,
+                "error": f"No friendship found with {friend_user.username}"
+            }, status=404)
+            
     except Exception as e:
         return Response({"success": False, "error": str(e)}, status=500)

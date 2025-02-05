@@ -171,6 +171,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (!response.ok) {
+      // Special case for "already friends"
+        if (data.error && data.error.includes("Already friends with")) {
+            alert(data.error);
+            return false;
+        }
       const errorData = await response.json();
       throw new Error(errorData.error || 'Failed to add friend');
     }
