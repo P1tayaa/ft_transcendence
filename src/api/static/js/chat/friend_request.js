@@ -2,11 +2,18 @@
 // Define API endpoints as constants
 const SEARCH_USERS_URL = '../api/fetch_matching_usernames/';
 const ADD_FRIEND_URL = '../api/add_friend/';
+const REMOVE_FRIEND_URL = '../api/remove_friend/';
+const FRIENDS_URL = '../api/get_friends/';
 
 
 import { getCSRFToken } from '../utils.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+
+  // Fetch friends and display them
+  getFriends();
+
+
   const inputField = document.getElementById('friend-input');
   const seePossibleBtn = document.getElementById('see-possible-btn');
 
@@ -21,15 +28,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const data = await fetchMatchingUsers(username);
-      if (!data.success) {
+
+      if (!data.success || data.count === 0) {
         alert(data.error || 'No matches found.');
         return;
       }
-      if (data.count === 0) {
-        alert('No matches found.');
-        return;
-      }
+
       displaySelection(data.results);
+
     } catch (error) {
       console.error('Error fetching matches:', error);
       alert('An error occurred while searching for friends.');
@@ -57,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     selectionDiv = document.createElement('div');
     selectionDiv.id = 'selection-div';
-    selectionDiv.style.marginTop = '10px';
 
     const select = document.createElement('select');
     select.id = 'matches-select';
@@ -75,11 +80,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const confirmBtn = document.createElement('button');
-    confirmBtn.textContent = 'Add Friend';
-    confirmBtn.style.marginLeft = '10px';
+    confirmBtn.textContent = 'Add';
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = 'Remove';
 
     selectionDiv.appendChild(select);
     selectionDiv.appendChild(confirmBtn);
+    selectionDiv.appendChild(deleteBtn);
     document.querySelector('.friend_add').appendChild(selectionDiv);
 
     confirmBtn.addEventListener('click', async () => {
@@ -101,6 +109,50 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('An error occurred while adding the friend.');
       }
     });
+
+    deleteBtn.addEventListener('click', async () => {
+      const selectedUserID = select.value;
+      if (!selectedUserID) {
+        alert('Please select a user to add.');
+        return;
+      }
+
+      try {
+        const success = await removeFriend(selectedUserID);
+        if (success) {
+          alert('Friend removed successfully!');
+          selectionDiv.remove();
+          inputField.value = '';
+        }
+      } catch (error) {
+        console.error('Error removing friend:', error);
+        alert('An error occurred while removing the friend.');
+      }
+    });
+  }
+
+  async function removeFriend(friend_id) {
+    const csrfToken = getCSRFToken();
+
+    if (!csrfToken) {
+      throw new Error('CSRF token not found');
+    }
+
+    const response = await fetch(REMOVE_FRIEND_URL, {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken
+      }, body: JSON.stringify({ friend_id: friend_id }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to remove friend');
+    }
+
+    const data = await response.json();
+    return data.success;
   }
 
   async function addFriend(friend_id) {
@@ -119,11 +171,39 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (!response.ok) {
+      // Special case for "already friends"
+        if (data.error && data.error.includes("Already friends with")) {
+            alert(data.error);
+            return false;
+        }
       const errorData = await response.json();
       throw new Error(errorData.error || 'Failed to add friend');
     }
 
     const data = await response.json();
     return data.success;
+  }
+
+  async function getFriends() {
+    const csrfToken = getCSRFToken();
+
+    const response = await fetch(FRIENDS_URL, {
+      method: 'GET',
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken
+      },
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to get friends');
+    }
+
+    const data = await response.json();
+    console.log(data.friends);
+
+    return data;
   }
 });

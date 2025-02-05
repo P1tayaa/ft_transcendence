@@ -9,14 +9,14 @@ class Profile(models.Model):
     highscore = models.IntegerField(default=0)
     most_recent_game_score = models.IntegerField(default=0)
 
-    def add_friend(self, friend_user):
-        return Friendship.objects.create(profile=self, friend=friend_user)
+    def add_friend(self, friend_profile):
+        return Friendship.objects.create(profile=self, friend=friend_profile)
 
-    def remove_friend(self, friend_user):
-        return self.friendships.filter(friend=friend_user).delete()
+    def remove_friend(self, friend_profile):
+        return self.friendships.filter(friend=friend_profile).delete()
 
-    def is_friend(self, friend_user):
-        return self.friendships.filter(friend=friend_user).exists()
+    def is_friend(self, friend_profile):
+        return self.friendships.filter(friend=friend_profile).exists()
 
     def get_friends(self):
         return self.friendships.all()
