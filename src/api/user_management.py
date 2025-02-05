@@ -275,17 +275,15 @@ def get_friends(request):
         profile = request.user.profile
         friendships = profile.get_friends()
 
-        friend_list = [
-            {
-                "user_id": friendships.user.id,
-                "username": friendships.user.username,
-                "friendship_id": friendships.id,
-                "created_at": friendships.created_at.isoformat()
-                if hasattr(friendships, "created_at")
-                else None,
-            }
-            for friendship in friendships
-        ]
+        friend_list = []
+
+        for friendship in friendships:
+            friend_list.append({
+                            "user_id": friendship.friend.user.id,
+                            "username": friendship.friend.user.username,
+                            "friendship_id": friendship.id,
+                            "created_at": friendship.created_at.isoformat()
+                       })
         return Response({"success": True, "friends": friend_list})
     except Exception as e:
         return Response({"success": False, "error": str(e)}, status=500)
