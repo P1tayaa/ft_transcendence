@@ -34,8 +34,11 @@ export async function getUserName()
       const errorData = await response.json();
       throw new Error(errorData.error || 'Failed to logout');
     }
+
+    const data = await response.json();
+    return data.username;
     
-    return (response.json().username)
+    // return (response.json().username)
   } catch (error) {
     console.error('Error: An error occurred. Please try again.', error);
   }

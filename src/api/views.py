@@ -33,7 +33,10 @@ def login(request):
 
 
 def dashboard(request):
-    return render(request, "base.html", {"template_name": "pages/dashboard.html"})
+    return render(request, "base.html", {
+                  "template_name": "pages/dashboard.html",
+                  "username": request.user.username,
+              })
 
 
 def configGame(request):
