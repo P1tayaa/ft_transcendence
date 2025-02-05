@@ -5,6 +5,7 @@ import LightManager from './modelLoading/light_manage.js';
 import ControlHandler from './control.js';
 import Pong from './pongLogic/pong.js';
 import Score from './pongLogic/score.js';
+import { initPowerUp } from './powerUp/powerUp.js';
 
 const assetsPath = "http://localhost:8000/static/glfw/";
 
@@ -39,7 +40,7 @@ export function hideLoadingScreen() {
 export default class Init {
   constructor() {
     this.assetsLoaded = 0;
-    this.totalAssets = 4; // Floor, Paddle1, Paddle2, Ball
+    this.totalAssets = 4;
     this.gameScene = new GameScene();
     this.lightManager = new LightManager(this.gameScene.getScene());
     this.controlHandler = new ControlHandler();
@@ -49,6 +50,8 @@ export default class Init {
   }
 
   loadAssets(callback) {
+    initPowerUp(assetsPath, this.gameScene);
+
     this.gameScene.loadModel('Floor', `${assetsPath}Floor.glb`, (model) => {
       console.log('Floor model loaded.');
       this.gameScene.moveAsset('Floor', { x: 0, y: 0, z: -3 });

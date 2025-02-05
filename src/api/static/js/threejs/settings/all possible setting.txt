@@ -1,0 +1,10 @@
+{
+  "mode": "networked" | "local" | "localSolo",
+  "serverUrl": "http://localhost:8000/api/",
+  "powerUp" : "true" | "false"
+    "powerUpList" : "star" | "Snail" | "SpeedUp" | "Glow" | "magnette
+  "playerCount" : "2" | "4"0
+    "map Style" : Clasic | bath | circle | rectengle
+
+    "playerSide": "left" | "right" | "top" | "bottom"
+}

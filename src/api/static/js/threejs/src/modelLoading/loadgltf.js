@@ -91,6 +91,10 @@ class GameScene {
     }
   }
 
+  doRender(name, render) {
+    this.assets[name].visible = render;
+  }
+
   getAssetPossition(name) {
     const asset = this.assets[name];
     if (asset) {

@@ -1,4 +1,5 @@
 import { checkAuthStatus } from './checkAuth.js';
+import { getCSRFToken } from '../utils.js';
 
 (async () => {
   const isAuthenticated = await checkAuthStatus();
@@ -11,12 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("loginForm");
   const errorMessage = document.getElementById("errorMessage");
 
-  function getCSRFToken() {
-    return document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
-      document.cookie.split('; ')
-        .find(row => row.startsWith('csrftoken='))
-        ?.split('=')[1];
-  }
 
   loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
