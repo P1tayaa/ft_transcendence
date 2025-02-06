@@ -1,6 +1,6 @@
 from django.urls import path
 # from .views import views
-from .views.user_management import (
+from .management.user_management import (
     get_current_user,
     register_user,
     login_user,
@@ -11,11 +11,11 @@ from .views.user_management import (
     get_friends,
     remove_friend,
 )
-from .views.chat_management import (
+from .management.chat_management import (
     get_chat_data,
     add_message,
 )
-from .views.score_management import (
+from .management.score_management import (
     add_score,
     get_score_history,
     get_recent_score,
