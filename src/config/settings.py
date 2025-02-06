@@ -34,6 +34,7 @@ ALLOWED_HOSTS = []
 
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -41,7 +42,12 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
-    "api",
+    "channels",
+
+    # local apps
+    "apps.api.apps.ApiConfig",
+    "apps.game.apps.GameConfig",
+    "apps.users.apps.UsersConfig",
 ]
 MIDDLEWARE = [
     # "corsheaders.middleware.CorsMiddleware",
@@ -52,8 +58,18 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "api.middleware.CSRFMiddleware",
+    "apps.api.middleware.CSRFMiddleware",
 ]
+
+ASGI_APPLICATION = 'config.asgi.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 # CORS_ALLOW_ALL_ORIGINS = True
 

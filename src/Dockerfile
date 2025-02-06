@@ -20,8 +20,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . .
 # Set up Webpack dependencies
-WORKDIR /app/src/api/static/js/threejs
-COPY src/api/static/js/threejs/package.json ./package.json
+WORKDIR /app/src/static/js/threejs
+COPY src/static/js/threejs/package.json ./package.json
 
 # Install npm dependencies
 RUN npm install
