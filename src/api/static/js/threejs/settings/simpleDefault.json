@@ -1,0 +1,16 @@
+{
+  "mode": "local",
+  "serverurl": "",
+  "powerup": "false",
+  "poweruplist": [],
+  "playercount": "2",
+  "map style": "classic",
+  "playerside": [
+    "left",
+    "right"
+  ],
+  "bots": "false",
+  "botsSide": [
+    "top"
+  ]
+}

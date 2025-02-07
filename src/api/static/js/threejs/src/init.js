@@ -5,9 +5,14 @@ import LightManager from './modelLoading/light_manage.js';
 import ControlHandler from './control.js';
 import Pong from './pongLogic/pong.js';
 import Score from './pongLogic/score.js';
-import { initPowerUp } from './powerUp/powerUp.js';
-
+import { initPowerUp, AllPowerUp } from './powerUp/AllPowerUp.js';
+import { MapStyle, get_settings, Setting } from "./pongLogic/setting.js";
 const assetsPath = "http://localhost:8000/static/glfw/";
+
+
+import { loadClassicMap, loadBathMap, loadCircleMap, loadRectangleMap } from "./init/loadMap.js";
+import { spawnPadles } from './init/loadPadle.js';
+
 
 
 // src/init/loadingScreen.js
@@ -39,6 +44,7 @@ export function hideLoadingScreen() {
 
 export default class Init {
   constructor() {
+    this.doneLoadingAssets = false;
     this.assetsLoaded = 0;
     this.totalAssets = 4;
     this.gameScene = new GameScene();
@@ -47,37 +53,57 @@ export default class Init {
     this.pongLogic = new Pong();
     this.pongLogic.initialize();
     this.score = new Score(this.gameScene.getScene());
+    this.allPower = new AllPowerUp();
+    this.settings;
   }
 
   loadAssets(callback) {
     initPowerUp(assetsPath, this.gameScene);
+    switch (this.settings.mapStyle) {
+      case MapStyle.CLASSIC:
+        loadClassicMap(assetsPath, callback, this);
+        break;
+      case MapStyle.BATH:
+        loadBathMap(assetsPath, callback, this);
+        break;
+      case MapStyle.CIRCLE:
+        loadCircleMap(assetsPath, callback, this);
+        break;
+      case MapStyle.RECTANGLE:
+        loadRectangleMap(assetsPath, callback, this);
+        break;
+      default:
+        console.error(`Unknown map style: ${MapStyle}`);
+        break;
+    }
 
-    this.gameScene.loadModel('Floor', `${assetsPath}Floor.glb`, (model) => {
-      console.log('Floor model loaded.');
-      this.gameScene.moveAsset('Floor', { x: 0, y: 0, z: -3 });
-      this.gameScene.rotateAsset('Floor', 'x', Math.PI / 2);
-      this.gameScene.rotateAsset('Floor', 'y', Math.PI / 2);
-      this.assetsLoaded++;
-      this.checkAllAssetsLoaded(callback);
-    });
+    spawnPadles(this.settings, this)
+    // this.gameScene.loadModel('Floor', `${assetsPath}Floor.glb`, (model) => {
+    //   console.log('Floor model loaded.');
+    //   this.gameScene.moveAsset('Floor', { x: 0, y: 0, z: -3 });
+    //   this.gameScene.rotateAsset('Floor', 'x', Math.PI / 2);
+    //   this.gameScene.rotateAsset('Floor', 'y', Math.PI / 2);
+    //   this.assetsLoaded++;
+    //   this.checkAllAssetsLoaded(callback);
+    // });
 
-    this.gameScene.loadModel('Padle1', `${assetsPath}padle.glb`, (model) => {
-      console.log('Paddle1 model loaded.');
-      this.gameScene.moveAsset('Padle1', { x: -40, y: 0, z: 0 });
-      this.gameScene.rotateAsset('Padle1', 'x', Math.PI / 2);
-      this.gameScene.rotateAsset('Padle1', 'y', Math.PI / 2);
-      this.assetsLoaded++;
-      this.checkAllAssetsLoaded(callback);
-    });
-
-    this.gameScene.loadModel('Padle2', `${assetsPath}padle.glb`, (model) => {
-      console.log('Paddle2 model loaded.');
-      this.gameScene.moveAsset('Padle2', { x: 40, y: 0, z: 0 });
-      this.gameScene.rotateAsset('Padle2', 'x', Math.PI / 2);
-      this.gameScene.rotateAsset('Padle2', 'y', Math.PI / 2);
-      this.assetsLoaded++;
-      this.checkAllAssetsLoaded(callback);
-    });
+    // this.gameScene.loadModel('Padle1', `${assetsPath}padle.glb`, (model) => {
+    //   console.log('Paddle1 model loaded.');
+    //   this.gameScene.moveAsset('Padle1', { x: -40, y: 0, z: 0 });
+    //   this.gameScene.rotateAsset('Padle1', 'x', Math.PI / 2);
+    //   this.gameScene.rotateAsset('Padle1', 'y', Math.PI / 2);
+    //   this.assetsLoaded++;
+    //   this.checkAllAssetsLoaded(callback);
+    // });
+    //
+    // this.gameScene.loadModel('Padle2', `${assetsPath}padle.glb`, (model) => {
+    //   console.log('Paddle2 model loaded.');
+    //   this.gameScene.moveAsset('Padle2', { x: 40, y: 0, z: 0 });
+    //   this.gameScene.rotateAsset('Padle2', 'x', Math.PI / 2);
+    //   this.gameScene.rotateAsset('Padle2', 'y', Math.PI / 2);
+    //   this.assetsLoaded++;
+    //   this.checkAllAssetsLoaded(callback);
+    // });
 
     this.gameScene.loadModel('Ball', `${assetsPath}Ball.glb`, (model) => {
       console.log('Ball model loaded.');
@@ -89,16 +115,40 @@ export default class Init {
     });
   }
 
+  countAssetToLoad() {
+    if (this.settings.playercount === 2) {
+      this.totalassets = 2 + 2;
+    } else if (this.settings.playercount === 4) {
+      this.totalassets = 4 + 2;
+    } else {
+      delete this.settings;
+      console.error("player cound was not 2 or 4");
+      this.settings = new this.settings();
+      this.countAssetToLoad();
+      return;
+    }
+  }
+
   checkAllAssetsLoaded(callback) {
+    console.log(this.assetsLoaded + "= loaded and total =" + this.totalAssets);
     if (this.assetsLoaded === this.totalAssets) {
       hideLoadingScreen();
       callback();
     }
   }
 
-  initialize() {
+  async initialize() {
     showLoadingScreen();
+    try {
+      const json_settings = await get_settings(0);
+      console.log(json_settings); // Log the fetched settings
+      this.settings = new Setting(json_settings);
+    } catch {
+      console.error('Error: An error occurred. Please try again.', error);
+      this.settings = new Setting();
+    }
     this.loadAssets(() => {
+      this.doneLoadingAssets = true;
       // Initialize lights, controls, and start the game loop
       this.lightManager.setupLights();
       this.controlHandler.setupControls();

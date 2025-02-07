@@ -1,10 +1,10 @@
 {
-  "mode": "networked" | "local" | "localSolo",
-  "serverUrl": "http://localhost:8000/api/",
-  "powerUp" : "true" | "false"
-    "powerUpList" : "star" | "Snail" | "SpeedUp" | "Glow" | "magnette
-  "playerCount" : "2" | "4"0
-    "map Style" : Clasic | bath | circle | rectengle
+  "mode": "networked" | "local" | "localsolo",
+  "serverurl": "http://localhost:8000/api/",
+  "powerup" : "true" | "false"
+    "poweruplist" : "star" | "snail" | "speedup" | "glow" | "magnette
+  "playercount" : "2" | "4"0
+    "map style" : clasic | bath | circle | rectengle
 
-    "playerSide": "left" | "right" | "top" | "bottom"
+    "playerside": "left" | "right" | "top" | "bottom"
 }

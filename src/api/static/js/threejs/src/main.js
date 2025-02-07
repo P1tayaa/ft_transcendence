@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const controlHandler = init.controlHandler;
   const pongLogic = init.pongLogic;
   const score = init.score;
+  const allPowers = init.allPower;
 
   const canvas = document.getElementById('pong-game');
   if (!canvas) {
@@ -31,11 +32,16 @@ document.addEventListener('DOMContentLoaded', () => {
   let Paddle1Win = 0;
   let Ball_Reset = false;
 
+  allPowers.activatePowerUp('Star')
+
   function animate() {
-    if (init.assetsLoaded !== init.totalAssets) {
+    if (init.doneLoadingAssets === false) {
       // Assets are still loading; skip rendering
       return;
     }
+
+    allPowers.update(gameScene);
+
 
     const { left, right } = controlHandler.getPaddleSpeeds();
 

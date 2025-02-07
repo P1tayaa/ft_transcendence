@@ -2,7 +2,7 @@
   "repository": "#",
   "scripts": {
     "build": "webpack --config ./webpack.config.js",
-    "dev": "webpack serve --config ./bundler/webpack.dev.js"
+    "dev": "webpack serve --mode development"
   },
   "dependencies": {
     "@babel/core": "^7.14.6",
@@ -23,7 +23,9 @@
     "three": "^0.172.0",
     "webpack": "^5.41.1",
     "webpack-cli": "^4.7.2",
-    "webpack-dev-server": "^5.2.0",
     "webpack-merge": "^5.8.0"
+  },
+  "devDependencies": {
+    "webpack-dev-server": "^5.2.0"
   }
 }
