@@ -18,7 +18,7 @@ function posSpawn(map, position) {
       distanceToCenter = 40;
       break;
     default:
-      console.error(`Unknown map style: ${MapStyle}`);
+      console.error(`Unknown map style: ${map}`);
       break;
   }
 
@@ -45,8 +45,32 @@ function posSpawn(map, position) {
   return (positionSpawn)
 }
 
+export function getRightSpeed(position, speed) {
+  let vector_speed;
+  switch (position) {
+    case PlayerSide.LEFT:
+      vector_speed = { x: 0, y: speed, z: 0 };
+      break;
+    case PlayerSide.RIGHT:
+      vector_speed = { x: 0, y: -speed, z: 0 };
+      break;
+    case PlayerSide.TOP:
+      vector_speed = { x: -speed, y: 0, z: 0 };
+      break;
+    case PlayerSide.BOTTOM:
+      vector_speed = { x: speed, y: 0, z: 0 };
+      break;
+    default:
+      console.error(`Unknown plauer side: ${position}`)
+      break;
+  }
+  return vector_speed;
+}
 
-export function Padle(init, name, assetsPath, map) {
+
+
+
+export function Padle(init, name, assetsPath, map, callback) {
 
   init.gameScene.loadModel(name, `${assetsPath}padle.glb`, (model) => {
     console.log('Paddle1 model loaded.');
@@ -61,14 +85,14 @@ export function Padle(init, name, assetsPath, map) {
 
 
 
-export function spawnPadles(settings, init, assetsPath) {
+export function spawnPadles(settings, init, assetsPath, callback) {
   if (settings.bots) {
     for (let i = 0; i < settings.botsSide.length; i++) {
-      Padle(init, settings.botsSide[i], assetsPath, settings.MapStyle)
+      Padle(init, settings.botsSide[i], assetsPath, settings.mapStyle, callback)
     }
   }
   for (let i = 0; i < settings.playerSide.length; i++) {
-    Padle(init, settings.playerSide[i], assetsPath, settings.MapStyle)
+    Padle(init, settings.playerSide[i], assetsPath, settings.mapStyle, callback)
   }
 }
 

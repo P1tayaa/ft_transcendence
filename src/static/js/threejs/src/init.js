@@ -48,11 +48,10 @@ export default class Init {
     this.assetsLoaded = 0;
     this.totalAssets = 4;
     this.gameScene = new GameScene();
-    this.lightManager = new LightManager(this.gameScene.getScene());
-    this.controlHandler = new ControlHandler();
+    this.lightManager;
+    this.controlHandler;
     this.pongLogic = new Pong();
-    this.pongLogic.initialize();
-    this.score = new Score(this.gameScene.getScene());
+    this.score;
     this.allPower = new AllPowerUp();
     this.settings;
   }
@@ -73,37 +72,12 @@ export default class Init {
         loadRectangleMap(assetsPath, callback, this);
         break;
       default:
-        console.error(`Unknown map style: ${MapStyle}`);
+        console.error(`Unknown map style: map`);
         break;
     }
 
-    spawnPadles(this.settings, this)
-    // this.gameScene.loadModel('Floor', `${assetsPath}Floor.glb`, (model) => {
-    //   console.log('Floor model loaded.');
-    //   this.gameScene.moveAsset('Floor', { x: 0, y: 0, z: -3 });
-    //   this.gameScene.rotateAsset('Floor', 'x', Math.PI / 2);
-    //   this.gameScene.rotateAsset('Floor', 'y', Math.PI / 2);
-    //   this.assetsLoaded++;
-    //   this.checkAllAssetsLoaded(callback);
-    // });
+    spawnPadles(this.settings, this, assetsPath, callback)
 
-    // this.gameScene.loadModel('Padle1', `${assetsPath}padle.glb`, (model) => {
-    //   console.log('Paddle1 model loaded.');
-    //   this.gameScene.moveAsset('Padle1', { x: -40, y: 0, z: 0 });
-    //   this.gameScene.rotateAsset('Padle1', 'x', Math.PI / 2);
-    //   this.gameScene.rotateAsset('Padle1', 'y', Math.PI / 2);
-    //   this.assetsLoaded++;
-    //   this.checkAllAssetsLoaded(callback);
-    // });
-    //
-    // this.gameScene.loadModel('Padle2', `${assetsPath}padle.glb`, (model) => {
-    //   console.log('Paddle2 model loaded.');
-    //   this.gameScene.moveAsset('Padle2', { x: 40, y: 0, z: 0 });
-    //   this.gameScene.rotateAsset('Padle2', 'x', Math.PI / 2);
-    //   this.gameScene.rotateAsset('Padle2', 'y', Math.PI / 2);
-    //   this.assetsLoaded++;
-    //   this.checkAllAssetsLoaded(callback);
-    // });
 
     this.gameScene.loadModel('Ball', `${assetsPath}Ball.glb`, (model) => {
       console.log('Ball model loaded.');
@@ -147,11 +121,14 @@ export default class Init {
       console.error('Error: An error occurred. Please try again.', error);
       this.settings = new Setting();
     }
+    this.pongLogic.initialize(this.settings);
+    this.controlHandler = new ControlHandler(this.settings);
+    this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
+    this.score = new Score(this.gameScene.getScene(), this.settings.playerSide);
     this.loadAssets(() => {
       this.doneLoadingAssets = true;
       // Initialize lights, controls, and start the game loop
       this.lightManager.setupLights();
-      this.controlHandler.setupControls();
       // You can trigger other initializations here
     });
   }

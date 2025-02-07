@@ -1,102 +1,81 @@
 
+
 import * as THREE from 'three';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
+import { PlayerSide } from '../pongLogic/setting.js'
 
 class Score {
-  constructor(scene) {
+  constructor(scene, playerSides) {
     this.scene = scene;
-    this.player1Score = 0;
-    this.player2Score = 0;
-
+    this.playerSides = playerSides;
+    this.scores = {}; // Stores scores dynamically
+    this.scoreMeshes = {}; // Stores score meshes dynamically
     this.fontLoader = new FontLoader();
-
-    // Text materials
     this.textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-
-    // Placeholder for score meshes
-    this.player1ScoreMesh = null;
-    this.player2ScoreMesh = null;
 
     // Load font and initialize score display
     this.fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
       this.font = font;
-      this.createScoreDisplay();
+      this.initializeScores();
     });
   }
 
-  // Create initial score display
-  createScoreDisplay() {
-    const player1ScoreGeometry = new TextGeometry(this.player1Score.toString(), {
+  // Initialize scores for active players
+  initializeScores() {
+    this.playerSides.forEach(side => {
+      this.scores[side] = 0; // Initialize score
+      this.scoreMeshes[side] = this.createScoreMesh(side);
+      this.scene.add(this.scoreMeshes[side]);
+    });
+  }
+
+  // Create a score mesh
+  createScoreMesh(side) {
+    const geometry = new TextGeometry(this.scores[side].toString(), {
       font: this.font,
       size: 2,
       height: 0.1,
     });
 
-    const player2ScoreGeometry = new TextGeometry(this.player2Score.toString(), {
-      font: this.font,
-      size: 2,
-      height: 0.1,
-    });
-
-    this.player1ScoreMesh = new THREE.Mesh(player1ScoreGeometry, this.textMaterial);
-    this.player2ScoreMesh = new THREE.Mesh(player2ScoreGeometry, this.textMaterial);
-
-    // Position the scores
-    this.player1ScoreMesh.position.set(-15, 25, 0); // Top-left
-    this.player2ScoreMesh.position.set(15, 25, 0);  // Top-right
-
-    this.scene.add(this.player1ScoreMesh);
-    this.scene.add(this.player2ScoreMesh);
+    const mesh = new THREE.Mesh(geometry, this.textMaterial);
+    mesh.position.copy(this.getScorePosition(side)); // Set position dynamically
+    return mesh;
   }
 
-  // Update score display
-  updateScoreDisplay() {
-    // Remove old meshes
-    this.scene.remove(this.player1ScoreMesh);
-    this.scene.remove(this.player2ScoreMesh);
-
-    // Create new score geometries
-    const player1ScoreGeometry = new TextGeometry(this.player1Score.toString(), {
-      font: this.font,
-      size: 2,
-      height: 0.1,
-    });
-
-    const player2ScoreGeometry = new TextGeometry(this.player2Score.toString(), {
-      font: this.font,
-      size: 2,
-      height: 0.1,
-    });
-
-    // Update score meshes
-    this.player1ScoreMesh = new THREE.Mesh(player1ScoreGeometry, this.textMaterial);
-    this.player2ScoreMesh = new THREE.Mesh(player2ScoreGeometry, this.textMaterial);
-
-    // Reposition the updated scores
-    this.player1ScoreMesh.position.set(-15, 25, 0);
-    this.player2ScoreMesh.position.set(15, 25, 0);
-
-    this.scene.add(this.player1ScoreMesh);
-    this.scene.add(this.player2ScoreMesh);
+  // Get score position based on the player's side
+  getScorePosition(side) {
+    const positions = {
+      [PlayerSide.LEFT]: new THREE.Vector3(-15, 25, 0),
+      [PlayerSide.RIGHT]: new THREE.Vector3(15, 25, 0),
+      [PlayerSide.TOP]: new THREE.Vector3(0, 30, 0),
+      [PlayerSide.BOTTOM]: new THREE.Vector3(0, -30, 0),
+    };
+    return positions[side] || new THREE.Vector3(0, 0, 0);
   }
 
-  // Increment player scores
-  incrementPlayer1Score() {
-    this.player1Score += 1;
-    this.updateScoreDisplay();
+  // Update a player's score display
+  updateScoreDisplay(side) {
+    this.scene.remove(this.scoreMeshes[side]); // Remove old mesh
+
+    this.scoreMeshes[side] = this.createScoreMesh(side);
+    this.scene.add(this.scoreMeshes[side]);
   }
 
-  incrementPlayer2Score() {
-    this.player2Score += 1;
-    this.updateScoreDisplay();
+  // Increment a player's score
+  incrementScore(side) {
+    if (this.scores[side] !== undefined) {
+      this.scores[side] += 1;
+      this.updateScoreDisplay(side);
+    }
   }
 
-  // Reset scores
+  // Reset all scores
   resetScores() {
-    this.player1Score = 0;
-    this.player2Score = 0;
-    this.updateScoreDisplay();
+    Object.keys(this.scores).forEach(side => {
+      this.scores[side] = 0;
+      this.updateScoreDisplay(side);
+    });
   }
 }
 

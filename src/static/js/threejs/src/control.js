@@ -1,12 +1,27 @@
 
-// src/controllers/ControlHandler.js
+
+import { PlayerSide } from "./pongLogic/setting.js";
+
+const inputKeys = {
+  [PlayerSide.LEFT]: { up: 'w', down: 's' },
+  [PlayerSide.RIGHT]: { up: 'k', down: 'i' },
+  [PlayerSide.TOP]: { up: 'x', down: 'c' },
+  [PlayerSide.BOTTOM]: { up: 'n', down: 'm' },
+};
+
 export default class ControlHandler {
-  constructor() {
-    this.leftPaddleSpeed = 0;
-    this.rightPaddleSpeed = 0;
+  constructor(settings) {
+    this.settings = settings; // Get player sides from settings
+    this.paddleSpeeds = {}; // Store paddle speeds dynamically
+    this.acceleration = 0.2; // Default acceleration
     this.debug = false;
-    this.padleLeftAcceleration = 0.2;
-    this.padleRightAcceleration = 0.2;
+
+    // Initialize paddle speeds for active players
+    this.settings.playerSide.forEach(side => {
+      this.paddleSpeeds[side] = 0;
+    });
+
+    this.setupControls();
   }
 
   setupControls() {
@@ -15,53 +30,37 @@ export default class ControlHandler {
   }
 
   onKeyDown(event) {
-    switch (event.key) {
-      case 'w':
-        this.leftPaddleSpeed = this.padleLeftAcceleration;
-        break;
-      case 's':
-        this.leftPaddleSpeed = -this.padleLeftAcceleration;
-        break;
-      case 'i':
-        this.rightPaddleSpeed = this.padleRightAcceleration;
-        break;
-      case 'k':
-        this.rightPaddleSpeed = -this.padleRightAcceleration;
-        break;
-      case 'b':
-        this.debug = true;
-        break;
-      default:
-        break;
+    this.settings.playerSide.forEach(side => {
+      if (event.key === inputKeys[side].up) {
+        this.paddleSpeeds[side] = this.acceleration;
+      } else if (event.key === inputKeys[side].down) {
+        this.paddleSpeeds[side] = -this.acceleration;
+      }
+    });
+
+    if (event.key === 'b') {
+      this.debug = true;
     }
   }
 
   onKeyUp(event) {
-    switch (event.key) {
-      case 'w':
-      case 's':
-        this.leftPaddleSpeed = 0;
-        break;
-      case 'i':
-      case 'k':
-        this.rightPaddleSpeed = 0;
-        break;
-      case 'b':
-        this.debug = false;
-        break;
-      default:
-        break;
+    this.settings.playerSide.forEach(side => {
+      if (event.key === inputKeys[side].up || event.key === inputKeys[side].down) {
+        this.paddleSpeeds[side] = 0;
+      }
+    });
+
+    if (event.key === 'b') {
+      this.debug = false;
     }
   }
 
   getPaddleSpeeds() {
-    return {
-      left: this.leftPaddleSpeed,
-      right: this.rightPaddleSpeed,
-    };
+    return this.paddleSpeeds;
   }
 
   isDebugEnabled() {
     return this.debug;
   }
 }
+

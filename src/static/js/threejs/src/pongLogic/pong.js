@@ -1,13 +1,17 @@
 
 // src/pongLogic/pong.js
-import * as THREE from 'three';
+
+
+import { PlayerSide, Mode, MapStyle, get_settings, Setting } from "./setting.js";
+import { getRightSpeed } from "../init/loadPadle.js"
+
+
 
 class Pong {
   constructor() {
     // Game properties
     this.ballSpeed = { x: 0.5, y: 0 };
-    this.paddle1Size = { x: 1, y: 8 };
-    this.paddle2Size = { x: 1, y: 8 };
+    this.paddleSize;
     this.ballSize = { x: 1, y: 1 };
     this.playArea = { width: 100, height: 60 };
     this.ySpeedCap = 50;
@@ -16,55 +20,46 @@ class Pong {
     this.paddle_collided = false;
     this.multiSidePush = 0.2;
 
-    // Settings and mode
-    this.setterUrlPath = "api/static/js/threejs/settings/test.json"; // Ensure correct path
-    this.settings = null;
-    this.mode = 'local';
-    this.serverUrl = '';
-    this.playerSide = 'left';
+    this.settings;
+    this.mode = Mode.LOCAL;
+    this.playerSide = PlayerSide.LEFT;
 
     // WebSocket
     this.socket = null;
   }
 
-  async initialize() {
-    try {
-      await this.loadSettings();
-      if (this.settings.mode === 'networked') {
-        this.mode = 'networked';
-        this.serverUrl = this.settings.serverUrl;
-        this.playerSide = this.settings.playerSide;
-
-        if (!this.serverUrl || !['left', 'right'].includes(this.playerSide)) {
-          throw new Error('Invalid settings for networked mode.');
-        }
-
-        this.startWebSocket();
-      }
-      console.log(`Pong initialized in ${this.mode} mode.`);
-    } catch (error) {
-      console.error('Failed to initialize Pong:', error);
-      this.mode = 'local';
+  async initialize(settings) {
+    this.settings = settings;
+    if (this.settings.mode === Mode.NETWORKED) {
+      this.mode = Mode.NETWORKED;
+      this.playerSide = this.settings.playerSide;
+      this.startWebSocket();
     }
+    this.paddleSize = {};
+    this.settings.playerSide.forEach(side => {
+      this.paddleSize[side] = { x: 1, y: 8 };
+    });
+
+
+    console.log(`Pong initialized in ${this.mode} mode.`);
   }
 
-  async loadSettings() {
-    const response = await fetch(this.setterUrlPath);
-    if (!response.ok) {
-      throw new Error('Failed to load settings.json');
-    }
-    this.settings = await response.json();
-  }
 
   startWebSocket() {
-    const wsUrl = `ws://${window.location.host}/ws/socket-server/`;
-    this.socket = new WebSocket(wsUrl);
+    const roomName = "test";
+    const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsPath = isSpectator ? 'spectate' : 'room';
+    this.socket = new WebSocket(
+      `${wsScheme}//${window.location.host}/ws/${wsPath}/${roomName}/`
+    );
 
     this.socket.onopen = () => {
       console.log('WebSocket connection established.');
       // Optionally send initial data if needed
     };
 
+
+    // TODO: need to improve this
     this.socket.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data);
@@ -87,6 +82,16 @@ class Pong {
       console.log('WebSocket connection closed.');
     };
   }
+
+
+
+
+
+
+
+
+
+
 
   sendPaddlePosition() {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
@@ -121,38 +126,39 @@ class Pong {
     );
   }
 
-  checkCollisions(ballPosition3D, paddle1Position3D, paddle2Position3D) {
+  checkCollisions(ballPosition3D, gameScene) {
     if (this.mode === 'local') {
-      this.localCollisionDetection(ballPosition3D, paddle1Position3D, paddle2Position3D);
+      this.localCollisionDetection(ballPosition3D, gameScene);
     } else if (this.mode === 'networked') {
       this.networkedCollisionDetection();
     }
   }
 
-  localCollisionDetection(ballPosition3D, paddle1Position3D, paddle2Position3D) {
+
+  localCollisionDetection(ballPosition3D, gameScene) {
     const ballPosition = { x: ballPosition3D.x, y: ballPosition3D.y };
-    const paddle1Position = { x: paddle1Position3D.x, y: paddle1Position3D.y };
-    const paddle2Position = { x: paddle2Position3D.x, y: paddle2Position3D.y };
+
+    // Get active paddles from game settings
+    const activePaddles = this.settings.playerSide.map(side => ({
+      side,
+      position: gameScene.getAssetPossition(side),
+      size: this.paddleSize[side],
+    }));
+
     const ballBox = this.createBoundingBox(ballPosition, this.ballSize);
-    const paddle1Box = this.createBoundingBox(paddle1Position, this.paddle1Size);
-    const paddle2Box = this.createBoundingBox(paddle2Position, this.paddle2Size);
     this.paddle_collided = false;
     this.reset_ball = false;
 
-    if (this.intersectsBox(ballBox, paddle1Box)) {
-      this.ballSpeed.x = Math.abs(this.ballSpeed.x);
-      this.ballSpeed.y += (ballPosition.y - paddle1Position.y) * this.multiSidePush;
-      this.paddle_collided = true;
-      console.log('Collision with left paddle.');
-    }
+    // Check for paddle collisions
+    activePaddles.forEach(({ side, position, size }) => {
+      const paddleBox = this.createBoundingBox(position, size);
 
-    if (this.intersectsBox(ballBox, paddle2Box)) {
-      this.ballSpeed.x = -Math.abs(this.ballSpeed.x);
-      this.ballSpeed.y += (ballPosition.y - paddle2Position.y) * this.multiSidePush;
-      this.paddle_collided = true;
-      console.log('Collision with right paddle.');
-    }
+      if (this.intersectsBox(ballBox, paddleBox)) {
+        this.handlePaddleCollision(side, ballPosition, position);
+      }
+    });
 
+    // Check for wall collisions (top & bottom bounds)
     if (
       ballPosition.y + this.ballSize.y / 2 >= this.playArea.height / 2 ||
       ballPosition.y - this.ballSize.y / 2 <= -this.playArea.height / 2
@@ -161,64 +167,62 @@ class Pong {
       console.log('Collision with wall.');
     }
 
-    if (Math.abs(ballPosition.x) >= this.playArea.width / 2) {
+    // Check if ball is out of bounds (left & right bounds)
+    if (Math.abs(ballPosition.x) >= this.playArea.width / 2 ||
+      Math.abs(ballPosition.y) >= this.playArea.height / 2) {
       console.log("Ball out of bounds. Resetting ball.");
-      this.reset_ball = true;
-      this.last_winner = ballPosition.x > 0 ? 1 : 2;
-      this.ballSpeed = { x: 0.5, y: 0 };
+      this.handleBallOutOfBounds(ballPosition);
     }
 
+    // Cap the Y speed
     if (Math.abs(this.ballSpeed.y) > this.ySpeedCap) {
       this.ballSpeed.y = this.ballSpeed.y < 0 ? -this.ySpeedCap : this.ySpeedCap;
     }
   }
 
-  networkedCollisionDetection() {
-    if (!this.serverBallPosition || !this.serverPaddle1Position || !this.serverPaddle2Position) {
-      return;
+
+  handlePaddleCollision(side, ballPosition, paddlePosition) {
+    this.paddle_collided = true;
+    if (this.last_winner !== 0) {
+      this.last_winner = 0;
     }
 
-    const ballPosition = { x: this.serverBallPosition.x, y: this.serverBallPosition.y };
-    const paddle1Position = { x: this.serverPaddle1Position.x, y: this.serverPaddle1Position.y };
-    const paddle2Position = { x: this.serverPaddle2Position.x, y: this.serverPaddle2Position.y };
-    const ballBox = this.createBoundingBox(ballPosition, this.ballSize);
-    const paddle1Box = this.createBoundingBox(paddle1Position, this.paddle1Size);
-    const paddle2Box = this.createBoundingBox(paddle2Position, this.paddle2Size);
-    this.paddle_collided = false;
-    this.reset_ball = false;
-
-    if (this.intersectsBox(ballBox, paddle1Box)) {
-      this.ballSpeed.x = Math.abs(this.ballSpeed.x);
-      this.ballSpeed.y += (ballPosition.y - paddle1Position.y) * this.multiSidePush;
-      this.paddle_collided = true;
-      console.log('Networked collision with left paddle.');
+    if (side === PlayerSide.LEFT) {
+      this.ballSpeed.x = Math.abs(this.ballSpeed.x); // Ensure ball moves right
+      this.ballSpeed.y = (ballPosition.y - paddlePosition.y) * this.multiSidePush;
     }
-
-    if (this.intersectsBox(ballBox, paddle2Box)) {
-      this.ballSpeed.x = -Math.abs(this.ballSpeed.x);
-      this.ballSpeed.y += (ballPosition.y - paddle2Position.y) * this.multiSidePush;
-      this.paddle_collided = true;
-      console.log('Networked collision with right paddle.');
+    else if (side === PlayerSide.RIGHT) {
+      this.ballSpeed.x = -Math.abs(this.ballSpeed.x); // Ensure ball moves left
+      this.ballSpeed.y += (ballPosition.y - paddlePosition.y) * this.multiSidePush;
     }
-
-    if (
-      ballPosition.y + this.ballSize.y / 2 >= this.playArea.height / 2 ||
-      ballPosition.y - this.ballSize.y / 2 <= -this.playArea.height / 2
-    ) {
-      this.ballSpeed.y = -this.ballSpeed.y;
-      console.log('Networked collision with wall.');
+    else if (side === PlayerSide.TOP) {
+      this.ballSpeed.y = Math.abs(this.ballSpeed.y); // Ensure ball moves downward
+      this.ballSpeed.x += (ballPosition.x - paddlePosition.x) * this.multiSidePush;
     }
+    else if (side === PlayerSide.BOTTOM) {
+      this.ballSpeed.y = -Math.abs(this.ballSpeed.y); // Ensure ball moves upward
+      this.ballSpeed.x += (ballPosition.x - paddlePosition.x) * this.multiSidePush;
+    }
+    else {
+      console.warn("Unknown paddle side:", side);
+    }
+    console.log(`Collision with ${side} paddle.`);
+  }
+
+
+  handleBallOutOfBounds(ballPosition) {
+    this.reset_ball = true;
 
     if (Math.abs(ballPosition.x) >= this.playArea.width / 2) {
-      console.log("Ball out of bounds. Resetting ball.");
-      this.reset_ball = true;
-      this.last_winner = ballPosition.x > 0 ? 1 : 2;
-      this.ballSpeed = { x: 0.5, y: 0 };
+      this.last_winner = ballPosition.x > 0 ? 1 : 2; // Left or Right wins
+    } else {
+      this.last_winner = ballPosition.y > 0 ? 3 : 4; // Top or Bottom wins
     }
 
-    if (Math.abs(this.ballSpeed.y) > this.ySpeedCap) {
-      this.ballSpeed.y = this.ballSpeed.y < 0 ? -this.ySpeedCap : this.ySpeedCap;
-    }
+    this.ballSpeed = { x: 0.5, y: 0 };
+  }
+
+  networkedCollisionDetection() {
   }
 
   moveBall() {
@@ -229,10 +233,30 @@ class Pong {
     // In networked mode, ball movement is handled by the server
   }
 
-  update() {
-    if (this.mode === 'networked') {
+  update(input, gameScene) {
+    if (this.mode === Mode.NETWORKED) {
       this.sendPaddlePosition();
+    } else if (this.mode === Mode.LOCAL) {
+      this.settings.playerSide.forEach(Padle => {
+        if (input[Padle] !== 0) {
+          gameScene.moveAssetBy(Padle, getRightSpeed(Padle, input[Padle]));
+        }
+      });
+      // Move Paddles
+      // gameScene.moveAssetBy(PlayerSide.RIGHT, { x: 0, y: left, z: 0 });
+      // gameScene.moveAssetBy(PlayerSide.LEFT, { x: 0, y: right, z: 0 });
+
+      // Get Positions
+      const BallPos = gameScene.getAssetPossition('Ball');
+      const Paddle1Pos = gameScene.getAssetPossition(PlayerSide.RIGHT);
+      const Paddle2Pos = gameScene.getAssetPossition(PlayerSide.LEFT);
+
+      // Check Collisions
+      this.checkCollisions(BallPos, gameScene);
+
     }
+
+
     // Additional update logic can be added here
   }
 

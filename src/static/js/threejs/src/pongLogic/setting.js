@@ -1,5 +1,5 @@
 
-const Mode = {
+export const Mode = {
   NETWORKED: "networked",
   LOCAL: "local",
   LOCALS_SOLO: "localsolo",
@@ -27,7 +27,16 @@ export const PlayerSide = {
   BOTTOM: "bottom",
 };
 
+export function intToPlayerSide(last_winner) {
+  const winnerSide =
+    last_winner === 1 ? PlayerSide.LEFT :
+      last_winner === 2 ? PlayerSide.RIGHT :
+        last_winner === 3 ? PlayerSide.TOP :
+          last_winner === 4 ? PlayerSide.BOTTOM :
+            null;
+  return winnerSide;
 
+}
 
 export function getCSRFToken() {
   return document.querySelector('[name=csrfmiddlewaretoken]')?.value ||

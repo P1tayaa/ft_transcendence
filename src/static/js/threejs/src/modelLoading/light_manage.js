@@ -1,84 +1,94 @@
 
+
 // src/lights/LightManager.js
 import * as THREE from 'three';
+import { intToPlayerSide } from '../pongLogic/setting.js'
 
-const blue = 0x0000ff;
-const green = 0x00ff00;
-const red = 0xff0000;
-const white = 0xffffff;
+const COLORS = {
+  blue: 0x0000ff,
+  green: 0x00ff00,
+  red: 0xff0000,
+  white: 0xffffff,
+};
+
+
+export function updateLightsForActivePlayers(lightManager, gameScene, playerSides, last_winner) {
+  const positions = { ball: gameScene.getAssetPossition('Ball') };
+  const colorChanges = { ball: false };
+
+  playerSides.forEach(side => {
+    positions[side] = gameScene.getAssetPossition(side);
+    colorChanges[side] = 0;
+  });
+  // Determine winner side
+  const winnerSide = intToPlayerSide(last_winner);
+  // Assign colors if there's a valid winner
+  if (winnerSide) {
+    colorChanges[winnerSide] = 1; // Winner glows green
+
+    playerSides
+      .filter(side => side !== winnerSide) // Get all non-winner sides
+      .forEach(side => colorChanges[side] = 2); // Set them to red
+  }
+  lightManager.updateLightPositions(positions, colorChanges);
+}
+
+
 
 export default class LightManager {
-  constructor(scene) {
+  constructor(scene, playerSides) {
     this.scene = scene;
-    this.lights = {
-      mainLight: null,
-      paddle1Light: null,
-      paddle2Light: null,
-    };
-    this.targets = {
-      ball: new THREE.Vector3(),
-      paddle1: new THREE.Vector3(),
-      paddle2: new THREE.Vector3(),
-    };
+    this.playerSides = playerSides; // Dynamically handle players
+    this.lights = {};
+    this.targets = {};
   }
 
   setupLights() {
-    // Main Light
-    this.lights.mainLight = new THREE.PointLight(0xffffff, 100, 10000);
-    this.lights.mainLight.position.set(0, 0, 0);
+    // Main Light for the ball
+    this.lights.mainLight = new THREE.PointLight(COLORS.white, 100, 10000);
+    this.lights.mainLight.position.set(0, 0, 10);
     this.scene.add(this.lights.mainLight);
+    this.targets.ball = new THREE.Vector3();
 
-    // Paddle1 Light
-    this.lights.paddle1Light = new THREE.PointLight(0xffffff, 100, 10000);
-    this.lights.paddle1Light.position.set(-40, 0, 5);
-    this.scene.add(this.lights.paddle1Light);
-
-    // Paddle2 Light
-    this.lights.paddle2Light = new THREE.PointLight(0xffffff, 100, 10000);
-    this.lights.paddle2Light.position.set(40, 0, 5);
-    this.scene.add(this.lights.paddle2Light);
+    // Create lights for each paddle dynamically
+    this.playerSides.forEach((side) => {
+      this.lights[side] = new THREE.PointLight(COLORS.white, 100, 10000);
+      this.lights[side].position.set(0, 0, 5); // Default position, will update dynamically
+      this.scene.add(this.lights[side]);
+      this.targets[side] = new THREE.Vector3();
+    });
   }
 
-  updateLightPositions(ballPos, paddle1Pos, paddle2Pos, ballColorChange, paddle1ColorChange, paddle2ColorChange) {
-    // Update positions with lerp for smooth movement
-    this.targets.ball.copy(ballPos).setZ(10);
-    this.lights.mainLight.position.lerp(this.targets.ball, 0.1);
-
-    this.targets.paddle1.copy(paddle1Pos).setZ(10);
-    this.lights.paddle1Light.position.lerp(this.targets.paddle1, 0.2);
-
-    this.targets.paddle2.copy(paddle2Pos).setZ(10);
-    this.lights.paddle2Light.position.lerp(this.targets.paddle2, 0.2);
-
-    // Update colors based on game state
-    this.lights.mainLight.color.set(ballColorChange ? blue : white);
-
-    switch (paddle1ColorChange) {
-      case 1:
-        this.lights.paddle1Light.intensity = 200;
-        this.lights.paddle1Light.color.set(green);
-        break;
-      case 2:
-        this.lights.paddle1Light.intensity = 200;
-        this.lights.paddle1Light.color.set(red);
-        break;
-      default:
-        this.lights.paddle1Light.intensity = 100;
-        this.lights.paddle1Light.color.set(white);
+  updateLightPositions(positions, colorChanges) {
+    // Update Ball Light
+    if (positions.ball) {
+      this.targets.ball.copy(positions.ball).setZ(10);
+      this.lights.mainLight.position.lerp(this.targets.ball, 0.1);
+      this.lights.mainLight.color.set(colorChanges.ball ? COLORS.blue : COLORS.white);
     }
 
-    switch (paddle2ColorChange) {
-      case 1:
-        this.lights.paddle2Light.intensity = 200;
-        this.lights.paddle2Light.color.set(green);
-        break;
-      case 2:
-        this.lights.paddle2Light.intensity = 200;
-        this.lights.paddle2Light.color.set(red);
-        break;
-      default:
-        this.lights.paddle2Light.intensity = 100;
-        this.lights.paddle2Light.color.set(white);
-    }
+    // Update Paddle Lights dynamically
+    this.playerSides.forEach((side) => {
+      if (positions[side]) {
+        this.targets[side].copy(positions[side]).setZ(10);
+        this.lights[side].position.lerp(this.targets[side], 0.2);
+
+        // Set color based on game events
+        switch (colorChanges[side]) {
+          case 1:
+            this.lights[side].intensity = 200;
+            this.lights[side].color.set(COLORS.green);
+            break;
+          case 2:
+            this.lights[side].intensity = 200;
+            this.lights[side].color.set(COLORS.red);
+            break;
+          default:
+            this.lights[side].intensity = 100;
+            this.lights[side].color.set(COLORS.white);
+        }
+      }
+    });
   }
 }
+
