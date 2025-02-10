@@ -147,4 +147,3 @@ class SpectatorConsumer(BaseConsumer):
 
     async def spectator_join(self, event):
         await self.send(text_data = json.dumps(event))
-        
