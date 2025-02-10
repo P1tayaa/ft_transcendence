@@ -11,13 +11,12 @@ class Pong {
   constructor() {
     // Game properties
     this.ballSpeed = { x: 0.5, y: 0 };
-    this.paddleSize;
     this.ballSize = { x: 1, y: 1 };
-    this.playArea = { width: 100, height: 60 };
+    this.playArea = { width: 100, depth: 60 };
     this.ySpeedCap = 50;
-    this.reset_ball = false;
-    this.last_winner = 0;
-    this.paddle_collided = false;
+    this.resetBall = false;
+    this.lastWinner = 0;
+    this.paddleCollided = false;
     this.multiSidePush = 0.2;
 
     this.settings;
@@ -26,6 +25,9 @@ class Pong {
 
     // WebSocket
     this.socket = null;
+
+    this.lastContact;
+    this.lastLoser;
   }
 
   async initialize(settings) {
@@ -35,11 +37,6 @@ class Pong {
       this.playerSide = this.settings.playerSide;
       this.startWebSocket();
     }
-    this.paddleSize = {};
-    this.settings.playerSide.forEach(side => {
-      this.paddleSize[side] = { x: 1, y: 8 };
-    });
-
 
     console.log(`Pong initialized in ${this.mode} mode.`);
   }
@@ -142,7 +139,7 @@ class Pong {
     const activePaddles = this.settings.playerSide.map(side => ({
       side,
       position: gameScene.getAssetPossition(side),
-      size: this.paddleSize[side],
+      size: this.settings.paddleSize[side],
     }));
 
     const ballBox = this.createBoundingBox(ballPosition, this.ballSize);
@@ -159,21 +156,18 @@ class Pong {
     });
 
     // Check for wall collisions (top & bottom bounds)
-    if (
-      ballPosition.y + this.ballSize.y / 2 >= this.playArea.height / 2 ||
-      ballPosition.y - this.ballSize.y / 2 <= -this.playArea.height / 2
-    ) {
-      this.ballSpeed.y = -this.ballSpeed.y;
-      console.log('Collision with wall.');
+    if (Math.abs(ballPosition.y) >= this.playArea.depth / 2) {
+      if (this.settings.playercount == 2) {
+        this.ballSpeed.y = -this.ballSpeed.y;
+      } else {
+        this.handleBallOutOfBounds(ballPosition);
+      }
     }
 
     // Check if ball is out of bounds (left & right bounds)
-    if (Math.abs(ballPosition.x) >= this.playArea.width / 2 ||
-      Math.abs(ballPosition.y) >= this.playArea.height / 2) {
-      console.log("Ball out of bounds. Resetting ball.");
+    if (Math.abs(ballPosition.x) >= this.playArea.width / 2) {
       this.handleBallOutOfBounds(ballPosition);
     }
-
     // Cap the Y speed
     if (Math.abs(this.ballSpeed.y) > this.ySpeedCap) {
       this.ballSpeed.y = this.ballSpeed.y < 0 ? -this.ySpeedCap : this.ySpeedCap;
@@ -183,25 +177,29 @@ class Pong {
 
   handlePaddleCollision(side, ballPosition, paddlePosition) {
     this.paddle_collided = true;
-    if (this.last_winner !== 0) {
-      this.last_winner = 0;
+    if (this.lastWinner !== 0) {
+      this.lastWinner = 0;
     }
 
     if (side === PlayerSide.LEFT) {
       this.ballSpeed.x = Math.abs(this.ballSpeed.x); // Ensure ball moves right
       this.ballSpeed.y = (ballPosition.y - paddlePosition.y) * this.multiSidePush;
+      this.lastContact = PlayerSide.LEFT;
     }
     else if (side === PlayerSide.RIGHT) {
       this.ballSpeed.x = -Math.abs(this.ballSpeed.x); // Ensure ball moves left
       this.ballSpeed.y += (ballPosition.y - paddlePosition.y) * this.multiSidePush;
+      this.lastContact = PlayerSide.RIGHT;
     }
     else if (side === PlayerSide.TOP) {
       this.ballSpeed.y = Math.abs(this.ballSpeed.y); // Ensure ball moves downward
       this.ballSpeed.x += (ballPosition.x - paddlePosition.x) * this.multiSidePush;
+      this.lastContact = PlayerSide.TOP;
     }
     else if (side === PlayerSide.BOTTOM) {
       this.ballSpeed.y = -Math.abs(this.ballSpeed.y); // Ensure ball moves upward
       this.ballSpeed.x += (ballPosition.x - paddlePosition.x) * this.multiSidePush;
+      this.lastContact = PlayerSide.BOTTOM;
     }
     else {
       console.warn("Unknown paddle side:", side);
@@ -211,13 +209,32 @@ class Pong {
 
 
   handleBallOutOfBounds(ballPosition) {
-    this.reset_ball = true;
+    this.resetBall = true;
+    if (this.settings.playercount == 2) {
 
-    if (Math.abs(ballPosition.x) >= this.playArea.width / 2) {
-      this.last_winner = ballPosition.x > 0 ? 1 : 2; // Left or Right wins
-    } else {
-      this.last_winner = ballPosition.y > 0 ? 3 : 4; // Top or Bottom wins
+      if (Math.abs(ballPosition.x) >= this.playArea.width / 2) {
+        this.lastWinner = ballPosition.x > 0 ? 1 : 2; // Left or Right wins
+      }
+    } else if (Math.abs(ballPosition.x) >= this.playArea.width / 2 || Math.abs(ballPosition.y) >= this.playArea.depth / 2) {
+      switch (this.lastContact) {
+        case PlayerSide.LEFT:
+          this.lastWinner = 1;
+          break;
+        case PlayerSide.RIGHT:
+          this.lastWinner = 2;
+          break;
+        case PlayerSide.BOTTOM:
+          this.lastWinner = 4;
+          break;
+        case PlayerSide.TOP:
+          this.lastWinner = 3;
+          break;
+        default:
+          console.error(`Unknown plauer side: ${this.lastContact}`)
+          break;
+      }
     }
+
 
     this.ballSpeed = { x: 0.5, y: 0 };
   }
@@ -239,7 +256,7 @@ class Pong {
     } else if (this.mode === Mode.LOCAL) {
       this.settings.playerSide.forEach(Padle => {
         if (input[Padle] !== 0) {
-          gameScene.moveAssetBy(Padle, getRightSpeed(Padle, input[Padle]));
+          gameScene.moveAssetBy(Padle, getRightSpeed(Padle, input[Padle], this.settings, this));
         }
       });
       // Move Paddles
@@ -248,8 +265,6 @@ class Pong {
 
       // Get Positions
       const BallPos = gameScene.getAssetPossition('Ball');
-      const Paddle1Pos = gameScene.getAssetPossition(PlayerSide.RIGHT);
-      const Paddle2Pos = gameScene.getAssetPossition(PlayerSide.LEFT);
 
       // Check Collisions
       this.checkCollisions(BallPos, gameScene);

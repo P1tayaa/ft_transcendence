@@ -45,7 +45,7 @@ export default class LightManager {
 
   setupLights() {
     // Main Light for the ball
-    this.lights.mainLight = new THREE.PointLight(COLORS.white, 100, 10000);
+    this.lights.mainLight = new THREE.PointLight(COLORS.white, 400, 10000);
     this.lights.mainLight.position.set(0, 0, 10);
     this.scene.add(this.lights.mainLight);
     this.targets.ball = new THREE.Vector3();

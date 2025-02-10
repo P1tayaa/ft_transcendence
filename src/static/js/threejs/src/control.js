@@ -6,7 +6,7 @@ const inputKeys = {
   [PlayerSide.LEFT]: { up: 'w', down: 's' },
   [PlayerSide.RIGHT]: { up: 'k', down: 'i' },
   [PlayerSide.TOP]: { up: 'x', down: 'c' },
-  [PlayerSide.BOTTOM]: { up: 'n', down: 'm' },
+  [PlayerSide.BOTTOM]: { up: 'm', down: 'n' },
 };
 
 export default class ControlHandler {

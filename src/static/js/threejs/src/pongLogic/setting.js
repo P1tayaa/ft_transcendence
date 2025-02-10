@@ -73,13 +73,26 @@ export class Setting {
     // Parse the JSON and fill in the settings
     this.mode = this.parseMode(setting_json.mode);
     this.serverurl = setting_json.serverurl || "http://localhost:8000/api/";
-    this.powerup = setting_json.powerup === "true"; // Convert to boolean
+    this.powerup = setting_json.powerup == "true"; // Convert to boolean
     this.powerupList = this.parsePoweruplist(setting_json.poweruplist);
     this.playercount = parseInt(setting_json.playercount) || 2; // Default to 2 players
     this.mapStyle = this.parseMapStyle(setting_json["map style"]);
     this.playerSide = this.parseMultipleSides(setting_json.playerside);
-    this.bots = setting_json.bots === "true"; // Convert to boolean
+    this.bots = setting_json.bots == "true"; // Convert to boolean
     this.botsSide = this.parseMultipleSides(setting_json.botsSide);
+
+
+    this.paddleSize = {};
+    this.paddleLoc = {};
+    this.playerSide.forEach(side => {
+      if (side === PlayerSide.RIGHT || side === PlayerSide.LEFT) {
+        this.paddleSize[side] = { x: 1, y: 8 };
+      } else {
+        this.paddleSize[side] = { x: 8, y: 1 };
+      }
+      this.paddleLoc[side] = 0;
+    });
+
   }
 
   // Helper function to parse 'mode' and return valid options
@@ -136,6 +149,6 @@ const settingsJson = {
   "botsSide": ["right"]
 };
 
-const gameSettings = new Setting(settingsJson);
-console.log(gameSettings);
+// const gameSettings = new Setting(settingsJson);
+// console.log(gameSettings);
 

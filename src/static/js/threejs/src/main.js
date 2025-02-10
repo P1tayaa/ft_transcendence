@@ -47,26 +47,27 @@ document.addEventListener('DOMContentLoaded', () => {
     let Paddle1Win = 0;
     let Ball_Reset = false;
 
-    if (pongLogic.paddle_collided) {
+    if (pongLogic.paddleCollided) {
       Paddle2Win = 0;
       Paddle1Win = 0;
       Ball_Reset = false;
     }
 
     // Handle Ball Reset
-    if (pongLogic.reset_ball) {
-      init.score.incrementScore(intToPlayerSide(pongLogic.last_winner));
+    if (pongLogic.resetBall) {
+      init.score.incrementScore(intToPlayerSide(pongLogic.lastWinner));
       Ball_Reset = true;
+      pongLogic.resetBall = false;
       gameScene.moveAsset('Ball', { x: 0, y: 0, z: 0 });
     }
 
     // Update Lights
-    updateLightsForActivePlayers(init.lightManager, gameScene, init.settings.playerSide, pongLogic.last_winner)
+    updateLightsForActivePlayers(init.lightManager, gameScene, init.settings.playerSide, pongLogic.lastWinner)
 
     // Move Ball
     const ballCurrentSpeed = { x: pongLogic.ballSpeed.x, y: pongLogic.ballSpeed.y, z: 0 };
     gameScene.moveAssetBy('Ball', ballCurrentSpeed);
-
+    // gameScene.update();
     // Debug Logging
     // if (controlHandler.isDebugEnabled()) {
     //   console.log(BallPos);

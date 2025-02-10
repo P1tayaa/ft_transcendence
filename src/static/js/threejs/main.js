@@ -60838,14 +60838,14 @@ const MapStyle = {
   CIRCLE: "circle",
   RECTANGLE: "rectangle"
 };
-const PlayerSide = {
+const setting_PlayerSide = {
   LEFT: "left",
   RIGHT: "right",
   TOP: "top",
   BOTTOM: "bottom"
 };
 function intToPlayerSide(last_winner) {
-  const winnerSide = last_winner === 1 ? PlayerSide.LEFT : last_winner === 2 ? PlayerSide.RIGHT : last_winner === 3 ? PlayerSide.TOP : last_winner === 4 ? PlayerSide.BOTTOM : null;
+  const winnerSide = last_winner === 1 ? setting_PlayerSide.LEFT : last_winner === 2 ? setting_PlayerSide.RIGHT : last_winner === 3 ? setting_PlayerSide.TOP : last_winner === 4 ? setting_PlayerSide.BOTTOM : null;
   return winnerSide;
 }
 function getCSRFToken() {
@@ -60878,13 +60878,29 @@ class Setting {
     // Parse the JSON and fill in the settings
     this.mode = this.parseMode(setting_json.mode);
     this.serverurl = setting_json.serverurl || "http://localhost:8000/api/";
-    this.powerup = setting_json.powerup === "true"; // Convert to boolean
+    this.powerup = setting_json.powerup == "true"; // Convert to boolean
     this.powerupList = this.parsePoweruplist(setting_json.poweruplist);
     this.playercount = parseInt(setting_json.playercount) || 2; // Default to 2 players
     this.mapStyle = this.parseMapStyle(setting_json["map style"]);
     this.playerSide = this.parseMultipleSides(setting_json.playerside);
-    this.bots = setting_json.bots === "true"; // Convert to boolean
+    this.bots = setting_json.bots == "true"; // Convert to boolean
     this.botsSide = this.parseMultipleSides(setting_json.botsSide);
+    this.paddleSize = {};
+    this.paddleLoc = {};
+    this.playerSide.forEach(side => {
+      if (side === setting_PlayerSide.RIGHT || side === setting_PlayerSide.LEFT) {
+        this.paddleSize[side] = {
+          x: 1,
+          y: 8
+        };
+      } else {
+        this.paddleSize[side] = {
+          x: 8,
+          y: 1
+        };
+      }
+      this.paddleLoc[side] = 0;
+    });
   }
 
   // Helper function to parse 'mode' and return valid options
@@ -60917,14 +60933,14 @@ class Setting {
   // Helper function to parse 'playerside' and allow multiple valid sides
   parseMultipleSides(sides) {
     if (Array.isArray(sides)) {
-      return sides.filter(side => Object.values(PlayerSide).includes(side));
+      return sides.filter(side => Object.values(setting_PlayerSide).includes(side));
     } else if (typeof sides === 'string') {
-      if (Object.values(PlayerSide).includes(sides)) {
+      if (Object.values(setting_PlayerSide).includes(sides)) {
         return [sides];
       }
     }
     console.error("Invalid player/bot side, defaulting to ['left']");
-    return [PlayerSide.LEFT]; // Default to left side if invalid
+    return [setting_PlayerSide.LEFT]; // Default to left side if invalid
   }
 }
 
@@ -60940,8 +60956,9 @@ const settingsJson = {
   "bots": "true",
   "botsSide": ["right"]
 };
-const gameSettings = new Setting(settingsJson);
-console.log(gameSettings);
+
+// const gameSettings = new Setting(settingsJson);
+// console.log(gameSettings);
 ;// ./src/modelLoading/light_manage.js
 // src/lights/LightManager.js
 
@@ -60983,7 +61000,7 @@ class LightManager {
   }
   setupLights() {
     // Main Light for the ball
-    this.lights.mainLight = new PointLight(COLORS.white, 100, 10000);
+    this.lights.mainLight = new PointLight(COLORS.white, 400, 10000);
     this.lights.mainLight.position.set(0, 0, 10);
     this.scene.add(this.lights.mainLight);
     this.targets.ball = new three_core_Vector3();
@@ -61031,21 +61048,21 @@ class LightManager {
 ;// ./src/control.js
 
 const inputKeys = {
-  [PlayerSide.LEFT]: {
+  [setting_PlayerSide.LEFT]: {
     up: 'w',
     down: 's'
   },
-  [PlayerSide.RIGHT]: {
+  [setting_PlayerSide.RIGHT]: {
     up: 'k',
     down: 'i'
   },
-  [PlayerSide.TOP]: {
+  [setting_PlayerSide.TOP]: {
     up: 'x',
     down: 'c'
   },
-  [PlayerSide.BOTTOM]: {
-    up: 'n',
-    down: 'm'
+  [setting_PlayerSide.BOTTOM]: {
+    up: 'm',
+    down: 'n'
   }
 };
 class ControlHandler {
@@ -61099,83 +61116,107 @@ class ControlHandler {
 function posSpawn(map, position) {
   let distanceToCenter;
   let positionSpawn;
+  let ration_map;
   switch (map) {
     case MapStyle.CLASSIC:
       distanceToCenter = 40;
+      ration_map = 0.6;
       break;
     case MapStyle.BATH:
       distanceToCenter = 40;
+      ration_map = 0.5;
       break;
     case MapStyle.CIRCLE:
       distanceToCenter = 40;
+      ration_map = 0.6;
       break;
     case MapStyle.RECTANGLE:
       distanceToCenter = 40;
+      ration_map = 0.6;
       break;
     default:
       console.error(`Unknown map style: ${map}`);
       break;
   }
   switch (position) {
-    case PlayerSide.LEFT:
+    case setting_PlayerSide.LEFT:
       positionSpawn = {
         x: -distanceToCenter,
         y: 0,
         z: 0
       };
       break;
-    case PlayerSide.RIGHT:
+    case setting_PlayerSide.RIGHT:
       positionSpawn = {
         x: distanceToCenter,
         y: 0,
         z: 0
       };
       break;
-    case PlayerSide.TOP:
+    case setting_PlayerSide.TOP:
       positionSpawn = {
         x: 0,
-        y: -distanceToCenter,
+        y: -distanceToCenter * ration_map,
         z: 0
       };
       break;
-    case PlayerSide.BOTTOM:
+    case setting_PlayerSide.BOTTOM:
       positionSpawn = {
         x: 0,
-        y: distanceToCenter,
+        y: distanceToCenter * ration_map,
         z: 0
       };
       break;
     default:
-      console.error(`Unknown map style: ${PlayerSide}`);
+      console.error(`Unknown map style: ${setting_PlayerSide}`);
       break;
   }
   return positionSpawn;
 }
-function getRightSpeed(position, speed) {
-  let vector_speed;
+function checkBounderyPadle(settings, name, pongLogic, speed) {
+  if (name === setting_PlayerSide.LEFT || name == setting_PlayerSide.RIGHT) {
+    if (Math.abs(settings.paddleLoc[name] + speed) + settings.paddleSize[name].y / 2 >= pongLogic.playArea.depth / 2) {
+      return false;
+    }
+  } else {
+    if (Math.abs(settings.paddleLoc[name] + speed) + settings.paddleSize[name].x / 2 >= pongLogic.playArea.width / 2) {
+      return false;
+    }
+  }
+  return true;
+}
+function getRightSpeed(position, speed, settings, pongLogic) {
+  let vector_speed = {
+    x: 0,
+    y: 0,
+    z: 0
+  };
+  if (checkBounderyPadle(settings, position, pongLogic, speed) == false) {
+    return vector_speed;
+  }
   switch (position) {
-    case PlayerSide.LEFT:
+    case setting_PlayerSide.LEFT:
       vector_speed = {
         x: 0,
         y: speed,
         z: 0
       };
       break;
-    case PlayerSide.RIGHT:
+    case setting_PlayerSide.RIGHT:
       vector_speed = {
         x: 0,
         y: -speed,
         z: 0
       };
       break;
-    case PlayerSide.TOP:
+    case setting_PlayerSide.TOP:
       vector_speed = {
         x: -speed,
         y: 0,
         z: 0
       };
       break;
-    case PlayerSide.BOTTOM:
+    case setting_PlayerSide.BOTTOM:
       vector_speed = {
         x: speed,
         y: 0,
@@ -61186,14 +61227,59 @@ function getRightSpeed(position, speed) {
       console.error(`Unknown plauer side: ${position}`);
       break;
   }
+  settings.paddleLoc[position] += speed;
+  console.log(settings.paddleLoc[position]);
   return vector_speed;
 }
-function Padle(init, name, assetsPath, map, callback) {
+function getRightRotation(name, gameScene) {
+  let vector_speed;
+  switch (name) {
+    case PlayerSide.LEFT:
+      gameScene.rotateAsset(name, 'x', Math.PI / 2);
+      gameScene.rotateAsset(name, 'y', Math.PI / 2);
+      break;
+    case PlayerSide.RIGHT:
+      gameScene.rotateAsset(name, 'x', -Math.PI / 2);
+      gameScene.rotateAsset(name, 'y', Math.PI / 2);
+      break;
+    case PlayerSide.TOP:
+      gameScene.rotateAsset(name, 'y', Math.PI / 2);
+      break;
+    case PlayerSide.BOTTOM:
+      gameScene.rotateAsset(name, 'y', Math.PI / 2);
+      break;
+    default:
+      console.error(`Unknown plauer side: ${name}`);
+      break;
+  }
+}
+function SpawnPadle(init, name, assetsPath, map, callback) {
   init.gameScene.loadModel(name, `${assetsPath}padle.glb`, model => {
-    console.log('Paddle1 model loaded.');
+    console.log(name + ' model loaded.');
     init.gameScene.moveAsset(name, posSpawn(map, name));
-    init.gameScene.rotateAsset(name, 'x', Math.PI / 2);
-    init.gameScene.rotateAsset(name, 'y', Math.PI / 2);
+    switch (name) {
+      case setting_PlayerSide.LEFT:
+        init.gameScene.rotateAsset(name, 'x', Math.PI / 2);
+        init.gameScene.rotateAsset(name, 'y', Math.PI / 2);
+        break;
+      case setting_PlayerSide.RIGHT:
+        init.gameScene.rotateAsset(name, 'x', Math.PI / 2);
+        init.gameScene.rotateAsset(name, 'y', Math.PI / 2);
+        break;
+      case setting_PlayerSide.TOP:
+        init.gameScene.rotateAsset(name, 'x', Math.PI / 2);
+        break;
+      case setting_PlayerSide.BOTTOM:
+        init.gameScene.rotateAsset(name, 'x', Math.PI / 2);
+        break;
+      default:
+        console.error(`Unknown plauer side: ${name}`);
+        break;
+    }
+
+    // this.getRightRotation(name, init.gameScene);
+    // init.gameScene.rotateAsset(name, 'x', Math.PI / 2);
+    // init.gameScene.rotateAsset(name, 'y', Math.PI / 2);
     init.assetsLoaded++;
     init.checkAllAssetsLoaded(callback);
   });
@@ -61201,12 +61287,13 @@ function Padle(init, name, assetsPath, map, callback) {
 function spawnPadles(settings, init, assetsPath, callback) {
   if (settings.bots) {
     for (let i = 0; i < settings.botsSide.length; i++) {
-      Padle(init, settings.botsSide[i], assetsPath, settings.mapStyle, callback);
+      SpawnPadle(init, settings.botsSide[i], assetsPath, settings.mapStyle, callback);
     }
   }
-  for (let i = 0; i < settings.playerSide.length; i++) {
-    Padle(init, settings.playerSide[i], assetsPath, settings.mapStyle, callback);
-  }
+  settings.playerSide.forEach(Padle => {
+    console.log(Padle);
+    SpawnPadle(init, Padle, assetsPath, settings.mapStyle, callback);
+  });
 }
 ;// ./src/pongLogic/pong.js
 // src/pongLogic/pong.js
@@ -61220,26 +61307,27 @@ class Pong {
       x: 0.5,
       y: 0
     };
-    this.paddleSize;
     this.ballSize = {
       x: 1,
       y: 1
     };
     this.playArea = {
       width: 100,
-      height: 60
+      depth: 60
     };
     this.ySpeedCap = 50;
-    this.reset_ball = false;
-    this.last_winner = 0;
-    this.paddle_collided = false;
+    this.resetBall = false;
+    this.lastWinner = 0;
+    this.paddleCollided = false;
     this.multiSidePush = 0.2;
     this.settings;
     this.mode = Mode.LOCAL;
-    this.playerSide = PlayerSide.LEFT;
+    this.playerSide = setting_PlayerSide.LEFT;
 
     // WebSocket
     this.socket = null;
+    this.lastContact;
+    this.lastLoser;
   }
   async initialize(settings) {
     this.settings = settings;
@@ -61248,13 +61336,6 @@ class Pong {
       this.playerSide = this.settings.playerSide;
       this.startWebSocket();
     }
-    this.paddleSize = {};
-    this.settings.playerSide.forEach(side => {
-      this.paddleSize[side] = {
-        x: 1,
-        y: 8
-      };
-    });
     console.log(`Pong initialized in ${this.mode} mode.`);
   }
   startWebSocket() {
@@ -61332,7 +61413,7 @@ class Pong {
     const activePaddles = this.settings.playerSide.map(side => ({
       side,
       position: gameScene.getAssetPossition(side),
-      size: this.paddleSize[side]
+      size: this.settings.paddleSize[side]
     }));
     const ballBox = this.createBoundingBox(ballPosition, this.ballSize);
     this.paddle_collided = false;
@@ -61351,17 +61432,18 @@ class Pong {
     });
 
     // Check for wall collisions (top & bottom bounds)
-    if (ballPosition.y + this.ballSize.y / 2 >= this.playArea.height / 2 || ballPosition.y - this.ballSize.y / 2 <= -this.playArea.height / 2) {
-      this.ballSpeed.y = -this.ballSpeed.y;
-      console.log('Collision with wall.');
+    if (Math.abs(ballPosition.y) >= this.playArea.depth / 2) {
+      if (this.settings.playercount == 2) {
+        this.ballSpeed.y = -this.ballSpeed.y;
+      } else {
+        this.handleBallOutOfBounds(ballPosition);
+      }
     }
 
     // Check if ball is out of bounds (left & right bounds)
-    if (Math.abs(ballPosition.x) >= this.playArea.width / 2 || Math.abs(ballPosition.y) >= this.playArea.height / 2) {
-      console.log("Ball out of bounds. Resetting ball.");
+    if (Math.abs(ballPosition.x) >= this.playArea.width / 2) {
       this.handleBallOutOfBounds(ballPosition);
     }
-
     // Cap the Y speed
     if (Math.abs(this.ballSpeed.y) > this.ySpeedCap) {
       this.ballSpeed.y = this.ballSpeed.y < 0 ? -this.ySpeedCap : this.ySpeedCap;
@@ -61369,32 +61451,54 @@ class Pong {
   }
   handlePaddleCollision(side, ballPosition, paddlePosition) {
     this.paddle_collided = true;
-    if (this.last_winner !== 0) {
-      this.last_winner = 0;
+    if (this.lastWinner !== 0) {
+      this.lastWinner = 0;
     }
-    if (side === PlayerSide.LEFT) {
+    if (side === setting_PlayerSide.LEFT) {
       this.ballSpeed.x = Math.abs(this.ballSpeed.x); // Ensure ball moves right
       this.ballSpeed.y = (ballPosition.y - paddlePosition.y) * this.multiSidePush;
-    } else if (side === PlayerSide.RIGHT) {
+      this.lastContact = setting_PlayerSide.LEFT;
+    } else if (side === setting_PlayerSide.RIGHT) {
       this.ballSpeed.x = -Math.abs(this.ballSpeed.x); // Ensure ball moves left
       this.ballSpeed.y += (ballPosition.y - paddlePosition.y) * this.multiSidePush;
-    } else if (side === PlayerSide.TOP) {
+      this.lastContact = setting_PlayerSide.RIGHT;
+    } else if (side === setting_PlayerSide.TOP) {
       this.ballSpeed.y = Math.abs(this.ballSpeed.y); // Ensure ball moves downward
       this.ballSpeed.x += (ballPosition.x - paddlePosition.x) * this.multiSidePush;
-    } else if (side === PlayerSide.BOTTOM) {
+      this.lastContact = setting_PlayerSide.TOP;
+    } else if (side === setting_PlayerSide.BOTTOM) {
       this.ballSpeed.y = -Math.abs(this.ballSpeed.y); // Ensure ball moves upward
       this.ballSpeed.x += (ballPosition.x - paddlePosition.x) * this.multiSidePush;
+      this.lastContact = setting_PlayerSide.BOTTOM;
     } else {
       console.warn("Unknown paddle side:", side);
     }
     console.log(`Collision with ${side} paddle.`);
   }
   handleBallOutOfBounds(ballPosition) {
-    this.reset_ball = true;
-    if (Math.abs(ballPosition.x) >= this.playArea.width / 2) {
-      this.last_winner = ballPosition.x > 0 ? 1 : 2; // Left or Right wins
-    } else {
-      this.last_winner = ballPosition.y > 0 ? 3 : 4; // Top or Bottom wins
+    this.resetBall = true;
+    if (this.settings.playercount == 2) {
+      if (Math.abs(ballPosition.x) >= this.playArea.width / 2) {
+        this.lastWinner = ballPosition.x > 0 ? 1 : 2; // Left or Right wins
+      }
+    } else if (Math.abs(ballPosition.x) >= this.playArea.width / 2 || Math.abs(ballPosition.y) >= this.playArea.depth / 2) {
+      switch (this.lastContact) {
+        case setting_PlayerSide.LEFT:
+          this.lastWinner = 1;
+          break;
+        case setting_PlayerSide.RIGHT:
+          this.lastWinner = 2;
+          break;
+        case setting_PlayerSide.BOTTOM:
+          this.lastWinner = 4;
+          break;
+        case setting_PlayerSide.TOP:
+          this.lastWinner = 3;
+          break;
+        default:
+          console.error(`Unknown plauer side: ${this.lastContact}`);
+          break;
+      }
     }
     this.ballSpeed = {
       x: 0.5,
@@ -61415,7 +61519,7 @@ class Pong {
     } else if (this.mode === Mode.LOCAL) {
       this.settings.playerSide.forEach(Padle => {
         if (input[Padle] !== 0) {
-          gameScene.moveAssetBy(Padle, getRightSpeed(Padle, input[Padle]));
+          gameScene.moveAssetBy(Padle, getRightSpeed(Padle, input[Padle], this.settings, this));
         }
       });
       // Move Paddles
@@ -61424,8 +61528,6 @@ class Pong {
 
       // Get Positions
       const BallPos = gameScene.getAssetPossition('Ball');
-      const Paddle1Pos = gameScene.getAssetPossition(PlayerSide.RIGHT);
-      const Paddle2Pos = gameScene.getAssetPossition(PlayerSide.LEFT);
 
       // Check Collisions
       this.checkCollisions(BallPos, gameScene);
@@ -61735,10 +61837,10 @@ class Score {
   // Get score position based on the player's side
   getScorePosition(side) {
     const positions = {
-      [PlayerSide.LEFT]: new three_core_Vector3(-15, 25, 0),
-      [PlayerSide.RIGHT]: new three_core_Vector3(15, 25, 0),
-      [PlayerSide.TOP]: new three_core_Vector3(0, 30, 0),
-      [PlayerSide.BOTTOM]: new three_core_Vector3(0, -30, 0)
+      [setting_PlayerSide.LEFT]: new three_core_Vector3(-15, 25, 0),
+      [setting_PlayerSide.RIGHT]: new three_core_Vector3(15, 25, 0),
+      [setting_PlayerSide.TOP]: new three_core_Vector3(0, 30, 0),
+      [setting_PlayerSide.BOTTOM]: new three_core_Vector3(0, -30, 0)
     };
     return positions[side] || new three_core_Vector3(0, 0, 0);
   }
@@ -61932,6 +62034,7 @@ function initPowerUp(assetsPath, gameScene) {
 ;// ./src/init/loadMap.js
 // InitMapFunctions.js
 
+
  // Import Init class
 
 // Define the individual map loading functions
@@ -61949,26 +62052,35 @@ function loadClassicMap(assetsPath, callback, init) {
     init.checkAllAssetsLoaded(callback); // Assuming this function is defined elsewhere
     init.pongLogic.playArea = {
       width: 100,
-      height: 60
+      depth: 60
     };
   });
 }
 ;
+const BATHLIGHT = 0xffffff;
 
 // TODO:  need to be set 
 function loadBathMap(assetsPath, callback, init) {
-  init.gameScene.loadModel('Floor', `${assetsPath}BathFloor.glb`, model => {
+  // init.gameScene.loadCharacter('Floor', `${assetsPath}Bath.glb`, (model) => {
+  init.gameScene.loadModel('Floor', `${assetsPath}Bath.glb`, model => {
     console.log('Bath Floor model loaded.');
     init.gameScene.moveAsset('Floor', {
       x: 0,
       y: 0,
-      z: -3
+      z: -13
     });
     init.gameScene.rotateAsset('Floor', 'x', Math.PI / 2);
     init.gameScene.rotateAsset('Floor', 'y', Math.PI / 2);
     init.assetsLoaded++;
+    init.pongLogic.playArea = {
+      width: 100,
+      depth: 60
+    };
     init.checkAllAssetsLoaded(callback);
   });
+  const ambiantLight = new PointLight(BATHLIGHT, 10000, 10000);
+  ambiantLight.position.set(120, -90, -6);
+  init.gameScene.scene.add(ambiantLight);
 }
 ;
 function loadCircleMap(assetsPath, callback, init) {
@@ -61976,7 +62088,7 @@ function loadCircleMap(assetsPath, callback, init) {
     console.log('Circle Floor model loaded.');
     init.gameScene.moveAsset('Floor', {
       x: 0,
-      y: 0,
+      y: 100,
       z: -3
     });
     init.gameScene.rotateAsset('Floor', 'x', Math.PI / 2);
@@ -62085,11 +62197,13 @@ class Init {
     });
   }
   countAssetToLoad() {
-    if (this.settings.playercount === 2) {
-      this.totalassets = 2 + 2;
-    } else if (this.settings.playercount === 4) {
-      this.totalassets = 4 + 2;
+    if (this.settings.playercount == 2) {
+      this.totalAssets = 2 + 2;
+    } else if (this.settings.playercount == 4) {
+      console.log("this should be printed");
+      this.totalAssets = 4 + 2;
     } else {
+      console.log("this should not be printed");
       delete this.settings;
       console.error("player cound was not 2 or 4");
       this.settings = new this.settings();
@@ -62114,6 +62228,7 @@ class Init {
       console.error('Error: An error occurred. Please try again.', error);
       this.settings = new Setting();
     }
+    this.countAssetToLoad();
     this.pongLogic.initialize(this.settings);
     this.controlHandler = new ControlHandler(this.settings);
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
@@ -62165,16 +62280,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let Paddle2Win = 0;
     let Paddle1Win = 0;
     let Ball_Reset = false;
-    if (pongLogic.paddle_collided) {
+    if (pongLogic.paddleCollided) {
       Paddle2Win = 0;
       Paddle1Win = 0;
       Ball_Reset = false;
     }
 
     // Handle Ball Reset
-    if (pongLogic.reset_ball) {
-      init.score.incrementScore(intToPlayerSide(pongLogic.last_winner));
+    if (pongLogic.resetBall) {
+      init.score.incrementScore(intToPlayerSide(pongLogic.lastWinner));
       Ball_Reset = true;
+      pongLogic.resetBall = false;
       gameScene.moveAsset('Ball', {
         x: 0,
         y: 0,
@@ -62183,7 +62299,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Update Lights
-    updateLightsForActivePlayers(init.lightManager, gameScene, init.settings.playerSide, pongLogic.last_winner);
+    updateLightsForActivePlayers(init.lightManager, gameScene, init.settings.playerSide, pongLogic.lastWinner);
 
     // Move Ball
     const ballCurrentSpeed = {
@@ -62192,7 +62308,7 @@ document.addEventListener('DOMContentLoaded', () => {
       z: 0
     };
     gameScene.moveAssetBy('Ball', ballCurrentSpeed);
-
+    // gameScene.update();
     // Debug Logging
     // if (controlHandler.isDebugEnabled()) {
     //   console.log(BallPos);

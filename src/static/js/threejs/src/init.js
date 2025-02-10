@@ -90,11 +90,13 @@ export default class Init {
   }
 
   countAssetToLoad() {
-    if (this.settings.playercount === 2) {
-      this.totalassets = 2 + 2;
-    } else if (this.settings.playercount === 4) {
-      this.totalassets = 4 + 2;
+    if (this.settings.playercount == 2) {
+      this.totalAssets = 2 + 2;
+    } else if (this.settings.playercount == 4) {
+      console.log("this should be printed");
+      this.totalAssets = 4 + 2;
     } else {
+      console.log("this should not be printed");
       delete this.settings;
       console.error("player cound was not 2 or 4");
       this.settings = new this.settings();
@@ -121,6 +123,7 @@ export default class Init {
       console.error('Error: An error occurred. Please try again.', error);
       this.settings = new Setting();
     }
+    this.countAssetToLoad();
     this.pongLogic.initialize(this.settings);
     this.controlHandler = new ControlHandler(this.settings);
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);

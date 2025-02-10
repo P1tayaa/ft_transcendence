@@ -3,11 +3,13 @@
   "serverurl": "",
   "powerup": "false",
   "poweruplist": [],
-  "playercount": "2",
+  "playercount": "4",
   "map style": "classic",
   "playerside": [
     "left",
-    "right"
+    "right",
+    "top",
+    "bottom"
   ],
   "bots": "false",
   "botsSide": [
