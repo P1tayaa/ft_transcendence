@@ -27,8 +27,8 @@ export function updateLightsForActivePlayers(lightManager, gameScene, playerSide
     colorChanges[winnerSide] = 1; // Winner glows green
 
     playerSides
-      .filter(side => side !== winnerSide) // Get all non-winner sides
-      .forEach(side => colorChanges[side] = 2); // Set them to red
+      .filter(side => side !== winnerSide)
+      .forEach(side => colorChanges[side] = 2);
   }
   lightManager.updateLightPositions(positions, colorChanges);
 }
@@ -53,7 +53,7 @@ export default class LightManager {
     // Create lights for each paddle dynamically
     this.playerSides.forEach((side) => {
       this.lights[side] = new THREE.PointLight(COLORS.white, 100, 10000);
-      this.lights[side].position.set(0, 0, 5); // Default position, will update dynamically
+      this.lights[side].position.set(0, 0, 5);
       this.scene.add(this.lights[side]);
       this.targets[side] = new THREE.Vector3();
     });

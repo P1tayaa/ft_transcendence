@@ -216,27 +216,33 @@ class Pong {
         this.lastWinner = ballPosition.x > 0 ? 1 : 2; // Left or Right wins
       }
     } else if (Math.abs(ballPosition.x) >= this.playArea.width / 2 || Math.abs(ballPosition.y) >= this.playArea.depth / 2) {
-      switch (this.lastContact) {
-        case PlayerSide.LEFT:
-          this.lastWinner = 1;
-          break;
-        case PlayerSide.RIGHT:
-          this.lastWinner = 2;
-          break;
-        case PlayerSide.BOTTOM:
-          this.lastWinner = 4;
-          break;
-        case PlayerSide.TOP:
-          this.lastWinner = 3;
-          break;
-        default:
-          console.error(`Unknown plauer side: ${this.lastContact}`)
-          break;
-      }
+      this.defineLastWinner(this.lastContact);
+
     }
 
 
     this.ballSpeed = { x: 0.5, y: 0 };
+  }
+
+  defineLastWinner(paddle) {
+    switch (paddle) {
+      case PlayerSide.LEFT:
+        this.lastWinner = 1;
+        break;
+      case PlayerSide.RIGHT:
+        this.lastWinner = 2;
+        break;
+      case PlayerSide.BOTTOM:
+        this.lastWinner = 3;
+        break;
+      case PlayerSide.TOP:
+        this.lastWinner = 4;
+        break;
+      default:
+        console.error(`Unknown plauer side: ${this.lastContact}`)
+        break;
+    }
+
   }
 
   networkedCollisionDetection() {

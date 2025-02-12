@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    allPowers.update(gameScene);
+    allPowers.update(gameScene, pongLogic);
 
 
     const input = init.controlHandler.getPaddleSpeeds();
@@ -53,7 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
       Ball_Reset = false;
     }
 
-    // Handle Ball Reset
     if (pongLogic.resetBall) {
       init.score.incrementScore(intToPlayerSide(pongLogic.lastWinner));
       Ball_Reset = true;
@@ -61,19 +60,11 @@ document.addEventListener('DOMContentLoaded', () => {
       gameScene.moveAsset('Ball', { x: 0, y: 0, z: 0 });
     }
 
-    // Update Lights
     updateLightsForActivePlayers(init.lightManager, gameScene, init.settings.playerSide, pongLogic.lastWinner)
 
-    // Move Ball
     const ballCurrentSpeed = { x: pongLogic.ballSpeed.x, y: pongLogic.ballSpeed.y, z: 0 };
     gameScene.moveAssetBy('Ball', ballCurrentSpeed);
-    // gameScene.update();
-    // Debug Logging
-    // if (controlHandler.isDebugEnabled()) {
-    //   console.log(BallPos);
-    // }
 
-    // Render Scene
     renderer.render(scene, camera);
   }
 

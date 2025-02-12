@@ -49,6 +49,16 @@ class GameScene {
     }
   }
 
+  setScale(name, scale) {
+    const asset = this.assets[name];
+    if (asset) {
+      asset.scale.set(scale, scale, scale);
+    } else {
+      console.warn(`Asset with name "${name}" not found.`);
+    }
+  }
+
+
   // Method to move a specific asset
   moveAsset(name, position) {
     const asset = this.assets[name];

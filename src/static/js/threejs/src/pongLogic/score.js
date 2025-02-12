@@ -48,8 +48,8 @@ class Score {
     const positions = {
       [PlayerSide.LEFT]: new THREE.Vector3(-15, 25, 0),
       [PlayerSide.RIGHT]: new THREE.Vector3(15, 25, 0),
-      [PlayerSide.TOP]: new THREE.Vector3(0, 30, 0),
-      [PlayerSide.BOTTOM]: new THREE.Vector3(0, -30, 0),
+      [PlayerSide.TOP]: new THREE.Vector3(0, -30, 0),
+      [PlayerSide.BOTTOM]: new THREE.Vector3(0, 30, 0),
     };
     return positions[side] || new THREE.Vector3(0, 0, 0);
   }

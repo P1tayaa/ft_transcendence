@@ -23,16 +23,16 @@ export const MapStyle = {
 export const PlayerSide = {
   LEFT: "left",
   RIGHT: "right",
-  TOP: "top",
   BOTTOM: "bottom",
+  TOP: "top",
 };
 
 export function intToPlayerSide(last_winner) {
   const winnerSide =
     last_winner === 1 ? PlayerSide.LEFT :
       last_winner === 2 ? PlayerSide.RIGHT :
-        last_winner === 3 ? PlayerSide.TOP :
-          last_winner === 4 ? PlayerSide.BOTTOM :
+        last_winner === 3 ? PlayerSide.BOTTOM :
+          last_winner === 4 ? PlayerSide.TOP :
             null;
   return winnerSide;
 
