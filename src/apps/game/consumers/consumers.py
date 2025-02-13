@@ -25,9 +25,6 @@ class GameConsumer(BaseConsumer):
         await super().connect()
 
         self.game_state = {
-            'balls_pos': {'x': 0, 'y': 0},
-            'ball_velocity': {'x': 5, 'y': 5},
-            'paddles': {},
             'score': {},
             'players': {},
             'is_playing': False,
@@ -37,6 +34,7 @@ class GameConsumer(BaseConsumer):
             },
             'powerUps': {},
             'pongLogic': {
+                'ballPos': {'x': 0, 'y': 0},
                 'ballSpeed': 5,
                 'ballSize': 10,
                 'lastWinner': None,
@@ -66,7 +64,7 @@ class GameConsumer(BaseConsumer):
         }
 
         # paddle for player
-        self.game_state['paddles'][player_id] = {
+        self.game_state['settings']['paddleLoc'][player_id] = {
             'y': 0,
             'rotation': 0
         }
@@ -92,11 +90,11 @@ class GameConsumer(BaseConsumer):
             if player_id in self.game_state['players'] and self.game_state['players'][player_id]['is_host']:
                 if 'pongLogic' in data:
                     self.game_state['pongLogic'].update(data['pongLogic'])
-                    # update ball speed
-                    speed = data['pongLogic'].get('ballSpeed', self.game_state['ball_velocity']['x'])
-                    self.game_state['ball_velocity'] = {'x': speed, 'y': speed}
                 if 'settings' in data:
+                    # merge and preserve paddle loc
+                    current_paddle_loc = self.game_state['settings']['paddleLoc']
                     self.game_state['settings'].update(data['settings'])
+                    self.game_state['settings']['paddleLoc'].update(current_paddle_loc)
                 if 'powerUps' in data:
                     self.game_state['powerUps'] = data['powerUps']
                 await self.channel_layer.group_send(
@@ -110,9 +108,7 @@ class GameConsumer(BaseConsumer):
         elif message_type == 'paddle_move':
             player_id = self.scope['user'].id
             if player_id in self.game_state['players']:
-                is_player1 = self.game_state['players'][player_id]['is_player1']
-                paddle_key = 'paddle1_pos' if is_player1 else 'paddle2_pos'
-                self.game_state[paddle_key] = {
+                self.game_state['settings']['paddleLoc'][player_id] = {
                     'y': data['position'],
                     'rotation': data['rotation']
                 }
@@ -124,7 +120,7 @@ class GameConsumer(BaseConsumer):
                     }
                 )
                
-        elif message_type == 'chat_messsage':
+        elif message_type == 'chat_message':
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
@@ -135,14 +131,18 @@ class GameConsumer(BaseConsumer):
             )
 
         elif message_type == 'start_game':
-            if len(self.game_state['players']) == 2 and not self.game_state['is_playing']:
+            player_id = self.scope['user'].id
+            if player_id in self.game_state['players'] \
+                and self.game_state['players'][player_id]['is_host'] \
+                and len(self.game_state['players']) >= 2 \
+                and not self.game_state['is_playing']:
                 self.game_state['is_playing'] = True
                 self.game_loop = asyncio.create_task(self.run_game_loop())
 
     async def run_game_loop(self):
         while self.game_state['is_playing']:
-            self.game_state['balls_pos']['x'] += self.game_state['ball_velocity']['x']
-            self.game_state['balls_pos']['y'] += self.game_state['ball_velocity']['y']
+            self.game_state['pongLogic']['ballPos']['x'] += self.game_state['pongLogic']['ballSpeed']
+            self.game_state['pongLogic']['ballPos']['y'] += self.game_state['pongLogic']['ballSpeed']
 
             await self.channel_layer.group_send(
                 self.room_group_name,
