@@ -1,0 +1,4 @@
+__pycache__/
+pgdata/
+.secret
+src/static/js/threejs/node_modules/

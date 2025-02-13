@@ -1,0 +1,16 @@
+
+<main>
+ <h2>Start a Match</h2>
+    <button id="MakeGame">Make Game Lobby</button>
+    <button onclick="startMatchmaking()">Find Opponent</button>
+ <script>
+    document.getElementById("MakeGame").addEventListener("click", function() {
+      window.location.href = "../configGame"; 
+    });
+    function startMatchmaking() {
+      window.location.href = "../game"; 
+    }
+  </script>
+
+</main>
+

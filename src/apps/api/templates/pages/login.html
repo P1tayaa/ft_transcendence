@@ -1,0 +1,30 @@
+<!-- Login Page -->
+
+<div class="login-container">
+  <h1>Login</h1>
+  <form id="loginForm">
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" required>
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required>
+    </div>
+    <button type="submit">Login</button>
+  </form>
+  <p id="errorMessage" class="error-message"></p>
+  <div class="register-redirect">
+    <p>Don't have an account?</p>
+    <button id="registerButton">Register</button>
+  <script>
+    document.getElementById("registerButton").addEventListener("click", function() {
+      window.location.href = "../register"; 
+    });
+  </script>
+
+  </div>
+
+<script type="module" src="../static/js/login/login.js">
+</script>
+</div>
