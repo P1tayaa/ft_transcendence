@@ -57,7 +57,7 @@ class Profile(models.Model):
                     .count(),
                 }
             )
-            return chat_data
+            # return chat_data
         return chat_data
 
     def get_chat_history(self, chat_id, limit=50, offset=0):
