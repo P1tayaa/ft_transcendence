@@ -27,17 +27,52 @@ class GameConsumer(BaseConsumer):
         self.game_state = {
             'balls_pos': {'x': 0, 'y': 0},
             'ball_velocity': {'x': 5, 'y': 5},
-            'paddle1_pos': {'y': 0, 'rotation': 0},
-            'paddle2_pos': {'y': 0, 'rotation': 0},
-            'score': {'player1': 0, 'player2': 0},
+            'paddles': {},
+            'score': {},
             'players': {},
-            'is_playing': False
+            'is_playing': False,
+            'settings': {
+                'paddleSize': {},
+                'paddleLoc': {},
+            },
+            'powerUps': {},
+            'pongLogic': {
+                'ballSpeed': 5,
+                'ballSize': 10,
+                'lastWinner': None,
+                'lastContact': None,
+                'lastLoser': None,
+            }
         }
 
-        self.game_state['players'][self.scope['user'].id] = {
+        # new player
+        player_id = self.scope['user'].id
+        player_count = len(self.game_state['players'])
+        is_host = player_count == 0
+
+        # position
+        position = 'left' # default for first player
+        if player_count == 1:
+            position = 'right'
+        elif player_count == 2:
+            position = 'top'
+        elif player_count == 3:
+            position = 'bottom'
+
+        self.game_state['players'][player_id] = {
             'username': self.scope['user'].username,
-            'is_player1': len(self.game_state['players']) == 0
+            'is_host': is_host,
+            'position': position
         }
+
+        # paddle for player
+        self.game_state['paddles'][player_id] = {
+            'y': 0,
+            'rotation': 0
+        }
+
+        #score for player
+        self.game_state['score'][player_id] = 0
 
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -51,17 +86,36 @@ class GameConsumer(BaseConsumer):
         data = json.loads(text_data)
         message_type = data.get('type')
 
-        if message_type == 'paddle_move':
+        if message_type == 'gameState':
+            # update settings
+            player_id = self.scope['user'].id
+            if player_id in self.game_state['players'] and self.game_state['players'][player_id]['is_host']:
+                if 'pongLogic' in data:
+                    self.game_state['pongLogic'].update(data['pongLogic'])
+                    # update ball speed
+                    speed = data['pongLogic'].get('ballSpeed', self.game_state['ball_velocity']['x'])
+                    self.game_state['ball_velocity'] = {'x': speed, 'y': speed}
+                if 'settings' in data:
+                    self.game_state['settings'].update(data['settings'])
+                if 'powerUps' in data:
+                    self.game_state['powerUps'] = data['powerUps']
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'game_state_update',
+                        'state': self.game_state
+                    }
+                )
+
+        elif message_type == 'paddle_move':
             player_id = self.scope['user'].id
             if player_id in self.game_state['players']:
                 is_player1 = self.game_state['players'][player_id]['is_player1']
                 paddle_key = 'paddle1_pos' if is_player1 else 'paddle2_pos'
-
                 self.game_state[paddle_key] = {
                     'y': data['position'],
                     'rotation': data['rotation']
                 }
-
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {

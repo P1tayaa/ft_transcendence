@@ -51,8 +51,8 @@ urlpatterns = [
     path("score/highscore", get_highscore, name="get_highscore"),
     path("add_message/", add_message, name="add_message"),
     path('tournament/create', create_tournament, name="create_tournament"),
-    path('tournament/join', join_tournament, name="join_tournament"),
-    path('tournament/get_data', get_tournament_data, name="get_tournament_data"),
-    path('tournament/update_scores', update_match_score, name="update_match_scores"),
+    path('tournament/<int:tournament_id>/join', join_tournament, name="join_tournament"),
+    path('tournament/<int:tournament_id>/get_data', get_tournament_data, name="get_tournament_data"),
+    path('tournament/<int:match_id>/update_scores', update_match_score, name="update_match_scores"),
 
 ]
