@@ -1,20 +1,55 @@
 
 
+
 class Websocket {
   constructor(settings) {
-    this.websocker = null;
+    this.socket = null;
     this.host = settings.host;
-    startWebSocket();
+    this.startWebSocket();
   }
 
   Update(pongLogic, scores, settings, powerUps) {
-     if (this.host) {
-
+    if (this.host) {
+      // Convert maps to plain objects before sending
+      const gameState = {
+        type: 'gameState',
+        pongLogic: {
+          ballPos: pongLogic.ballPos,
+          ballSpeed: pongLogic.ballSpeed,
+          ballSize: pongLogic.ballSize,
+          lastWinner: pongLogic.lastWinner,
+          lastContact: pongLogic.lastContact,
+          lastLoser: pongLogic.lastLoser,
+        },
+        settings: {
+          paddleSize: Object.fromEntries(settings.paddleSize.entries()),
+          paddleLoc: Object.fromEntries(settings.paddleLoc.entries()),
+        },
+        powerUps: Object.fromEntries(
+          powerUps.entries()
+        ),
+        scores: Object.fromEntries(scores.scores.entries()),
+      };
+      this.socket.send(JSON.stringify(gameState));
     } else {
+      // If this client is not the host, overwrite local values with server values
+      if (this.serverState) {
+        pongLogic.ballSpeed = this.serverState.pongLogic.ballSpeed;
+        pongLogic.ballSize = this.serverState.pongLogic.ballSize;
+        pongLogic.lastWinner = this.serverState.pongLogic.lastWinner;
+        pongLogic.lastContact = this.serverState.pongLogic.lastContact;
+        pongLogic.lastLoser = this.serverState.pongLogic.lastLoser;
 
+        // Convert received objects back to maps
+        settings.paddleSize = new Map(Object.entries(this.serverState.settings.paddleSize));
+        settings.paddleLoc = new Map(Object.entries(this.serverState.settings.paddleLoc));
+
+        scores.scores = this.serverState.scores;
+
+        powerUps = new Map(Object.entries(this.serverState.powerUps));
+      }
     }
   }
-
 
   startWebSocket() {
     const roomName = "test";
@@ -26,19 +61,14 @@ class Websocket {
 
     this.socket.onopen = () => {
       console.log('WebSocket connection established.');
-      // Optionally send initial data if needed
     };
 
-
-    // TODO: need to improve this
     this.socket.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data);
         if (data.type === 'gameState') {
-          this.serverBallPosition = data.ballPosition;
-          this.serverPaddle1Position = data.paddle1Position;
-          this.serverPaddle2Position = data.paddle2Position;
-          console.log('Received game state from server.');
+          this.serverState = data;
+          console.log('Received game state from server.', this.serverState);
         }
       } catch (err) {
         console.error('Error parsing WebSocket message:', err);
@@ -53,7 +83,5 @@ class Websocket {
       console.log('WebSocket connection closed.');
     };
   }
-
-
-  
 }
+

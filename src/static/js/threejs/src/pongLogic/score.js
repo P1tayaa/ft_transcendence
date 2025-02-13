@@ -35,7 +35,7 @@ class Score {
     const geometry = new TextGeometry(this.scores[side].toString(), {
       font: this.font,
       size: 2,
-      height: 0.1,
+      depth: 0.1,
     });
 
     const mesh = new THREE.Mesh(geometry, this.textMaterial);

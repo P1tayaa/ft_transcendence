@@ -4,7 +4,7 @@
 
 import { PlayerSide, Mode, MapStyle, get_settings, Setting } from "./setting.js";
 import { getRightSpeed } from "../init/loadPadle.js"
-
+import { WebSocket } from "./websocket.js"
 
 
 class Pong {
@@ -18,13 +18,13 @@ class Pong {
     this.lastWinner = 0;
     this.paddleCollided = false;
     this.multiSidePush = 0.2;
-
+    this.ballPos = { x: 0, y: 0 };
     this.settings;
     this.mode = Mode.LOCAL;
     this.playerSide = PlayerSide.LEFT;
 
     // WebSocket
-    this.socket = null;
+    this.socket;
 
     this.lastContact;
     this.lastLoser;
@@ -33,31 +33,29 @@ class Pong {
   async initialize(settings) {
     this.settings = settings;
     if (this.settings.mode === Mode.NETWORKED) {
-      this.mode = Mode.NETWORKED;
-      this.playerSide = this.settings.playerSide;
-      this.startWebSocket();
+      this.mode = this.settings.mode;
+      this.socket = new WebSocket(this.settings);
     }
-
     console.log(`Pong initialized in ${this.mode} mode.`);
   }
 
 
-  sendPaddlePosition() {
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      const localPaddlePosition = this.playerSide === 'left'
-        ? this.localPaddle1Position
-        : this.localPaddle2Position;
-
-      const message = {
-        type: 'updatePaddle',
-        paddleSide: this.playerSide,
-        position: localPaddlePosition,
-      };
-
-      this.socket.send(JSON.stringify(message));
-      console.log('Sent paddle position to server.');
-    }
-  }
+  // sendPaddlePosition() {
+  //   if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+  //     const localPaddlePosition = this.playerSide === 'left'
+  //       ? this.localPaddle1Position
+  //       : this.localPaddle2Position;
+  //
+  //     const message = {
+  //       type: 'updatePaddle',
+  //       paddleSide: this.playerSide,
+  //       position: localPaddlePosition,
+  //     };
+  //
+  //     this.socket.send(JSON.stringify(message));
+  //     console.log('Sent paddle position to server.');
+  //   }
+  // }
 
   createBoundingBox(position, size) {
     return {
@@ -76,16 +74,18 @@ class Pong {
   }
 
   checkCollisions(ballPosition3D, gameScene) {
-    if (this.mode === 'local') {
+    if (this.mode === Mode.LOCAL) {
       this.localCollisionDetection(ballPosition3D, gameScene);
-    } else if (this.mode === 'networked') {
-      this.networkedCollisionDetection();
+    } else if (this.mode === Mode.NETWORKED) {
+      if (this.socket.host) {
+        this.localCollisionDetection(ballPosition3D, gameScene);
+      }
     }
   }
 
 
   localCollisionDetection(ballPosition3D, gameScene) {
-    const ballPosition = { x: ballPosition3D.x, y: ballPosition3D.y };
+    this.ballPos = { x: ballPosition3D.x, y: ballPosition3D.y };
 
     // Get active paddles from game settings
     const activePaddles = this.settings.playerSide.map(side => ({
@@ -94,7 +94,7 @@ class Pong {
       size: this.settings.paddleSize[side],
     }));
 
-    const ballBox = this.createBoundingBox(ballPosition, this.ballSize);
+    const ballBox = this.createBoundingBox(this.ballPos, this.ballSize);
     this.paddle_collided = false;
     this.reset_ball = false;
 
@@ -103,22 +103,22 @@ class Pong {
       const paddleBox = this.createBoundingBox(position, size);
 
       if (this.intersectsBox(ballBox, paddleBox)) {
-        this.handlePaddleCollision(side, ballPosition, position);
+        this.handlePaddleCollision(side, this.ballPos, position);
       }
     });
 
     // Check for wall collisions (top & bottom bounds)
-    if (Math.abs(ballPosition.y) >= this.playArea.depth / 2) {
+    if (Math.abs(this.ballPos.y) >= this.playArea.depth / 2) {
       if (this.settings.playercount == 2) {
         this.ballSpeed.y = -this.ballSpeed.y;
       } else {
-        this.handleBallOutOfBounds(ballPosition);
+        this.handleBallOutOfBounds(this.ballPos);
       }
     }
 
     // Check if ball is out of bounds (left & right bounds)
-    if (Math.abs(ballPosition.x) >= this.playArea.width / 2) {
-      this.handleBallOutOfBounds(ballPosition);
+    if (Math.abs(this.ballPos.x) >= this.playArea.width / 2) {
+      this.handleBallOutOfBounds(this.ballPos);
     }
     // Cap the Y speed
     if (Math.abs(this.ballSpeed.y) > this.ySpeedCap) {

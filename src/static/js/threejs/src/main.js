@@ -2,8 +2,8 @@
 // src/main.js
 import * as THREE from 'three';
 import Init from './init.js';
-import { intToPlayerSide } from "./pongLogic/setting.js";
-import updateLightPositions, { updateLightsForActivePlayers } from "./modelLoading/light_manage.js";
+import { intToPlayerSide, Mode } from "./pongLogic/setting.js";
+import { updateLightsForActivePlayers } from "./modelLoading/light_manage.js";
 
 document.addEventListener('DOMContentLoaded', () => {
   const init = new Init();
@@ -35,7 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
       // Assets are still loading; skip rendering
       return;
     }
-
+    if (init.settings.mode === Mode.NETWORKED) {
+      pongLogic.socket.update(pongLogic, init.score, init.settings, this.allPower.powerUps);
+    }
     allPowers.update(gameScene, pongLogic);
 
 
