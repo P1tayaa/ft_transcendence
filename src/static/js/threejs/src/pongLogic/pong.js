@@ -4,7 +4,7 @@
 
 import { PlayerSide, Mode, MapStyle, get_settings, Setting } from "./setting.js";
 import { getRightSpeed } from "../init/loadPadle.js"
-import { WebSocket } from "./websocket.js"
+import MyWebSocket from "./websocket.js"
 
 
 class Pong {
@@ -24,7 +24,7 @@ class Pong {
     this.playerSide = PlayerSide.LEFT;
 
     // WebSocket
-    this.socket;
+    this.socket = new MyWebSocket;
 
     this.lastContact;
     this.lastLoser;
@@ -34,7 +34,7 @@ class Pong {
     this.settings = settings;
     if (this.settings.mode === Mode.NETWORKED) {
       this.mode = this.settings.mode;
-      this.socket = new WebSocket(this.settings);
+      this.socket.init(this.settings);
     }
     console.log(`Pong initialized in ${this.mode} mode.`);
   }
@@ -78,6 +78,7 @@ class Pong {
       this.localCollisionDetection(ballPosition3D, gameScene);
     } else if (this.mode === Mode.NETWORKED) {
       if (this.socket.host) {
+        this.settings.paddleLoc = this.socket.getPaddlePosition();
         this.localCollisionDetection(ballPosition3D, gameScene);
       }
     }
@@ -156,7 +157,7 @@ class Pong {
     else {
       console.warn("Unknown paddle side:", side);
     }
-    console.log(`Collision with ${side} paddle.`);
+    // console.log(`Collision with ${side} paddle.`);
   }
 
 
@@ -210,27 +211,19 @@ class Pong {
 
   update(input, gameScene) {
     if (this.mode === Mode.NETWORKED) {
-      this.sendPaddlePosition();
+      this.socket.sendPaddlePosition(input[this.playerSide], this.playerSide);
     } else if (this.mode === Mode.LOCAL) {
       this.settings.playerSide.forEach(Padle => {
         if (input[Padle] !== 0) {
           gameScene.moveAssetBy(Padle, getRightSpeed(Padle, input[Padle], this.settings, this));
         }
       });
-      // Move Paddles
-      // gameScene.moveAssetBy(PlayerSide.RIGHT, { x: 0, y: left, z: 0 });
-      // gameScene.moveAssetBy(PlayerSide.LEFT, { x: 0, y: right, z: 0 });
 
       // Get Positions
-      const BallPos = gameScene.getAssetPossition('Ball');
-
-      // Check Collisions
-      this.checkCollisions(BallPos, gameScene);
-
     }
 
-
-    // Additional update logic can be added here
+    const BallPos = gameScene.getAssetPossition('Ball');
+    this.checkCollisions(BallPos, gameScene);
   }
 
   destroy() {

@@ -1,113 +1,5 @@
 /******/ (() => { // webpackBootstrap
-/******/ 	var __webpack_modules__ = ({
-
-/***/ 917:
-/***/ (() => {
-
-class Websocket {
-  constructor(settings) {
-    this.socket = null;
-    this.host = settings.host;
-    this.startWebSocket();
-  }
-  Update(pongLogic, scores, settings, powerUps) {
-    if (this.host) {
-      // Convert maps to plain objects before sending
-      const gameState = {
-        type: 'gameState',
-        pongLogic: {
-          ballPos: pongLogic.ballPos,
-          ballSpeed: pongLogic.ballSpeed,
-          ballSize: pongLogic.ballSize,
-          lastWinner: pongLogic.lastWinner,
-          lastContact: pongLogic.lastContact,
-          lastLoser: pongLogic.lastLoser
-        },
-        settings: {
-          paddleSize: Object.fromEntries(settings.paddleSize.entries()),
-          paddleLoc: Object.fromEntries(settings.paddleLoc.entries())
-        },
-        powerUps: Object.fromEntries(powerUps.entries()),
-        scores: Object.fromEntries(scores.scores.entries())
-      };
-      this.socket.send(JSON.stringify(gameState));
-    } else {
-      // If this client is not the host, overwrite local values with server values
-      if (this.serverState) {
-        pongLogic.ballSpeed = this.serverState.pongLogic.ballSpeed;
-        pongLogic.ballSize = this.serverState.pongLogic.ballSize;
-        pongLogic.lastWinner = this.serverState.pongLogic.lastWinner;
-        pongLogic.lastContact = this.serverState.pongLogic.lastContact;
-        pongLogic.lastLoser = this.serverState.pongLogic.lastLoser;
-
-        // Convert received objects back to maps
-        settings.paddleSize = new Map(Object.entries(this.serverState.settings.paddleSize));
-        settings.paddleLoc = new Map(Object.entries(this.serverState.settings.paddleLoc));
-        scores.scores = this.serverState.scores;
-        powerUps = new Map(Object.entries(this.serverState.powerUps));
-      }
-    }
-  }
-  startWebSocket() {
-    const roomName = "test";
-    const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsPath = isSpectator ? 'spectate' : 'room';
-    this.socket = new WebSocket(`${wsScheme}//${window.location.host}/ws/${wsPath}/${roomName}/`);
-    this.socket.onopen = () => {
-      console.log('WebSocket connection established.');
-    };
-    this.socket.onmessage = e => {
-      try {
-        const data = JSON.parse(e.data);
-        if (data.type === 'gameState') {
-          this.serverState = data;
-          console.log('Received game state from server.', this.serverState);
-        }
-      } catch (err) {
-        console.error('Error parsing WebSocket message:', err);
-      }
-    };
-    this.socket.onerror = error => {
-      console.error('WebSocket error:', error);
-    };
-    this.socket.onclose = () => {
-      console.log('WebSocket connection closed.');
-    };
-  }
-}
-
-/***/ })
-
-/******/ 	});
-/************************************************************************/
-/******/ 	// The module cache
-/******/ 	var __webpack_module_cache__ = {};
-/******/ 	
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
-/******/ 		// Check if module is in cache
-/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
-/******/ 		if (cachedModule !== undefined) {
-/******/ 			return cachedModule.exports;
-/******/ 		}
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			// no module.id needed
-/******/ 			// no module.loaded needed
-/******/ 			exports: {}
-/******/ 		};
-/******/ 	
-/******/ 		// Execute the module function
-/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
-/******/ 	
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-/******/ 	
-/************************************************************************/
-// This entry needs to be wrapped in an IIFE because it needs to be in strict mode.
-(() => {
-"use strict";
+/******/ 	"use strict";
 
 ;// ./node_modules/three/build/three.core.js
 /**
@@ -61002,6 +60894,7 @@ class Setting {
     this.bots = setting_json.bots == "true"; // Convert to boolean
     this.botsSide = this.parseMultipleSides(setting_json.botsSide);
     this.host = setting_json.host == "true";
+    this.isSpectator = setting_json.isSpectator == "true";
     this.paddleSize = {};
     this.paddleLoc = {};
     this.playerSide.forEach(side => {
@@ -61025,8 +60918,8 @@ class Setting {
     if (Object.values(Mode).includes(mode)) {
       return mode;
     }
-    console.error("Invalid mode, defaulting to 'networked'");
-    return Mode.NETWORKED; // Default value if invalid
+    console.error("Invalid mode, defaulting to 'local'");
+    return Mode.LOCAL;
   }
 
   // Helper function to parse 'poweruplist' and ensure they are valid
@@ -61371,7 +61264,7 @@ function getRightRotation(name, gameScene) {
 }
 function SpawnPadle(init, name, assetsPath, map, callback) {
   init.gameScene.loadModel(name, `${assetsPath}padle.glb`, model => {
-    console.log(name + ' model loaded.');
+    // console.log(name + ' model loaded.');
     init.gameScene.moveAsset(name, posSpawn(map, name));
     switch (name) {
       case setting_PlayerSide.LEFT:
@@ -61407,12 +61300,104 @@ function spawnPadles(settings, init, assetsPath, callback) {
     }
   }
   settings.playerSide.forEach(Padle => {
-    console.log(Padle);
+    // console.log(Padle);
     SpawnPadle(init, Padle, assetsPath, settings.mapStyle, callback);
   });
 }
-// EXTERNAL MODULE: ./src/pongLogic/websocket.js
-var websocket = __webpack_require__(917);
+;// ./src/pongLogic/websocket.js
+class MyWebSocket {
+  constructor() {
+    this.socket = null;
+    this.host;
+    this.isSpectator;
+  }
+  init(settings) {
+    this.host = settings.host;
+    this.isSpectator = settings.isSpectator;
+    this.startWebSocket();
+  }
+  getPaddlePosition() {
+    if (this.serverState && this.serverState.settings) {
+      return this.serverState.settings.paddleLoc;
+    }
+    return null; // Return null if no data is available yet
+  }
+  sendPaddlePosition(paddleInput, paddleKey) {
+    const paddleInfo = {
+      settings: {
+        paddleKey: paddleKey,
+        paddleInput: paddleInput
+      }
+    };
+    this.socket.send(JSON.stringify(paddleInfo));
+  }
+  update(pongLogic, scores, settings, powerUps) {
+    if (this.host) {
+      // Convert maps to plain objects before sending
+      const gameState = {
+        type: 'gameState',
+        pongLogic: {
+          ballPos: pongLogic.ballPos,
+          ballSpeed: pongLogic.ballSpeed,
+          ballSize: pongLogic.ballSize,
+          lastWinner: pongLogic.lastWinner,
+          lastContact: pongLogic.lastContact,
+          lastLoser: pongLogic.lastLoser
+        },
+        settings: {
+          paddleSize: settings.paddleSize,
+          paddleLoc: settings.paddleLoc
+          // paddleSize: settings.paddleSize,
+          // paddleLoc: Object.fromEntries(settings.paddleLoc.entries),
+        },
+        // powerUps: Object.fromEntries(powerUps),
+        // scores: Object.fromEntries(scores.scores),
+        powerUps: powerUps,
+        scores: scores.scores
+      };
+      this.socket.send(JSON.stringify(gameState));
+    } else {
+      // If this client is not the host, overwrite local values with server values
+      if (this.serverState) {
+        pongLogic.ballSpeed = this.serverState.pongLogic.ballSpeed;
+        pongLogic.ballSize = this.serverState.pongLogic.ballSize;
+        pongLogic.lastWinner = this.serverState.pongLogic.lastWinner;
+        pongLogic.lastContact = this.serverState.pongLogic.lastContact;
+        pongLogic.lastLoser = this.serverState.pongLogic.lastLoser;
+
+        // Convert received objects back to maps
+        settings.paddleSize = new Map(Object.entries(this.serverState.settings.paddleSize));
+        settings.paddleLoc = new Map(Object.entries(this.serverState.settings.paddleLoc));
+        scores.scores = new Map(Object.entries(this.serverState.scores));
+        powerUps = new Map(Object.entries(this.serverState.powerUps));
+      }
+    }
+  }
+  startWebSocket() {
+    console.log("is this called yet");
+    const roomName = "test";
+    const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsPath = this.isSpectator ? 'spectate' : 'room';
+    this.socket = new WebSocket(`${wsScheme}//${window.location.host}/ws/${wsPath}/${roomName}/`);
+    this.socket.onopen = () => {
+      console.log('Connected to WebSocket');
+    };
+    this.socket.onmessage = event => {
+      const data = JSON.parse(event.data);
+      console.log('Received:', data);
+      if (data.type === "gameState") {
+        this.serverState = data; // Store the received game state
+      }
+    };
+    this.socket.onclose = event => {
+      console.warn('WebSocket connection closed', event);
+    };
+    this.socket.onerror = error => {
+      console.error('WebSocket Error:', error.message);
+    };
+  }
+}
+/* harmony default export */ const websocket = (MyWebSocket);
 ;// ./src/pongLogic/pong.js
 // src/pongLogic/pong.js
 
@@ -61448,7 +61433,7 @@ class Pong {
     this.playerSide = setting_PlayerSide.LEFT;
 
     // WebSocket
-    this.socket;
+    this.socket = new websocket();
     this.lastContact;
     this.lastLoser;
   }
@@ -61456,7 +61441,7 @@ class Pong {
     this.settings = settings;
     if (this.settings.mode === Mode.NETWORKED) {
       this.mode = this.settings.mode;
-      this.socket = new websocket.WebSocket(this.settings);
+      this.socket.init(this.settings);
     }
     console.log(`Pong initialized in ${this.mode} mode.`);
   }
@@ -61498,6 +61483,7 @@ class Pong {
       this.localCollisionDetection(ballPosition3D, gameScene);
     } else if (this.mode === Mode.NETWORKED) {
       if (this.socket.host) {
+        this.settings.paddleLoc = this.socket.getPaddlePosition();
         this.localCollisionDetection(ballPosition3D, gameScene);
       }
     }
@@ -61572,7 +61558,7 @@ class Pong {
     } else {
       console.warn("Unknown paddle side:", side);
     }
-    console.log(`Collision with ${side} paddle.`);
+    // console.log(`Collision with ${side} paddle.`);
   }
   handleBallOutOfBounds(ballPosition) {
     this.resetBall = true;
@@ -61617,25 +61603,18 @@ class Pong {
   }
   update(input, gameScene) {
     if (this.mode === Mode.NETWORKED) {
-      this.sendPaddlePosition();
+      this.socket.sendPaddlePosition(input[this.playerSide], this.playerSide);
     } else if (this.mode === Mode.LOCAL) {
       this.settings.playerSide.forEach(Padle => {
         if (input[Padle] !== 0) {
           gameScene.moveAssetBy(Padle, getRightSpeed(Padle, input[Padle], this.settings, this));
         }
       });
-      // Move Paddles
-      // gameScene.moveAssetBy(PlayerSide.RIGHT, { x: 0, y: left, z: 0 });
-      // gameScene.moveAssetBy(PlayerSide.LEFT, { x: 0, y: right, z: 0 });
 
       // Get Positions
-      const BallPos = gameScene.getAssetPossition('Ball');
-
-      // Check Collisions
-      this.checkCollisions(BallPos, gameScene);
     }
-
-    // Additional update logic can be added here
+    const BallPos = gameScene.getAssetPossition('Ball');
+    this.checkCollisions(BallPos, gameScene);
   }
   destroy() {
     if (this.socket) {
@@ -105806,10 +105785,8 @@ class Init {
     if (this.settings.playercount == 2) {
       this.totalAssets = 2 + 2;
     } else if (this.settings.playercount == 4) {
-      console.log("this should be printed");
       this.totalAssets = 4 + 2;
     } else {
-      console.log("this should not be printed");
       delete this.settings;
       console.error("player cound was not 2 or 4");
       this.settings = new this.settings();
@@ -105828,8 +105805,9 @@ class Init {
     showLoadingScreen();
     try {
       const json_settings = await get_settings(0);
-      console.log(json_settings); // Log the fetched settings
+      console.log(json_settings);
       this.settings = new Setting(json_settings);
+      console.log(this.settings);
     } catch {
       console.error('Error: An error occurred. Please try again.', error);
       this.settings = new Setting();
@@ -105880,12 +105858,12 @@ document.addEventListener('DOMContentLoaded', () => {
       // Assets are still loading; skip rendering
       return;
     }
-    if (init.settings.mode === Mode.NETWORKED) {
-      pongLogic.socket.update(pongLogic, init.score, init.settings, this.allPower.powerUps);
-    }
     allPowers.update(gameScene, pongLogic);
     const input = init.controlHandler.getPaddleSpeeds();
     pongLogic.update(input, gameScene);
+    if (init.settings.mode === Mode.NETWORKED) {
+      pongLogic.socket.update(pongLogic, init.score, init.settings, init.allPower.powerUps);
+    }
     let Paddle2Win = 0;
     let Paddle1Win = 0;
     let Ball_Reset = false;
@@ -105915,7 +105893,5 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   renderer.setAnimationLoop(animate);
 });
-})();
-
 /******/ })()
 ;

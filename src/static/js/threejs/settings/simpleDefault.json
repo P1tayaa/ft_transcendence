@@ -1,5 +1,5 @@
 {
-  "mode": "local",
+  "mode": "networked",
   "serverurl": "",
   "powerup": "false",
   "poweruplist": [],
@@ -15,5 +15,6 @@
   "botsSide": [
     "top"
   ],
-  "host": "true"
+  "host": "true",
+  "Spectator": "false"
 }

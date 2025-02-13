@@ -79,5 +79,5 @@ class Score {
   }
 }
 
-export default Score;
 
+export default Score;

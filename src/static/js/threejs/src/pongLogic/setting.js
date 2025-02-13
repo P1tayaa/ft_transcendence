@@ -81,6 +81,7 @@ export class Setting {
     this.bots = setting_json.bots == "true"; // Convert to boolean
     this.botsSide = this.parseMultipleSides(setting_json.botsSide);
     this.host = setting_json.host == "true";
+    this.isSpectator = setting_json.isSpectator == "true";
 
     this.paddleSize = {};
     this.paddleLoc = {};
@@ -100,8 +101,8 @@ export class Setting {
     if (Object.values(Mode).includes(mode)) {
       return mode;
     }
-    console.error("Invalid mode, defaulting to 'networked'");
-    return Mode.NETWORKED; // Default value if invalid
+    console.error("Invalid mode, defaulting to 'local'");
+    return Mode.LOCAL;
   }
 
   // Helper function to parse 'poweruplist' and ensure they are valid

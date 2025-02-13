@@ -121,7 +121,7 @@ export function getRightRotation(name, gameScene) {
 export function SpawnPadle(init, name, assetsPath, map, callback) {
 
   init.gameScene.loadModel(name, `${assetsPath}padle.glb`, (model) => {
-    console.log(name + ' model loaded.');
+    // console.log(name + ' model loaded.');
     init.gameScene.moveAsset(name, posSpawn(map, name));
 
 
@@ -165,7 +165,7 @@ export function spawnPadles(settings, init, assetsPath, callback) {
     }
   }
   settings.playerSide.forEach(Padle => {
-    console.log(Padle);
+    // console.log(Padle);
     SpawnPadle(init, Padle, assetsPath, settings.mapStyle, callback);
   });
 }

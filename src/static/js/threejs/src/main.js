@@ -35,16 +35,16 @@ document.addEventListener('DOMContentLoaded', () => {
       // Assets are still loading; skip rendering
       return;
     }
-    if (init.settings.mode === Mode.NETWORKED) {
-      pongLogic.socket.update(pongLogic, init.score, init.settings, this.allPower.powerUps);
-    }
+
     allPowers.update(gameScene, pongLogic);
 
 
     const input = init.controlHandler.getPaddleSpeeds();
 
     pongLogic.update(input, gameScene);
-
+    if (init.settings.mode === Mode.NETWORKED) {
+      pongLogic.socket.update(pongLogic, init.score, init.settings, init.allPower.powerUps);
+    }
     let Paddle2Win = 0;
     let Paddle1Win = 0;
     let Ball_Reset = false;
