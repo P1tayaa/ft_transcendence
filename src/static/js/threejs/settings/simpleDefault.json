@@ -14,5 +14,6 @@
   "bots": "false",
   "botsSide": [
     "top"
-  ]
+  ],
+  "host": "true"
 }

@@ -80,7 +80,7 @@ export class Setting {
     this.playerSide = this.parseMultipleSides(setting_json.playerside);
     this.bots = setting_json.bots == "true"; // Convert to boolean
     this.botsSide = this.parseMultipleSides(setting_json.botsSide);
-
+    this.host = setting_json.host == "true";
 
     this.paddleSize = {};
     this.paddleLoc = {};
