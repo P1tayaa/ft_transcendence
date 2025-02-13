@@ -31,6 +31,8 @@ class TournamentRoom(models.Model):
     status = models.CharField(max_length=20, choices = TOURNAMENT_STATUS, default = 'WAITING')
     max_participants = models.IntegerField(default=8)
     creator = models.ForeignKey(User, related_name='created_tournament', on_delete=models.SET_NULL, null=True)
+    # !To do: add settings to tournament
+    # settings = models.ForeignKey(GameConfig, related_name='settings', on_delete=models.SET_NULL, null=True)
 
     def get_current_matches(self):
         return self.tournament_matches.filter(status='IN_PROGRESS')
