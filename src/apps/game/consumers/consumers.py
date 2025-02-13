@@ -44,7 +44,7 @@ class GameConsumer(BaseConsumer):
         }
 
         # new player
-        player_id = self.scope['user'].id
+        player_id = str(self.scope['user'].id)
         player_count = len(self.game_state['players'])
         is_host = player_count == 0
 
@@ -86,15 +86,15 @@ class GameConsumer(BaseConsumer):
 
         if message_type == 'gameState':
             # update settings
-            player_id = self.scope['user'].id
+            player_id = str(self.scope['user'].id)
             if player_id in self.game_state['players'] and self.game_state['players'][player_id]['is_host']:
                 if 'pongLogic' in data:
                     self.game_state['pongLogic'].update(data['pongLogic'])
                 if 'settings' in data:
                     # merge and preserve paddle loc
-                    current_paddle_loc = self.game_state['settings']['paddleLoc']
+                    # current_paddle_loc = self.game_state['settings']['paddleLoc']
                     self.game_state['settings'].update(data['settings'])
-                    self.game_state['settings']['paddleLoc'].update(current_paddle_loc)
+                    # self.game_state['settings']['paddleLoc'].update(current_paddle_loc)
                 if 'powerUps' in data:
                     self.game_state['powerUps'] = data['powerUps']
                 await self.channel_layer.group_send(
@@ -106,7 +106,7 @@ class GameConsumer(BaseConsumer):
                 )
 
         elif message_type == 'paddle_move':
-            player_id = self.scope['user'].id
+            player_id = str(self.scope['user'].id)
             if player_id in self.game_state['players']:
                 self.game_state['settings']['paddleLoc'][player_id] = {
                     'y': data['position'],
@@ -131,7 +131,7 @@ class GameConsumer(BaseConsumer):
             )
 
         elif message_type == 'start_game':
-            player_id = self.scope['user'].id
+            player_id = str(self.scope['user'].id)
             if player_id in self.game_state['players'] \
                 and self.game_state['players'][player_id]['is_host'] \
                 and len(self.game_state['players']) >= 2 \
