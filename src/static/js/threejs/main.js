@@ -61311,10 +61311,10 @@ class MyWebSocket {
     this.host;
     this.isSpectator;
   }
-  init(settings) {
+  init(settings, websocketData) {
     this.host = settings.host;
     this.isSpectator = settings.isSpectator;
-    this.startWebSocket();
+    this.startWebSocket(websocketData);
   }
   getPaddlePosition() {
     if (this.serverState && this.serverState.settings) {
@@ -61373,9 +61373,9 @@ class MyWebSocket {
       }
     }
   }
-  startWebSocket() {
+  startWebSocket(websocketData) {
     console.log("is this called yet");
-    const roomName = "test";
+    const roomName = websocketData.room_name;
     const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsPath = this.isSpectator ? 'spectate' : 'room';
     this.socket = new WebSocket(`${wsScheme}//${window.location.host}/ws/${wsPath}/${roomName}/`);
@@ -61437,11 +61437,11 @@ class Pong {
     this.lastContact;
     this.lastLoser;
   }
-  async initialize(settings) {
+  async initialize(settings, websocketData) {
     this.settings = settings;
     if (this.settings.mode === Mode.NETWORKED) {
       this.mode = this.settings.mode;
-      this.socket.init(this.settings);
+      this.socket.init(this.settings, websocketData);
     }
     console.log(`Pong initialized in ${this.mode} mode.`);
   }
@@ -105801,19 +105801,19 @@ class Init {
       callback();
     }
   }
-  async initialize() {
+  async initialize(settings, websocketData) {
     showLoadingScreen();
-    try {
-      const json_settings = await get_settings(0);
-      console.log(json_settings);
-      this.settings = new Setting(json_settings);
-      console.log(this.settings);
-    } catch {
-      console.error('Error: An error occurred. Please try again.', error);
-      this.settings = new Setting();
-    }
+    // try {
+    //   const json_settings = await get_settings(0);
+    //   console.log(json_settings);
+    //   console.log(this.settings);
+    // } catch {
+    //   console.error('Error: An error occurred. Please try again.', error);
+    //   this.settings = new Setting();
+    // }
+    this.settings = new Setting(settings);
     this.countAssetToLoad();
-    this.pongLogic.initialize(this.settings);
+    this.pongLogic.initialize(this.settings, websocketData);
     this.controlHandler = new ControlHandler(this.settings);
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new score(this.gameScene.getScene(), this.settings.playerSide);
@@ -105831,9 +105831,26 @@ class Init {
 
 
 
+let startInit = false;
+let config = null;
+let datainfo = null;
+document.addEventListener("startGame", event => {
+  const detail = event.detail;
+  config = detail.gameConfig;
+  datainfo = detail.dataInfo;
+  console.log(config);
+  console.log(datainfo);
+  startInit = true;
+  console.log("Game event received! Initializing...");
+});
 document.addEventListener('DOMContentLoaded', () => {
   const init = new Init();
-  init.initialize();
+  const waitForInit = setInterval(() => {
+    if (startInit) {
+      clearInterval(waitForInit);
+      init.initialize(config, datainfo);
+    }
+  }, 100);
   const gameScene = init.gameScene;
   const scene = gameScene.getScene();
   const lightManager = init.lightManager;

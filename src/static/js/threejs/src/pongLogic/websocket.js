@@ -7,10 +7,10 @@ class MyWebSocket {
     this.isSpectator;
   }
 
-  init(settings) {
+  init(settings, websocketData) {
     this.host = settings.host;
     this.isSpectator = settings.isSpectator;
-    this.startWebSocket();
+    this.startWebSocket(websocketData);
   }
 
   getPaddlePosition() {
@@ -76,9 +76,9 @@ class MyWebSocket {
     }
   }
 
-  startWebSocket() {
+  startWebSocket(websocketData) {
     console.log("is this called yet");
-    const roomName = "test";
+    const roomName = websocketData.room_name;
     const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsPath = this.isSpectator ? 'spectate' : 'room';
     this.socket = new WebSocket(

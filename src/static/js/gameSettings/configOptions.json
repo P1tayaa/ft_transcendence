@@ -78,23 +78,27 @@
       }
     }
   },
-  "cameraPerspective": {
-    "label": "Camera Perspective",
+  "gamemode": {
+    "label": "Mode",
     "type": "select",
     "options": [
       {
-        "value": "default",
-        "label": "Default"
+        "value": "networked",
+        "label": "Public"
       },
       {
-        "value": "top-down",
-        "label": "Top-Down"
+        "value": "networked",
+        "label": "Private"
       },
       {
-        "value": "side",
-        "label": "Side View"
+        "value": "local",
+        "label": "Local"
+      },
+      {
+        "value": "localsolo",
+        "label": "Local Vs Bots"
       }
     ],
-    "default": "default"
+    "default": "Public"
   }
 }

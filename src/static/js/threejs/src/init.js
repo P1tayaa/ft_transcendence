@@ -111,19 +111,19 @@ export default class Init {
     }
   }
 
-  async initialize() {
+  async initialize(settings, websocketData) {
     showLoadingScreen();
-    try {
-      const json_settings = await get_settings(0);
-      console.log(json_settings);
-      this.settings = new Setting(json_settings);
-      console.log(this.settings);
-    } catch {
-      console.error('Error: An error occurred. Please try again.', error);
-      this.settings = new Setting();
-    }
+    // try {
+    //   const json_settings = await get_settings(0);
+    //   console.log(json_settings);
+    //   console.log(this.settings);
+    // } catch {
+    //   console.error('Error: An error occurred. Please try again.', error);
+    //   this.settings = new Setting();
+    // }
+    this.settings = new Setting(settings);
     this.countAssetToLoad();
-    this.pongLogic.initialize(this.settings);
+    this.pongLogic.initialize(this.settings, websocketData);
     this.controlHandler = new ControlHandler(this.settings);
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new Score(this.gameScene.getScene(), this.settings.playerSide);

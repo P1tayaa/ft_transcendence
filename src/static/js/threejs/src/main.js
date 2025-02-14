@@ -5,11 +5,35 @@ import Init from './init.js';
 import { intToPlayerSide, Mode } from "./pongLogic/setting.js";
 import { updateLightsForActivePlayers } from "./modelLoading/light_manage.js";
 
+
+
+let startInit = false;
+let config = null;
+let datainfo = null;
+
+document.addEventListener("startGame", (event) => {
+  const detail = event.detail;
+  config = detail.gameConfig;
+  datainfo = detail.dataInfo;
+  console.log(config);
+  console.log(datainfo)
+
+  startInit = true;
+  console.log("Game event received! Initializing...");
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   const init = new Init();
-  init.initialize();
+
+  const waitForInit = setInterval(() => {
+    if (startInit) {
+      clearInterval(waitForInit);
+      init.initialize(config, datainfo);
+    }
+  }, 100);
 
   const gameScene = init.gameScene;
+
   const scene = gameScene.getScene();
   const lightManager = init.lightManager;
   // const controlHandler = init.controlHandler;

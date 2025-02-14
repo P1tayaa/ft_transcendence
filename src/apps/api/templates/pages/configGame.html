@@ -11,7 +11,10 @@
     </form>
     <button id="startButton">Start Game</button>
   </div>
-
-  <script src="../static/js/gameSettings/gameSetting.js"></script>
+  <div id="game">
+      <script type="module" src="../static/js/threejs/main.js"> </script>
+        <canvas id="pong-game" width="960" height="720">Your browser does not support the canvas element.</canvas>
+  </div>
+  <script type="module" src="../static/js/gameSettings/gameSetting.js"></script>
 </body>
 
