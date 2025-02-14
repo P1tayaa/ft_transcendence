@@ -71,17 +71,23 @@ export async function initializeGame(config) {
       break;
   }
 
-  const datainfo = await make_room(gameConfig);
+  try {
+
+    const datainfo = await make_room(gameConfig);
+
+    setTimeout(() => {
+      document.dispatchEvent(new CustomEvent("startGame", { detail: { gameConfig: gameConfig, gameInfo: datainfo } }));
+    }, 3000);
+    console.log('Initializing game with configuration:', config);
+  } catch (error) {
+    console.error('Error fetching matches:', error);
+    alert('An error occurred while searching for friends.');
+  }
 
 
 
 
 
-  setTimeout(() => {
-    document.dispatchEvent(new CustomEvent("startGame", { detail: { gameConfig: gameConfig, gameInfo: datainfo } }));
-  }, 3000);
-  console.log('Initializing game with configuration:', config);
-  // alert('Game is initializing with your selected configuration. Check the console for details.');
 }
 
 export default initializeGame;
