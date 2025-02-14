@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 import json
 from rest_framework.decorators import api_view
-from apps.game.models.models import TournamentRoom, TournamentParticipant, TournamentMatch, TournamentScore
+from apps.game.models.tournament import TournamentRoom, TournamentParticipant, TournamentMatch, TournamentScore
 
 @login_required
 @api_view(["POST"])

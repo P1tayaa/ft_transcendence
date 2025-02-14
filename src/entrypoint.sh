@@ -6,6 +6,7 @@ while ! nc -z db 5432; do
 done
 echo "PostgreSQL started"
 
+python src/manage.py makemigrations game
 python src/manage.py makemigrations
 
 # Apply migrations

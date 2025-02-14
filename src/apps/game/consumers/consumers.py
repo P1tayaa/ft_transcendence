@@ -1,7 +1,9 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 import asyncio
-
+from django.core.exceptions import ValidationError
+from channels.db import database_sync_to_async
+from apps.game.models.game import GameRoom, GameConfig
 
 class BaseConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -21,8 +23,56 @@ class BaseConsumer(AsyncWebsocketConsumer):
         )
 
 class GameConsumer(BaseConsumer):
+    game_room = None
     async def connect(self):
         await super().connect()
+
+        try :
+            config = await database_sync_to_async(GameConfig.objects.first)()
+            if not config:
+                config = await database_sync_to_async(GameConfig.objects.create)(
+                    mode='networked',
+                    server_url='',
+                    powerups_enabled=False,
+                    powerup_list=[],
+                    player_count=4,
+                    map_style='classic',
+                    player_sides=['left', 'right', 'top', 'bottom'],
+                    bots_enabled=False,
+                    bot_sides=['top'],
+                    is_host=True,
+                    spectator_enabled=False
+                )
+            self.game_room, created = await database_sync_to_async(GameRoom.objects.get_or_create)(
+                room_name=self.room_name,
+                defaults = {
+                    'config': await database_sync_to_async(GameConfig.objects.first)(),  # Use a default config
+                    'status': 'WAITING',
+                    'is_active': True
+                }
+            )
+            if not self.game_room:
+                raise ValueError("Failed to create game_room")
+            await database_sync_to_async(self.game_room.join_game)(self.scope['user'])
+            await self.send(text_data=json.dumps({
+                    'type': 'connection_successful',
+                    'message': 'connected to room'
+                }))
+        except ValidationError as e:
+            await self.send(text_data=json.dumps({
+                    'type': 'error',
+                    'message': str(e),
+                }))
+            await self.close()
+        except GameRoom.DoesNotExist:
+            await self.close()
+            return
+        except Exception as e:
+            await self.send(text_data=json.dumps({
+                'type': 'error',
+                'message': 'Failed to connect to room'
+             }))
+            await self.close()
 
         self.game_state = {
             'score': {},
@@ -49,13 +99,9 @@ class GameConsumer(BaseConsumer):
         is_host = player_count == 0
 
         # position
-        position = 'left' # default for first player
-        if player_count == 1:
-            position = 'right'
-        elif player_count == 2:
-            position = 'top'
-        elif player_count == 3:
-            position = 'bottom'
+        available_positions = await database_sync_to_async(self.game_room.config.player_sides.copy)()
+        used_positions = set(p['position'] for p in self.game_state['players'].values() if 'position 'in p)
+        position = next(pos for pos in available_positions if pos not in used_positions)
 
         self.game_state['players'][player_id] = {
             'username': self.scope['user'].username,
@@ -79,6 +125,11 @@ class GameConsumer(BaseConsumer):
                 'players': self.game_state['players']
             }
         )
+
+    async def disconnect(self, close_code):
+        if hasattr(self, 'game_room'):
+            await database_sync_to_async(self.game_room.leave_game)(self.scope['user'])
+        await super().disconnect(close_code)
     
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -94,7 +145,7 @@ class GameConsumer(BaseConsumer):
                     # merge and preserve paddle loc
                     # current_paddle_loc = self.game_state['settings']['paddleLoc']
                     self.game_state['settings'].update(data['settings'])
-                    # self.game_state['settings']['paddleLoc'].update(current_paddle_loc)
+                    # self.game_state['settings']['paddleLoc']. = current_paddle_loc
                 if 'powerUps' in data:
                     self.game_state['powerUps'] = data['powerUps']
                 await self.channel_layer.group_send(
@@ -134,10 +185,31 @@ class GameConsumer(BaseConsumer):
             player_id = str(self.scope['user'].id)
             if player_id in self.game_state['players'] \
                 and self.game_state['players'][player_id]['is_host'] \
-                and len(self.game_state['players']) >= 2 \
+                and len(self.game_state['players']) >= self.game_room.config.player_count \
                 and not self.game_state['is_playing']:
                 self.game_state['is_playing'] = True
                 self.game_loop = asyncio.create_task(self.run_game_loop())
+
+        elif message_type == 'game_over':
+            winner_id = data.get('winner_id')
+            if winner_id and self.game_state['is_playing']:
+                self.game_state['is_playing'] = False
+                # update database
+                await database_sync_to_async(self.game_room.complete_game)(
+                    winner_id=winner_id,
+                    scores=self.game_state['score']
+                )
+                # notify players
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'game_state_update',
+                        'state': self.game_state,
+                        'game_over': True,
+                        'winner': winner_id
+                    }
+                )
+
 
     async def run_game_loop(self):
         while self.game_state['is_playing']:

@@ -2,21 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import transaction
-import math
 import random
-
-
-class BaseGameRoom(models.Model):
-    room_name = models.CharField(max_length=100, unique=True)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    player1 = models.ForeignKey(User, related_name='player1', null=True, on_delete=models.SET_NULL)
-    player2 = models.ForeignKey(User, related_name='player2', null=True, on_delete=models.SET_NULL)
-    score1 = models.IntegerField(default=0)
-    score2 = models.IntegerField(default=0)
-
-    class Meta:
-        abstract = True
+from .game import GameRoom, GameConfig
 
 class TournamentRoom(models.Model):
     TOURNAMENT_STATUS = (
@@ -31,8 +18,7 @@ class TournamentRoom(models.Model):
     status = models.CharField(max_length=20, choices = TOURNAMENT_STATUS, default = 'WAITING')
     max_participants = models.IntegerField(default=8)
     creator = models.ForeignKey(User, related_name='created_tournament', on_delete=models.SET_NULL, null=True)
-    # !To do: add settings to tournament
-    # settings = models.ForeignKey(GameConfig, related_name='settings', on_delete=models.SET_NULL, null=True)
+    config = models.ForeignKey(GameConfig, related_name='tournaments', on_delete=models.PROTECT)
 
     def get_current_matches(self):
         return self.tournament_matches.filter(status='IN_PROGRESS')
@@ -46,16 +32,14 @@ class TournamentRoom(models.Model):
     def join_tournament(self, player):
         # allow to join if not started and not full
         if self.status != 'WAITING':
-            raise ValidationError("Tournament is full")
+            raise ValidationError("Tournament is not available to join")
 
-        current_participants = self.participants.count()
-        if current_participants >= self.max_participants:
+        if self.participants.count() >= self.max_participants:
             raise ValidationError("Tournament is full")
-
-        participant, created =TournamentParticipant.objects.get_or_create(
+        participant, _ = TournamentParticipant.objects.get_or_create(
             tournament=self,
             player=player,
-            defaults={'is_active': True}
+            default={'is_active': True}
         )
 
         TournamentScore.objects.get_or_create(
@@ -69,10 +53,12 @@ class TournamentRoom(models.Model):
             }
         )
 
+        # auto start when full
         if self.participants.count() == self.max_participants:
             self.start_tournament()
 
         return participant
+
 
     def start_tournament(self):
         if self.status != 'WAITING':
@@ -85,41 +71,49 @@ class TournamentRoom(models.Model):
 
             random.shuffle(participants)
 
-            round_number = 1
-            for i in range(0, len(participants), 2):
-                if i + 1 < len(participants):
-                    TournamentMatch.objects.create(
-                        tournament=self,
-                        round_number =round_number,
-                        match_number = i//2,
-                        player1 = participants[i].player,
-                        player2 = participants[i + 1].player,
-                        room_name = f"{self.tournament_name}_R{round_number}M{i//2}",
-                        status='SCHEDULED',
-                    )
-
+            self.create_round_matches(
+                round_number=1,
+                players = [p.player for p in participants]
+            )
             self.status = 'IN_PROGRESS'
             self.save()
 
+    def create_round_matches(self, round_number, players):
+        for i in range(0, len(players), 2):
+            if i + 1 < len(players):
+                match_config = GameConfig.objects.create(
+                    mode = self.config.mode,
+                    powerups_enabled = self.config.powerups_enabled,
+                    player_count = 2,
+                    map_style = self.config.map_style,
+                    player_sides = ['left', 'right']
+                )
 
-    def complete_match(self, match, winner):
+                TournamentMatch.objects.create(
+                    tournament = self,
+                    round_number = round_number,
+                    match_number = i / 2,
+                    room_name = f"{self.tournament_name}_R{round_number}M{i/2}",
+                    config =match_config,
+                ).join_game(players[i]).join_game(players[i + 1])
+
+
+    def process_completed_match(self, match):
         with transaction.atomic():
-            match.status = 'COMPLETED'
-            match.winner = winner
-            match.save()
+            winner = match.get_winner()
+            loser = match.player_states.excludes(player=winner).first().player
 
-            loser = match.player2 if winner == match.player1 else match.player1
             winner_score = TournamentScore.objects.get(tournament=self, player=winner)
             loser_score = TournamentScore.objects.get(tournament=self, player=loser)
 
             winner_score.matches_played += 1
             winner_score.wins += 1
-            winner_score.points += match.score1 if winner == match.player1 else match.score2
+            winner_score.points += match.get_player_score(winner)
             winner_score.save()
 
             loser_score.matches_player += 1
             loser_score.losses += 1
-            loser_score.points += match.score2 if winner == match.player1 else match.score1
+            loser_score.points += match.get_player_score(loser)
             loser_score.save()
 
             TournamentParticipant.objects.filter(
@@ -132,24 +126,12 @@ class TournamentRoom(models.Model):
             all_completed = all(m.status == 'COMPLETED' for m in matches_in_round)
 
             if all_completed:
-                winners = [m.winner for m in matches_in_round]
-                if len(winners) == 1:
+                round_winners = [m.get_winner() for m in matches_in_round]
+                if len(round_winners) == 1:
                     self.status = 'COMPLETED'
                     self.save()
                 else:
-                    # create next round
-                    next_round = current_round + 1
-                    for i in range(0, len(winners), 2):
-                        if i + 1 < len(winners):
-                            TournamentMatch.objects.create(
-                                tournament=self,
-                                round_number=next_round,
-                                match_number = i//2,
-                                player1 = winners[i],
-                                player2 = winners[i + 1],
-                                room_name = f"{self.tournament_name}_R{next_round}M{i//2}",
-                                status='SCHEDULED'
-                            )
+                    self.create_round_matches(round_number=current_round + 1, players=round_winners)
 
     def get_tournament_status(self):
         return {
@@ -189,7 +171,7 @@ class TournamentParticipant(models.Model):
         unique_together = ['tournament', 'player']
 
 
-class TournamentMatch(BaseGameRoom):
+class TournamentMatch(GameRoom):
     MATCH_STATUS = (
         ('SCHEDULED', 'Scheduled'),
         ('IN_PROGRESS', 'In Progress'),
@@ -199,11 +181,32 @@ class TournamentMatch(BaseGameRoom):
     tournament = models.ForeignKey(TournamentRoom, related_name='tournament_matches', on_delete=models.CASCADE)
     round_number = models.IntegerField(default=0)
     match_number = models.IntegerField(default=0)
-    status = models.CharField(max_length=20, choices=MATCH_STATUS, default='SCHEDULED')
-    winner = models.ForeignKey(User, related_name='tournament_wins', null=True, on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ['tournament', 'round_number', 'match_number']
+
+    def get_winner(self):
+        if self.status != 'COMPLETED':
+            return None
+
+        player_states = list(self.player_states.all())
+        if player_states[0].score >player_states[1].score:
+            return player_states[0].player
+        return player_states[1].player
+
+    def get_player_score(self, player):
+        return self.player_states.get(player=player).score
+
+    def complete_game(self, winner_id, scores):
+        super().complete_game(winner_id, scores)
+        self.tournament.process_completed_matches(self)
+
+    def join_game(self, player):
+        result = super().join_game(player)
+        if self.is_full():
+            self.status = 'IN_PROGRESS'
+            self.save()
+        return result
 
 class TournamentScore(models.Model):
     tournament = models.ForeignKey(TournamentRoom, related_name='participant_scores', on_delete=models.CASCADE)
@@ -215,3 +218,5 @@ class TournamentScore(models.Model):
 
     class Meta:
         unique_together = ['tournament', 'player']
+
+
