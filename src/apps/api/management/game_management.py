@@ -20,7 +20,7 @@ def create_game_room(request):
 
         try:
             game_config = GameConfig.create_from_frontend(config_data)
-            game_config.full_clean()
+            game_config.clean()
             game_config.save()
         except ValidationError as e:
             return JsonResponse({
@@ -32,7 +32,7 @@ def create_game_room(request):
         game_room = GameRoom.objects.create(
             room_name = f"game_{request.user.username}_{game_config.id}",
             config = game_config,
-            max_players = int(config_data['playercount'])
+            # max_players = int(config_data['playerCount'])
         )
     
         game_room.join_game(request.user)
