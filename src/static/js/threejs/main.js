@@ -60960,7 +60960,7 @@ const settingsJson = {
   "serverurl": "http://example.com/api/",
   "powerup": "true",
   "poweruplist": ["star", "speedup"],
-  "playercount": "4",
+  "playerCount": "4",
   "map style": "circle",
   "playerside": ["left", "top"],
   "bots": "true",

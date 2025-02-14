@@ -77,25 +77,25 @@ class GameConfig(models.Model):
 
     @classmethod
     def validate_config_json(cls, config_json):
-        required_fields = {'mode', 'playercount', 'map style', 'playerside'}
+        required_fields = {'mode', 'playerCount', 'map_style', 'playerside'}
         errors = {}
 
         for field in required_fields:
             if field not in config_json:
                 errors[field] = f"Missing required field: {field}"
-
+        player_count = 0
         try:
-            player_count = int(config_json.get('playercount', 0))
+            player_count = int(config_json.get('playerCount', 0))
             if not 2 <= player_count <= 4:
-                errors['playercount'] = "Player count must be between 2 and 4"
+                errors['playerCount'] = "Player count must be between 2 and 4"
         except ValueError:
-            errors['playercount'] = "Playercount must be a number"
+            errors['playerCount'] = "Playercount must be a number"
 
         player_sides =config_json.get('playerside', [])
         if len(player_sides) != player_count:
             errors['playerside'] = f"Number of player sides ({len(player_sides)}) must match player count ({player_count})"
 
-        if config_json.get('bots', '').lower() == 'true':
+        if config_json.get('bots', '') == 'true':
             if 'botSide' not in config_json or not config_json['botSide']:
                 errors['botSide'] = "Bot sides must be specified when bots are enabled"
 
@@ -117,30 +117,30 @@ class GameConfig(models.Model):
         return cls(
             mode=config_dict['mode'],
             server_url=config_dict.get('serverurl', ''),
-            powerups_enabled=config_dict.get('powerup', 'false').lower() == 'true',
+            powerups_enabled=config_dict.get('powerup', 'false') == 'true',
             powerup_list=config_dict.get('poweruplist', []),
-            player_count=int(config_dict['playercount']),
-            map_style=config_dict['map style'],
+            player_count=int(config_dict['playerCount']),
+            map_style=config_dict['map_style'],
             player_sides=config_dict['playerside'],
-            bots_enabled=config_dict.get('bots', 'false').lower() == 'true',
+            bots_enabled=config_dict.get('bots', 'false') == 'true',
             bot_sides=config_dict.get('botsSide', []),
-            is_host=config_dict.get('host', 'false').lower() == 'true',
-            spectator_enabled=config_dict.get('Spectator', 'false').lower() == 'true'
+            is_host=config_dict.get('host', 'false') == 'true',
+            spectator_enabled=config_dict.get('Spectator', 'false') == 'true'
         )
 
     def to_dict(self):
         return {
             'mode': self.mode,
             'serverurl': self.server_url,
-            'powerup': str(self.powerups_enabled).lower(),
+            'powerup': str(self.powerups_enabled),
             'poweruplist': self.powerup_list,
-            'playercount': str(self.player_count),
-            'map style': self.map_style,
+            'playerCount': str(self.player_count),
+            'map_style': self.map_style,
             'playerside': self.player_sides,
-            'bots': str(self.bots_enabled).lower(),
+            'bots': str(self.bots_enabled),
             'botsSide': self.bot_sides,
-            'host': str(self.is_host).lower(),
-            'Spectator': str(self.spectator_enabled).lower()
+            'host': str(self.is_host),
+            'Spectator': str(self.spectator_enabled)
         }
 
     def __str__(self):

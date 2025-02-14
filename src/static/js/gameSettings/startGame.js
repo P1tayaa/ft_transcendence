@@ -9,7 +9,7 @@ async function make_room(config) {
   if (!csrfToken) {
     throw new Error('CSRF token not found');
   }
-
+  console.log(config);
   const response = await fetch(CREATE_GAME_URL, {
     method: 'POST',
     headers: {
@@ -20,7 +20,8 @@ async function make_room(config) {
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData.error || 'Failed to remove friend');
+    throw new Error(JSON.stringify(errorData));
+    // throw new Error(errorData.errors || 'failed to make game room');
   }
 
   const data = await response.json();
@@ -30,52 +31,57 @@ async function make_room(config) {
 // data {status, room_id, room_name, config}
 
 
-export function initializeGame(config) {
+export async function initializeGame(config) {
   let gameConfig = {
 
-    "mode": config.gamemode,
-    "powerup": config.powerUps,
-    "poweruplist": config.powerUpOptions,
-    "playerCount": config.playerCount,
-    "map style": config.map,
-    "playerside": [],
-    "bots": "false",
-    "botsSide": [],
-    "host": "true",
-    "Spectator": "false"
+    mode: config.gamemode,
+    serverurl: "ws://localhost:8000/ws/room/poop",
+    powerup: config.powerUps,
+    poweruplist: config.powerUpOptions,
+    playerCount: config.playerCount,
+    map_style: config.map,
+    playerside: [],
+    bots: false,
+    botsSide: [],
+    host: true,
+    Spectator: false
   }
 
-  if (gameConfig["mode"] === "Local Ws Bots") {
-    gameConfig["bots"] = "true";
+  if (gameConfig.mode === "Local Ws Bots") {
+    gameConfig.bots = true;
   }
 
-  switch (gameConfig["playerCount"]) {
+  switch (gameConfig.playerCount) {
     case "2":
-      gameConfig["playerside"] = [
+      gameConfig.playerside = [
         "left",
         "right",
       ]
       break;
     case "4":
-      gameConfig["playerside"] = [
+      gameConfig.playerside = [
         "left",
         "right",
         "top",
         "bottom"
       ]
+      break;
     default:
       console.error("player count error");
       break;
   }
 
-  const datainfo = make_room(gameConfig);
+  const datainfo = await make_room(gameConfig);
+
+
+
 
 
   setTimeout(() => {
     document.dispatchEvent(new CustomEvent("startGame", { detail: { gameConfig: gameConfig, gameInfo: datainfo } }));
   }, 3000);
   console.log('Initializing game with configuration:', config);
-  alert('Game is initializing with your selected configuration. Check the console for details.');
+  // alert('Game is initializing with your selected configuration. Check the console for details.');
 }
 
 export default initializeGame;
