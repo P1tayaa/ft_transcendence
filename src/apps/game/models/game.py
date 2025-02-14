@@ -10,9 +10,12 @@ from apps.users.models import ScoreHistory
 class PlayerState(models.Model):
     game = models.ForeignKey('GameRoom', related_name='player_states', on_delete=models.CASCADE)
     player = models.ForeignKey(User, related_name='game_states', on_delete=models.CASCADE)
+    player_number = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
+    score = models.IntegerField(default=0)
     joined_at = models.DateTimeField(auto_now_add=True)
     final_score = models.IntegerField(null=True, blank=True)
+    side = models.CharField(max_length=20, blank=True)
 
     class Meta:
         unique_together = ['game', 'player', 'is_active']
@@ -37,7 +40,7 @@ class GameConfig(models.Model):
     )
 
     mode = models.CharField(max_length=50, choices=GAME_MODES)
-    server_url=models.URLField(blank=True)
+    # server_url=models.URLField(blank=True)
     player_count = models.IntegerField(validators=[MinValueValidator(2), MaxValueValidator(4)])
     map_style = models.CharField(max_length=20, choices=MAP_STYLES)
 
@@ -69,8 +72,8 @@ class GameConfig(models.Model):
         if self.bots_enabled and not self.bot_sides:
             errors['bot_sides'] = 'Bot sides mut be specificed when bots are enabled'
 
-        if self.mode == 'networked' and not self.server_url:
-            errors['server_url'] = 'Server URL is required for NETWORK mode'
+        # if self.mode == 'networked' and not self.server_url:
+            # errors['server_url'] = 'Server URL is required for NETWORK mode'
 
         if errors:
             raise ValidationError(errors)
@@ -99,8 +102,8 @@ class GameConfig(models.Model):
             if 'botSide' not in config_json or not config_json['botSide']:
                 errors['botSide'] = "Bot sides must be specified when bots are enabled"
 
-        if config_json.get('mode') == 'networked' and not config_json.get('serverurl'):
-            errors['serverurl'] = "Server URL is required for NETWORK mode"
+        # if config_json.get('mode') == 'networked' and not config_json.get('serverurl'):
+        #     errors['serverurl'] = "Server URL is required for NETWORK mode"
 
         return (len(errors) == 0, errors)
 
@@ -116,7 +119,7 @@ class GameConfig(models.Model):
     def from_dict(cls, config_dict):
         return cls(
             mode=config_dict['mode'],
-            server_url=config_dict.get('serverurl', ''),
+            # server_url=config_dict.get('serverurl', ''),
             powerups_enabled=config_dict.get('powerup', 'false') == 'true',
             powerup_list=config_dict.get('poweruplist', []),
             player_count=int(config_dict['playerCount']),
@@ -131,7 +134,7 @@ class GameConfig(models.Model):
     def to_dict(self):
         return {
             'mode': self.mode,
-            'serverurl': self.server_url,
+            # 'serverurl': self.server_url,
             'powerup': str(self.powerups_enabled),
             'poweruplist': self.powerup_list,
             'playerCount': str(self.player_count),
@@ -274,7 +277,7 @@ class GameRoom(BaseGameRoom):
             'game_mode': self.config.mode,
             'map_style': self.config.map_style,
             'current_players': self.get_player_count(),
-            'max_players': self.config.player_count,
+            # 'max_players': self.config.player_count,
             'players': [{
                 'number': ps.player_number,
                 'username': ps.player.username,

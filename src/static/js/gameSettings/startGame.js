@@ -35,7 +35,7 @@ export async function initializeGame(config) {
   let gameConfig = {
 
     mode: config.gamemode,
-    serverurl: "ws://localhost:8000/ws/room/poop",
+    // serverurl: "ws://localhost:8000/ws/room/poop",
     powerup: config.powerUps,
     poweruplist: config.powerUpOptions,
     playerCount: config.playerCount,
