@@ -7,6 +7,8 @@ done
 echo "PostgreSQL started"
 
 python src/manage.py makemigrations game
+python src/manage.py makemigrations users
+python src/manage.py makemigrations api
 python src/manage.py makemigrations
 
 # Apply migrations
