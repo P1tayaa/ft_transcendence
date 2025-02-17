@@ -3,7 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 import json
-from apps.game.models.game import GameConfig, GameRoom
+from apps.game.models.game import GameConfig, GameRoom, PlayerState
+from django.db import transaction
 
 @login_required
 @require_http_methods(["POST"])
@@ -52,3 +53,40 @@ def create_game_room(request):
              'status': 'error',
              'message': str(e),
          }, status=500)
+
+
+
+# @user_passes_test(lambda u: u.is_staff)  # Only allow staff users to clear rooms
+@login_required
+@require_http_methods(["POST"])
+def clear_game_rooms(request):
+    try:
+        with transaction.atomic():
+            # Get counts before deletion for reporting
+            player_states_count = PlayerState.objects.count()
+            game_rooms_count = GameRoom.objects.count()
+            game_configs_count = GameConfig.objects.count()
+            
+            # Delete all player states first (due to foreign key relationships)
+            PlayerState.objects.all().delete()
+            
+            # Delete all game rooms
+            GameRoom.objects.all().delete()
+            
+            # Optionally, delete all game configs if you want to start completely fresh
+            GameConfig.objects.all().delete()
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'All game rooms cleared successfully',
+                'deleted': {
+                    'player_states': player_states_count,
+                    'game_rooms': game_rooms_count,
+                    'game_configs': game_configs_count
+                }
+            })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Failed to clear game rooms: {str(e)}'
+        }, status=500)
