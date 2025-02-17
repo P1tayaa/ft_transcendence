@@ -111,7 +111,7 @@ export default class Init {
   }
 
   async waitForGameStart() {
-    while (true) {
+    while (!this.pongLogic.socket.isPlaying()) {
       await new Promise(resolve => setTimeout(resolve, 100)); // Wait for 100ms before checking again
     }
     console.log("Game has started!");
