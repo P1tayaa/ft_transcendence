@@ -70,6 +70,7 @@ class GameConsumer(BaseConsumer):
         except Exception as e:
             await self.send(text_data=json.dumps({
                 'type': 'error',
+                'error': str(e),
                 'message': 'Failed to connect to room'
              }))
             await self.close()
@@ -100,7 +101,7 @@ class GameConsumer(BaseConsumer):
 
         # position
         available_positions = await database_sync_to_async(self.game_room.config.player_sides.copy)()
-        used_positions = set(p['position'] for p in self.game_state['players'].values() if 'position 'in p)
+        used_positions = set(p['position'] for p in self.game_state['players'].values() if 'position' in p)
         position = next(pos for pos in available_positions if pos not in used_positions)
 
         self.game_state['players'][player_id] = {
@@ -180,6 +181,15 @@ class GameConsumer(BaseConsumer):
                     'message': data['message']
                 }
             )
+
+        # elif message_type == 'is_playing':
+        #     await self.channel_layer.group_send(
+        #         self.room_group_name,
+        #         {
+        #             'type': 'is_playing',
+        #             'value': self.
+        #         }
+        #     )
 
         elif message_type == 'start_game':
             player_id = str(self.scope['user'].id)
