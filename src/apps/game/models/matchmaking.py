@@ -50,7 +50,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         message_type = data.get('type')
 
         if message_type == 'list_rooms':
-            rooms = await database_sync_to_async(list)(GameRoom.get_available_rooms().values('room_name', 'config__player_count'))
+            rooms = await database_sync_to_async(list)(GameRoom.get_available_rooms(self).values('room_name', 'config__player_count'))
             await self.send(json.dumps({
                    'type': 'room_list',
                    'rooms': rooms

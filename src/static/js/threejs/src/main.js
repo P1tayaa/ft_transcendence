@@ -9,14 +9,14 @@ import { updateLightsForActivePlayers } from "./modelLoading/light_manage.js";
 
 let startInit = false;
 let config = null;
-let datainfo = null;
+let roomName;
 
 document.addEventListener("startGame", (event) => {
   const detail = event.detail;
   config = detail.gameConfig;
-  datainfo = detail.dataInfo;
-  console.log(config);
-  console.log(datainfo)
+  roomName = detail.room_name;
+  console.log("config received my pong game", config);
+  console.log("room_name received my pong game", roomName)
 
   startInit = true;
   console.log("Game event received! Initializing...");
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const waitForInit = setInterval(() => {
     if (startInit) {
       clearInterval(waitForInit);
-      init.initialize(config, datainfo);
+      init.initialize(config, roomName);
     }
   }, 100);
 

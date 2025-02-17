@@ -75,8 +75,10 @@ export async function initializeGame(config) {
 
     const datainfo = await make_room(gameConfig);
 
+    console.log("the responce of the ", (datainfo));
+
     setTimeout(() => {
-      document.dispatchEvent(new CustomEvent("startGame", { detail: { gameConfig: gameConfig, gameInfo: datainfo } }));
+      document.dispatchEvent(new CustomEvent("startGame", { detail: { gameConfig: gameConfig, room_name: datainfo.room_name } }));
     }, 3000);
     console.log('Initializing game with configuration:', config);
   } catch (error) {

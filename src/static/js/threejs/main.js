@@ -60889,7 +60889,7 @@ class Setting {
     this.powerup = setting_json.powerup == "true"; // Convert to boolean
     this.powerupList = this.parsePoweruplist(setting_json.poweruplist);
     this.playercount = parseInt(setting_json.playercount) || 2; // Default to 2 players
-    this.mapStyle = this.parseMapStyle(setting_json["map style"]);
+    this.mapStyle = this.parseMapStyle(setting_json["map_style"]);
     this.playerSide = this.parseMultipleSides(setting_json.playerside);
     this.bots = setting_json.bots == "true"; // Convert to boolean
     this.botsSide = this.parseMultipleSides(setting_json.botsSide);
@@ -61305,16 +61305,30 @@ function spawnPadles(settings, init, assetsPath, callback) {
   });
 }
 ;// ./src/pongLogic/websocket.js
+//paddle_mode
+// chat_message
+// ctart_game
+// update_game
+// consumers.py is where you can find all
+
 class MyWebSocket {
   constructor() {
     this.socket = null;
     this.host;
     this.isSpectator;
   }
-  init(settings, websocketData) {
+  isPlaying() {
+    if (this.serverState) {
+      return this.serverState.is_playing;
+    } else {
+      console.log("server state not on yet");
+      return false;
+    }
+  }
+  init(settings, roomName) {
     this.host = settings.host;
     this.isSpectator = settings.isSpectator;
-    this.startWebSocket(websocketData);
+    this.startWebSocket(roomName);
   }
   getPaddlePosition() {
     if (this.serverState && this.serverState.settings) {
@@ -61373,9 +61387,9 @@ class MyWebSocket {
       }
     }
   }
-  startWebSocket(websocketData) {
+  startWebSocket(roomName) {
     console.log("is this called yet");
-    const roomName = websocketData.room_name;
+    // const roomName = websocketData.room_name;
     const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsPath = this.isSpectator ? 'spectate' : 'room';
     this.socket = new WebSocket(`${wsScheme}//${window.location.host}/ws/${wsPath}/${roomName}/`);
@@ -61437,11 +61451,11 @@ class Pong {
     this.lastContact;
     this.lastLoser;
   }
-  async initialize(settings, websocketData) {
+  async initialize(settings, roomName) {
     this.settings = settings;
     if (this.settings.mode === Mode.NETWORKED) {
       this.mode = this.settings.mode;
-      this.socket.init(this.settings, websocketData);
+      this.socket.init(this.settings, roomName);
     }
     console.log(`Pong initialized in ${this.mode} mode.`);
   }
@@ -105797,11 +105811,16 @@ class Init {
   checkAllAssetsLoaded(callback) {
     console.log(this.assetsLoaded + "= loaded and total =" + this.totalAssets);
     if (this.assetsLoaded === this.totalAssets) {
-      hideLoadingScreen();
       callback();
     }
   }
-  async initialize(settings, websocketData) {
+  async waitForGameStart() {
+    while (true) {
+      await new Promise(resolve => setTimeout(resolve, 100)); // Wait for 100ms before checking again
+    }
+    console.log("Game has started!");
+  }
+  async initialize(settings, roomName) {
     showLoadingScreen();
     // try {
     //   const json_settings = await get_settings(0);
@@ -105813,16 +105832,18 @@ class Init {
     // }
     this.settings = new Setting(settings);
     this.countAssetToLoad();
-    this.pongLogic.initialize(this.settings, websocketData);
+    this.pongLogic.initialize(this.settings, roomName);
     this.controlHandler = new ControlHandler(this.settings);
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new score(this.gameScene.getScene(), this.settings.playerSide);
     this.loadAssets(() => {
-      this.doneLoadingAssets = true;
       // Initialize lights, controls, and start the game loop
       this.lightManager.setupLights();
       // You can trigger other initializations here
     });
+    await this.waitForGameStart();
+    hideLoadingScreen();
+    this.doneLoadingAssets = true;
   }
 }
 ;// ./src/main.js
@@ -105833,13 +105854,13 @@ class Init {
 
 let startInit = false;
 let config = null;
-let datainfo = null;
+let roomName;
 document.addEventListener("startGame", event => {
   const detail = event.detail;
   config = detail.gameConfig;
-  datainfo = detail.dataInfo;
-  console.log(config);
-  console.log(datainfo);
+  roomName = detail.room_name;
+  console.log("config received my pong game", config);
+  console.log("room_name received my pong game", roomName);
   startInit = true;
   console.log("Game event received! Initializing...");
 });
@@ -105848,7 +105869,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const waitForInit = setInterval(() => {
     if (startInit) {
       clearInterval(waitForInit);
-      init.initialize(config, datainfo);
+      init.initialize(config, roomName);
     }
   }, 100);
   const gameScene = init.gameScene;

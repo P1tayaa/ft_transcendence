@@ -30,11 +30,11 @@ class Pong {
     this.lastLoser;
   }
 
-  async initialize(settings, websocketData) {
+  async initialize(settings, roomName) {
     this.settings = settings;
     if (this.settings.mode === Mode.NETWORKED) {
       this.mode = this.settings.mode;
-      this.socket.init(this.settings, websocketData);
+      this.socket.init(this.settings, roomName);
     }
     console.log(`Pong initialized in ${this.mode} mode.`);
   }

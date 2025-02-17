@@ -106,12 +106,20 @@ export default class Init {
   checkAllAssetsLoaded(callback) {
     console.log(this.assetsLoaded + "= loaded and total =" + this.totalAssets);
     if (this.assetsLoaded === this.totalAssets) {
-      hideLoadingScreen();
       callback();
     }
   }
 
-  async initialize(settings, websocketData) {
+  async waitForGameStart() {
+    while (true) {
+      await new Promise(resolve => setTimeout(resolve, 100)); // Wait for 100ms before checking again
+    }
+    console.log("Game has started!");
+  };
+
+
+
+  async initialize(settings, roomName) {
     showLoadingScreen();
     // try {
     //   const json_settings = await get_settings(0);
@@ -123,15 +131,21 @@ export default class Init {
     // }
     this.settings = new Setting(settings);
     this.countAssetToLoad();
-    this.pongLogic.initialize(this.settings, websocketData);
+    this.pongLogic.initialize(this.settings, roomName);
     this.controlHandler = new ControlHandler(this.settings);
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new Score(this.gameScene.getScene(), this.settings.playerSide);
     this.loadAssets(() => {
-      this.doneLoadingAssets = true;
       // Initialize lights, controls, and start the game loop
       this.lightManager.setupLights();
       // You can trigger other initializations here
     });
+
+    await this.waitForGameStart();
+
+    hideLoadingScreen();
+    this.doneLoadingAssets = true;
+
   }
 }
+

@@ -1,4 +1,8 @@
-
+//paddle_mode
+// chat_message
+// ctart_game
+// update_game
+// consumers.py is where you can find all
 
 class MyWebSocket {
   constructor() {
@@ -7,10 +11,20 @@ class MyWebSocket {
     this.isSpectator;
   }
 
-  init(settings, websocketData) {
+  isPlaying() {
+    if (this.serverState) {
+
+      return this.serverState.is_playing;
+    } else {
+      console.log("server state not on yet");
+      return false;
+    }
+  }
+
+  init(settings, roomName) {
     this.host = settings.host;
     this.isSpectator = settings.isSpectator;
-    this.startWebSocket(websocketData);
+    this.startWebSocket(roomName);
   }
 
   getPaddlePosition() {
@@ -76,9 +90,9 @@ class MyWebSocket {
     }
   }
 
-  startWebSocket(websocketData) {
+  startWebSocket(roomName) {
     console.log("is this called yet");
-    const roomName = websocketData.room_name;
+    // const roomName = websocketData.room_name;
     const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsPath = this.isSpectator ? 'spectate' : 'room';
     this.socket = new WebSocket(

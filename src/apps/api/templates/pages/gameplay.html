@@ -1,9 +1,25 @@
 <!-- Gameplay Page -->
 
 <main>
+
+<h2>Available Matches</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Room Name</th>
+                <th>Players</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="roomsTableBody">
+            <!-- Dynamic rows will be inserted here -->
+        </tbody>
+    </table>
+
+
   <div id="gameplay">
         <canvas id="pong-game" width="960" height="720">Your browser does not support the canvas element.</canvas>
   </div>
-  
+ <script src="../static/js/gameSettings/joinGame.js"></script> 
   <script type="module" src="../static/js/threejs/main.js"> </script>
 </main>
