@@ -261,6 +261,12 @@ class GameConsumer(BaseConsumer):
     async def player_update(self, event):
         await self.send(text_data = json.dumps(event))
 
+    async def which_paddle(self, event):
+        await self.send(text_data = json.dumps({
+                           'type': 'which_paddle',
+                           'position': event['position']
+                       }))
+
 class SpectatorConsumer(BaseConsumer):
     async def connect(self):
         await super().connect()
