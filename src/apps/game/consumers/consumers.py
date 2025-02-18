@@ -158,14 +158,24 @@ class GameConsumer(BaseConsumer):
                 )
 
         elif message_type == 'which_paddle':
-            position = self.game_state['players'][player_id]['position']
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    'type': 'which_paddle',
-                    'position': position,
-                }
-            )
+            player_id = str(self.scope['user'].id)
+            if player_id in self.game_state['players']:
+                position = self.game_state['players'][player_id]['position']
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'which_paddle',
+                        'position': position,
+                    }
+                )
+            else:
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'error',
+                        'message': 'Player not found in game',
+                    }
+                )
             
         elif message_type == 'paddle_move':
             player_id = str(self.scope['user'].id)
