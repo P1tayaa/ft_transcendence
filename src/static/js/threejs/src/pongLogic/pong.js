@@ -34,7 +34,7 @@ class Pong {
     this.settings = settings;
     if (this.settings.mode === Mode.NETWORKED) {
       this.mode = this.settings.mode;
-      this.socket.init(this.settings, roomName);
+      await this.socket.init(this.settings, roomName);
     }
     console.log(`Pong initialized in ${this.mode} mode.`);
   }

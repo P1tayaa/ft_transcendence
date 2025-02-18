@@ -4,6 +4,9 @@
 // update_game
 // consumers.py is where you can find all
 
+import { intToPlayerSide, PlayerSide } from './setting.js'
+
+
 class MyWebSocket {
   constructor() {
     this.socket = null;
@@ -13,7 +16,8 @@ class MyWebSocket {
     this.serverState;
     this.winner = "";
     this.game_over = false;
-
+    this.myPos = null;
+    this.myPosStruc;
   }
 
   isPlaying() {
@@ -31,15 +35,26 @@ class MyWebSocket {
   }
 
   getWhichPadle() {
-    const paddle = this.gameState.players.player_id.position;
-    console.log(paddle);
-    return paddle;
+    console.log(this.myPos);
+    if (this.myPos === "left") {
+      this.myPosStruc = PlayerSide.LEFT;
+    } else if (this.myPos === "right") {
+      this.myPosStruc = PlayerSide.RIGHT;
+    } else if (this.myPos === "bottom") {
+      this.myPosStruc = PlayerSide.BOTTOM;
+    } else if (this.myPos === "top") {
+      this.myPosStruc = PlayerSide.TOP;
+    } else {
+      console.error("Invalid position value:", this.myPos);
+    }
+
+    return intToPlayerSide(this.myPosStruc);
   }
 
-  init(settings, roomName) {
+  async init(settings, roomName) {
     this.host = settings.host;
     this.isSpectator = settings.isSpectator;
-    this.startWebSocket(roomName);
+    await this.startWebSocket(roomName);
   }
 
   getPaddlePosition() {
@@ -104,45 +119,54 @@ class MyWebSocket {
     }
   }
 
-  startWebSocket(roomName) {
+  async startWebSocket(roomName) {
     console.log("is this called yet");
     // const roomName = websocketData.room_name;
     const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsPath = this.isSpectator ? 'spectate' : 'room';
-    this.socket = new WebSocket(
-      `${wsScheme}//${window.location.host}/ws/${wsPath}/${roomName}/`
-    );
 
 
-    this.socket.onopen = () => {
-      console.log('Connected to WebSocket');
-    };
+    await new Promise((resolve, reject) => {
 
-    this.socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log('Received:', data);
+      this.socket = new WebSocket(
+        `${wsScheme}//${window.location.host}/ws/${wsPath}/${roomName}/`
+      );
 
-      // if (data.type === "gameState") {
-      //   this.serverState = data; // Store the received game state
-      // } else
-      if (data.type === "game_state_update") {
-        this.serverState = data.state;
-        if (data.game_over) {
-          this.winner = data.winner;
-          this.game_over = true;
+
+      this.socket.onopen = () => {
+        console.log('Connected to WebSocket');
+        resolve();
+      };
+
+      this.socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log('Received:', data);
+
+        // if (data.type === "gameState") {
+        //   this.serverState = data; // Store the received game state
+        // } else
+        if (data.type === "game_state_update") {
+          this.serverState = data.state;
+          if (data.game_over) {
+            this.winner = data.winner;
+            this.game_over = true;
+          }
+        } else if (data.type === "whitch_paddle") {
+          this.myPos = data.position;
         }
-      } else if (data.type === "whitch_paddle") {
-        this.myPos = data.position;
-      }
-    };
+      };
 
-    this.socket.onclose = (event) => {
-      console.warn('WebSocket connection closed', event);
-    };
+      this.socket.onclose = (event) => {
+        console.warn('WebSocket connection closed', event);
+      };
 
-    this.socket.onerror = (error) => {
-      console.error('WebSocket Error:', error.message);
-    };
+      this.socket.onerror = (error) => {
+        console.error('WebSocket Error:', error.message);
+      };
+
+    });
+
+    this.socket.send(JSON.stringify({ type: "which_paddle" }))
   }
 }
 

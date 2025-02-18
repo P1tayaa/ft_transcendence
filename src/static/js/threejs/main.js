@@ -61319,11 +61319,17 @@ function spawnPadles(settings, init, assetsPath, callback) {
 // update_game
 // consumers.py is where you can find all
 
+
 class MyWebSocket {
   constructor() {
     this.socket = null;
     this.host;
     this.isSpectator;
+    this.serverState;
+    this.winner = "";
+    this.game_over = false;
+    this.myPos = null;
+    this.myPosStruc;
   }
   isPlaying() {
     if (this.serverState) {
@@ -61339,14 +61345,24 @@ class MyWebSocket {
     }));
   }
   getWhichPadle() {
-    const paddle = this.gameState.players.player_id.position;
-    console.log(paddle);
-    return paddle;
+    console.log(this.myPos);
+    if (this.myPos === "left") {
+      this.myPosStruc = setting_PlayerSide.LEFT;
+    } else if (this.myPos === "right") {
+      this.myPosStruc = setting_PlayerSide.RIGHT;
+    } else if (this.myPos === "bottom") {
+      this.myPosStruc = setting_PlayerSide.BOTTOM;
+    } else if (this.myPos === "top") {
+      this.myPosStruc = setting_PlayerSide.TOP;
+    } else {
+      console.error("Invalid position value:", this.myPos);
+    }
+    return intToPlayerSide(this.myPosStruc);
   }
-  init(settings, roomName) {
+  async init(settings, roomName) {
     this.host = settings.host;
     this.isSpectator = settings.isSpectator;
-    this.startWebSocket(roomName);
+    await this.startWebSocket(roomName);
   }
   getPaddlePosition() {
     if (this.serverState && this.serverState.settings) {
@@ -61354,12 +61370,11 @@ class MyWebSocket {
     }
     return null; // Return null if no data is available yet
   }
-  sendPaddlePosition(paddleInput, paddleKey) {
+  sendPaddlePosition(paddleInput, paddleKey, rotation) {
     const paddleInfo = {
-      settings: {
-        paddleKey: paddleKey,
-        paddleInput: paddleInput
-      }
+      type: 'paddle_move',
+      position: paddleInput,
+      rotation: rotation
     };
     this.socket.send(JSON.stringify(paddleInfo));
   }
@@ -61405,28 +61420,44 @@ class MyWebSocket {
       }
     }
   }
-  startWebSocket(roomName) {
+  async startWebSocket(roomName) {
     console.log("is this called yet");
     // const roomName = websocketData.room_name;
     const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsPath = this.isSpectator ? 'spectate' : 'room';
-    this.socket = new WebSocket(`${wsScheme}//${window.location.host}/ws/${wsPath}/${roomName}/`);
-    this.socket.onopen = () => {
-      console.log('Connected to WebSocket');
-    };
-    this.socket.onmessage = event => {
-      const data = JSON.parse(event.data);
-      console.log('Received:', data);
-      if (data.type === "gameState") {
-        this.serverState = data; // Store the received game state
-      }
-    };
-    this.socket.onclose = event => {
-      console.warn('WebSocket connection closed', event);
-    };
-    this.socket.onerror = error => {
-      console.error('WebSocket Error:', error.message);
-    };
+    await new Promise((resolve, reject) => {
+      this.socket = new WebSocket(`${wsScheme}//${window.location.host}/ws/${wsPath}/${roomName}/`);
+      this.socket.onopen = () => {
+        console.log('Connected to WebSocket');
+        resolve();
+      };
+      this.socket.onmessage = event => {
+        const data = JSON.parse(event.data);
+        console.log('Received:', data);
+
+        // if (data.type === "gameState") {
+        //   this.serverState = data; // Store the received game state
+        // } else
+        if (data.type === "game_state_update") {
+          this.serverState = data.state;
+          if (data.game_over) {
+            this.winner = data.winner;
+            this.game_over = true;
+          }
+        } else if (data.type === "whitch_paddle") {
+          this.myPos = data.position;
+        }
+      };
+      this.socket.onclose = event => {
+        console.warn('WebSocket connection closed', event);
+      };
+      this.socket.onerror = error => {
+        console.error('WebSocket Error:', error.message);
+      };
+    });
+    this.socket.send(JSON.stringify({
+      type: "which_paddle"
+    }));
   }
 }
 /* harmony default export */ const websocket = (MyWebSocket);
@@ -61473,7 +61504,7 @@ class Pong {
     this.settings = settings;
     if (this.settings.mode === Mode.NETWORKED) {
       this.mode = this.settings.mode;
-      this.socket.init(this.settings, roomName);
+      await this.socket.init(this.settings, roomName);
     }
     console.log(`Pong initialized in ${this.mode} mode.`);
   }
@@ -105835,9 +105866,7 @@ class Init {
   async waitForGameStart() {
     while (!this.pongLogic.socket.isPlaying()) {
       await new Promise(resolve => setTimeout(resolve, 100));
-      if (this.settings.host === true) {
-        this.socket.tryStartGame();
-      }
+      this.pongLogic.socket.tryStartGame();
     }
     console.log("Game has started!");
   }
@@ -105853,8 +105882,8 @@ class Init {
     // }
     this.settings = new Setting(settings);
     this.countAssetToLoad();
-    this.pongLogic.initialize(this.settings, roomName);
-    this.controlHandler = new ControlHandler(this.settings);
+    await this.pongLogic.initialize(this.settings, roomName);
+    this.controlHandler = new ControlHandler(this.settings, this.pongLogic.socket);
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new score(this.gameScene.getScene(), this.settings.playerSide);
     this.loadAssets(() => {
