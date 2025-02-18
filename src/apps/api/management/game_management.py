@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 import json
-from apps.game.models.game import GameConfig, GameRoom, PlayerState 
+from apps.game.models.game import GameConfig, GameRoom, PlayerState,BaseGameRoom
 from django.db import transaction
 
 
