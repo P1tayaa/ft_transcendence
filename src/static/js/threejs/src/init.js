@@ -6,7 +6,7 @@ import ControlHandler from './control.js';
 import Pong from './pongLogic/pong.js';
 import Score from './pongLogic/score.js';
 import { initPowerUp, AllPowerUp } from './powerUp/AllPowerUp.js';
-import { MapStyle, get_settings, Setting } from "./pongLogic/setting.js";
+import { Mode, MapStyle, get_settings, Setting } from "./pongLogic/setting.js";
 const assetsPath = "http://localhost:8000/static/glfw/";
 
 
@@ -112,7 +112,10 @@ export default class Init {
 
   async waitForGameStart() {
     while (!this.pongLogic.socket.isPlaying()) {
-      await new Promise(resolve => setTimeout(resolve, 100)); // Wait for 100ms before checking again
+      await new Promise(resolve => setTimeout(resolve, 100));
+      if (this.settings.host === true) {
+        this.pongLogic.socket.tryStartGame();
+      }
     }
     console.log("Game has started!");
   };
@@ -132,20 +135,21 @@ export default class Init {
     this.settings = new Setting(settings);
     this.countAssetToLoad();
     this.pongLogic.initialize(this.settings, roomName);
-    this.controlHandler = new ControlHandler(this.settings);
+    this.controlHandler = new ControlHandler(this.settings, this.pongLogic.socket);
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new Score(this.gameScene.getScene(), this.settings.playerSide);
     this.loadAssets(() => {
-      // Initialize lights, controls, and start the game loop
+
+
+      this.doneLoadingAssets = true;
+
       this.lightManager.setupLights();
-      // You can trigger other initializations here
     });
 
-    await this.waitForGameStart();
+    if (this.settings.mode === Mode.NETWORKED)
+      await this.waitForGameStart();
 
     hideLoadingScreen();
-    this.doneLoadingAssets = true;
-
   }
 }
 

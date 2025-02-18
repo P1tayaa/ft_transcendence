@@ -47,9 +47,6 @@ export async function initializeGame(config) {
     Spectator: false
   }
 
-  if (gameConfig.mode === "Local Ws Bots") {
-    gameConfig.bots = true;
-  }
 
   switch (gameConfig.playerCount) {
     case "2":
@@ -70,6 +67,26 @@ export async function initializeGame(config) {
       console.error("player count error");
       break;
   }
+
+
+
+  if (gameConfig.mode === "localsolo") {
+    // Enable bot mode
+    gameConfig.bots = true;
+
+    // Pick a random index from the playerside array
+    const playerIndex = Math.floor(Math.random() * gameConfig.playerside.length);
+    for (let i = 0; i < gameConfig.playerside.length; i++) {
+      if (i !== playerIndex) {
+        gameConfig.botsSide.push(gameConfig.playerside[i]);
+      }
+    }
+    // Keep one random side for the player
+    gameConfig.playerside = [gameConfig.playerside[playerIndex]];
+
+    // Move all other sides to botsSide
+  }
+
 
   try {
 

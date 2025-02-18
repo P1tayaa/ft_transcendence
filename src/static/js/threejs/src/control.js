@@ -1,6 +1,6 @@
 
 
-import { PlayerSide } from "./pongLogic/setting.js";
+import { Mode, PlayerSide } from "./pongLogic/setting.js";
 
 const inputKeys = {
   [PlayerSide.LEFT]: { up: 'w', down: 's' },
@@ -10,17 +10,24 @@ const inputKeys = {
 };
 
 export default class ControlHandler {
-  constructor(settings) {
+  constructor(settings, socket) {
     this.settings = settings; // Get player sides from settings
     this.paddleSpeeds = {}; // Store paddle speeds dynamically
     this.acceleration = 0.2; // Default acceleration
     this.debug = false;
 
     // Initialize paddle speeds for active players
-    this.settings.playerSide.forEach(side => {
-      this.paddleSpeeds[side] = 0;
-    });
-
+    if (settings.Mode == Mode.LOCAL) {
+      this.settings.playerSide.forEach(side => {
+        this.paddleSpeeds[side] = 0;
+      });
+    } else if (settings.Mode == Mode.LOCALS_SOLO) {
+      this.settings.playerSide.forEach(side => {
+        this.paddleSpeeds[side] = 0;
+      });
+    } else {
+      this.paddleSpeeds[socket.getWhichPadle()] = 0;
+    }
     this.setupControls();
   }
 

@@ -61075,16 +61075,24 @@ const inputKeys = {
   }
 };
 class ControlHandler {
-  constructor(settings) {
+  constructor(settings, socket) {
     this.settings = settings; // Get player sides from settings
     this.paddleSpeeds = {}; // Store paddle speeds dynamically
     this.acceleration = 0.2; // Default acceleration
     this.debug = false;
 
     // Initialize paddle speeds for active players
-    this.settings.playerSide.forEach(side => {
-      this.paddleSpeeds[side] = 0;
-    });
+    if (settings.Mode == Mode.LOCAL) {
+      this.settings.playerSide.forEach(side => {
+        this.paddleSpeeds[side] = 0;
+      });
+    } else if (settings.Mode == Mode.LOCALS_SOLO) {
+      this.settings.playerSide.forEach(side => {
+        this.paddleSpeeds[side] = 0;
+      });
+    } else {
+      this.paddleSpeeds[socket.getWhichPadle()] = 0;
+    }
     this.setupControls();
   }
   setupControls() {
@@ -61324,6 +61332,16 @@ class MyWebSocket {
       console.log("server state not on yet");
       return false;
     }
+  }
+  tryStartGame() {
+    this.socket.send(JSON.stringify({
+      type: 'start_game'
+    }));
+  }
+  getWhichPadle() {
+    const paddle = this.gameState.players.player_id.position;
+    console.log(paddle);
+    return paddle;
   }
   init(settings, roomName) {
     this.host = settings.host;
@@ -105815,9 +105833,11 @@ class Init {
     }
   }
   async waitForGameStart() {
-    console.log("is platinh socket :", this.pongLogic.socket.isPlaying);
     while (!this.pongLogic.socket.isPlaying()) {
-      await new Promise(resolve => setTimeout(resolve, 100)); // Wait for 100ms before checking again
+      await new Promise(resolve => setTimeout(resolve, 100));
+      if (this.settings.host === true) {
+        this.socket.tryStartGame();
+      }
     }
     console.log("Game has started!");
   }
@@ -105838,13 +105858,11 @@ class Init {
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new score(this.gameScene.getScene(), this.settings.playerSide);
     this.loadAssets(() => {
-      // Initialize lights, controls, and start the game loop
+      this.doneLoadingAssets = true;
       this.lightManager.setupLights();
-      // You can trigger other initializations here
     });
-    await this.waitForGameStart();
+    if (this.settings.mode === Mode.NETWORKED) await this.waitForGameStart();
     hideLoadingScreen();
-    this.doneLoadingAssets = true;
   }
 }
 ;// ./src/main.js

@@ -9,6 +9,11 @@ class MyWebSocket {
     this.socket = null;
     this.host;
     this.isSpectator;
+
+    this.serverState;
+    this.winner = "";
+    this.game_over = false;
+
   }
 
   isPlaying() {
@@ -19,6 +24,16 @@ class MyWebSocket {
       console.log("server state not on yet");
       return false;
     }
+  }
+
+  tryStartGame() {
+    this.socket.send(JSON.stringify({ type: 'start_game' }));
+  }
+
+  getWhichPadle() {
+    const paddle = this.gameState.players.player_id.position;
+    console.log(paddle);
+    return paddle;
   }
 
   init(settings, roomName) {
@@ -35,12 +50,11 @@ class MyWebSocket {
   }
 
 
-  sendPaddlePosition(paddleInput, paddleKey) {
+  sendPaddlePosition(paddleInput, paddleKey, rotation) {
     const paddleInfo = {
-      settings: {
-        paddleKey: paddleKey,
-        paddleInput: paddleInput
-      }
+      type: 'paddle_move',
+      position: paddleInput,
+      rotation: rotation,
     }
     this.socket.send(JSON.stringify(paddleInfo))
   }
@@ -108,8 +122,17 @@ class MyWebSocket {
       const data = JSON.parse(event.data);
       console.log('Received:', data);
 
-      if (data.type === "gameState") {
-        this.serverState = data; // Store the received game state
+      // if (data.type === "gameState") {
+      //   this.serverState = data; // Store the received game state
+      // } else
+      if (data.type === "game_state_update") {
+        this.serverState = data.state;
+        if (data.game_over) {
+          this.winner = data.winner;
+          this.game_over = true;
+        }
+      } else if (data.type === "whitch_paddle") {
+        this.myPos = data.position;
       }
     };
 
