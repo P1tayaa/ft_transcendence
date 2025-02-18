@@ -16,6 +16,7 @@ Including another URLconf
 """
 
 from django.contrib import admin
+from django.conf.urls.static import static
 from django.urls import path, include
 import os
 from django.http import FileResponse, Http404
@@ -70,4 +71,4 @@ urlpatterns = [
     path("configGame/", configGame, name="configGame"),
     path("gameStarting/", gameStarting, name="gameStarting"),
     # ... other paths
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
