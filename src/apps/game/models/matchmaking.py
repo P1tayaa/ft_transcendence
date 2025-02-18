@@ -50,10 +50,39 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         message_type = data.get('type')
 
         if message_type == 'list_rooms':
-            rooms = await database_sync_to_async(list)(GameRoom.get_available_rooms().values('room_name', 'config__player_count'))
+            rooms = await database_sync_to_async(list)(
+            GameRoom.get_available_rooms(self).values(
+                'room_name',
+                'config__mode',
+                'config__player_count',
+                'config__map_style',
+                'config__powerups_enabled',
+                'config__powerup_list',
+                'config__player_sides',
+                'config__bots_enabled',
+                'config__bot_sides',
+                'config__is_host',
+                'config__spectator_enabled'
+                )
+            )
+            formatted_rooms = [{
+            'room_name': room['room_name'],
+            'config': {
+                'mode': room['config__mode'],
+                'playerCount': room['config__player_count'],
+                'map_style': room['config__map_style'],
+                'powerup': str(room['config__powerups_enabled']),
+                'poweruplist': room['config__powerup_list'],
+                'playerside': room['config__player_sides'],
+                'bots': str(room['config__bots_enabled']),
+                'botsSide': room['config__bot_sides'],
+                'host': str(room['config__is_host']),
+                'Spectator': str(room['config__spectator_enabled'])
+                }
+            } for room in rooms]
             await self.send(json.dumps({
                    'type': 'room_list',
-                   'rooms': rooms
+                   'rooms': formatted_rooms
                }))
         elif message_type == 'find_random':
             try:
