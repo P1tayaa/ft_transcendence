@@ -151,7 +151,7 @@ class MyWebSocket {
             this.winner = data.winner;
             this.game_over = true;
           }
-        } else if (data.type === "whitch_paddle") {
+        } else if (data.type === "which_paddle") {
           this.myPos = data.position;
         }
       };
@@ -166,7 +166,7 @@ class MyWebSocket {
 
     });
 
-    this.socket.send(JSON.stringify({ type: "which_paddle" }))
+    this.socket.send(JSON.stringify({ type: "which_paddle" }));
   }
 }
 

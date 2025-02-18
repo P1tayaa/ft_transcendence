@@ -61091,7 +61091,9 @@ class ControlHandler {
         this.paddleSpeeds[side] = 0;
       });
     } else {
-      this.paddleSpeeds[socket.getWhichPadle()] = 0;
+      const cur_paddle = socket.getWhichPadle();
+      console.log(cur_paddle);
+      this.paddleSpeeds[cur_paddle] = 0;
     }
     this.setupControls();
   }
@@ -61444,7 +61446,7 @@ class MyWebSocket {
             this.winner = data.winner;
             this.game_over = true;
           }
-        } else if (data.type === "whitch_paddle") {
+        } else if (data.type === "which_paddle") {
           this.myPos = data.position;
         }
       };

@@ -26,7 +26,9 @@ export default class ControlHandler {
         this.paddleSpeeds[side] = 0;
       });
     } else {
-      this.paddleSpeeds[socket.getWhichPadle()] = 0;
+      const cur_paddle = socket.getWhichPadle();
+      console.log(cur_paddle)
+      this.paddleSpeeds[cur_paddle] = 0;
     }
     this.setupControls();
   }
