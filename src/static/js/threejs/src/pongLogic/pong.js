@@ -84,7 +84,6 @@ class Pong {
     }
   }
 
-
   localCollisionDetection(ballPosition3D, gameScene) {
     this.ballPos = { x: ballPosition3D.x, y: ballPosition3D.y };
 
@@ -218,10 +217,7 @@ class Pong {
           gameScene.moveAssetBy(Padle, getRightSpeed(Padle, input[Padle], this.settings, this));
         }
       });
-
-      // Get Positions
     }
-
     const BallPos = gameScene.getAssetPossition('Ball');
     this.checkCollisions(BallPos, gameScene);
   }

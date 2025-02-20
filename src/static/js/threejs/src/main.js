@@ -45,8 +45,9 @@ class main {
       // Assets are still loading; skip rendering
       return;
     }
-
-    this.allPowers.update(this.gameScene, this.pongLogic);
+    if (this.init.settings.this.powerup) {
+      this.allPowers.update(this.gameScene, this.pongLogic);
+    }
 
 
     const input = this.init.controlHandler.getPaddleSpeeds();
