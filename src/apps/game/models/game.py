@@ -210,7 +210,7 @@ class GameRoom(BaseGameRoom):
     def all_players_ready(self):
         """Check if all active players are ready"""
         active_players = self.get_players()
-        return active_players.count() > 0 and all(ps.is_ready for ps in active_players)
+        return active_players.count() >= self.config.player_count and all(ps.is_ready for ps in active_players)
 
     def join_game(self, player): # Player is User object
         if self.status != 'WAITING':
