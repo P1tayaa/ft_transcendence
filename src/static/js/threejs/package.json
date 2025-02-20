@@ -21,7 +21,7 @@
     "smooth-scrollbar": "^8.7.5",
     "style-loader": "^3.0.0",
     "three": "^0.172.0",
-    "webpack": "^5.41.1",
+    "webpack": "^5.98.0",
     "webpack-cli": "^4.7.2",
     "webpack-merge": "^5.8.0"
   },

@@ -24,32 +24,17 @@ class BaseConsumer(AsyncWebsocketConsumer):
 
 class GameConsumer(BaseConsumer):
     game_room = None
+
+    @database_sync_to_async
+    def get_player_count(self):
+        return self.game_room.get_player_count()
+
     async def connect(self):
         await super().connect()
 
         try :
-            config = await database_sync_to_async(GameConfig.objects.first)()
-            if not config:
-                config = await database_sync_to_async(GameConfig.objects.create)(
-                    mode='networked',
-                    server_url='',
-                    powerups_enabled=False,
-                    powerup_list=[],
-                    player_count=4,
-                    map_style='classic',
-                    player_sides=['left', 'right', 'top', 'bottom'],
-                    bots_enabled=False,
-                    bot_sides=['top'],
-                    is_host=True,
-                    spectator_enabled=False
-                )
-            self.game_room, created = await database_sync_to_async(GameRoom.objects.get_or_create)(
-                room_name=self.room_name,
-                defaults = {
-                    'config': await database_sync_to_async(GameConfig.objects.first)(),  # Use a default config
-                    'status': 'WAITING',
-                    'is_active': True
-                }
+            self.game_room = await database_sync_to_async(GameRoom.objects.get)(
+                room_name=self.room_name
             )
             if not self.game_room:
                 raise ValueError("Failed to create game_room")
@@ -219,10 +204,11 @@ class GameConsumer(BaseConsumer):
 
         elif message_type == 'start_game':
             player_id = str(self.scope['user'].id)
+            current_player_count = await self.get_player_count()
             if player_id in self.game_state['players'] \
                 and self.game_state['players'][player_id]['is_host'] \
-                and len(self.game_state['players']) >= self.game_room.config.player_count \
-                and not self.game_state['is_playing']:
+                and not self.game_state['is_playing'] \
+                and current_player_count >= self.game_room.config.player_count:
                 self.game_state['is_playing'] = True
                 self.game_loop = asyncio.create_task(self.run_game_loop())
                 await self.channel_layer.group_send(
@@ -238,6 +224,8 @@ class GameConsumer(BaseConsumer):
                     {
                         'type': 'failed_to_start_game',
                         'state': self.game_state,
+                        'checks': len(self.game_state['players']),
+                        'config_player_count': self.game_room.config.player_count
                     }
                 )
 
@@ -262,6 +250,27 @@ class GameConsumer(BaseConsumer):
                         'winner': winner_id
                     }
                 )
+
+        elif message_type == 'player_ready':
+            player_id = self.scope['user']
+            await self.game_room.set_player_ready(player_id)
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'player_ready',
+                    'message': 'player set ready'
+                }
+            )
+
+        elif message_type == 'is_all_players_ready':
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'is_all_players_ready',
+                    'value': await self.game_room.all_players_ready()
+                }
+            )
+            
 
 
     async def run_game_loop(self):
@@ -293,6 +302,18 @@ class GameConsumer(BaseConsumer):
                            'type': 'which_paddle',
                            'position': event['position']
                        }))
+        
+    async def started_game(self, event):
+        await self.send(text_data = json.dumps(event))
+    async def failed_to_start_game(self, event):
+        await self.send(text_data = json.dumps(event))
+
+    async def player_ready(self, event):
+        await self.send(text_data = json.dumps(event))
+    async def is_all_players_ready(self, event):
+        await self.send(text_data = json.dumps(event))
+        
+
 
 class SpectatorConsumer(BaseConsumer):
     async def connect(self):
@@ -333,9 +354,4 @@ class SpectatorConsumer(BaseConsumer):
     async def spectator_join(self, event):
         await self.send(text_data = json.dumps(event))
     
-    async def started_game(self, event):
-        await self.send(text_data = json.dumps(event))
-    async def failed_to_start_game(self, event):
-        await self.send(text_data = json.dumps(event))
-
 

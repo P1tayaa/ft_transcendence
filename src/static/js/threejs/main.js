@@ -61334,6 +61334,7 @@ class MyWebSocket {
     this.myPos = null;
     this.myPosStruc;
     this.gameStarted = false;
+    this.allPlayerReady = false;
   }
   isPlaying() {
     if (this.serverState) {
@@ -61432,6 +61433,13 @@ class MyWebSocket {
       }
     }
   }
+  async player_ready() {
+    console.log("setting player ready");
+    const playerRequest = {
+      type: 'player_ready'
+    };
+    this.socket.send(JSON.stringify(playerRequest));
+  }
   async startWebSocket(roomName) {
     console.log("is this called yet");
     // const roomName = websocketData.room_name;
@@ -61463,6 +61471,10 @@ class MyWebSocket {
           this.gameStarted = true;
         } else if (data.type === "failed_to_start_game") {
           console.log(data.state);
+          console.log(data.checks);
+          console.log(data.config_player_count);
+        } else if (data.type === 'is_all_players_ready') {
+          this.allPlayerReady = true;
         }
       };
       this.socket.onclose = event => {
@@ -105881,7 +105893,8 @@ class Init {
     }
   }
   async waitForGameStart() {
-    while (!this.pongLogic.socket.isPlaying()) {
+    this.pongLogic.socket.player_ready();
+    while (!this.pongLogic.socket.allPlayerReady) {
       await new Promise(resolve => setTimeout(resolve, 100));
       this.pongLogic.socket.tryStartGame();
     }

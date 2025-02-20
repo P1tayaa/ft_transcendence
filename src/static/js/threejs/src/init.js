@@ -111,7 +111,8 @@ export default class Init {
   }
 
   async waitForGameStart() {
-    while (!this.pongLogic.socket.isPlaying()) {
+    this.pongLogic.socket.player_ready();
+    while (!this.pongLogic.socket.allPlayerReady) {
       await new Promise(resolve => setTimeout(resolve, 100));
       this.pongLogic.socket.tryStartGame()
     }

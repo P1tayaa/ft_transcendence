@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
+from channels.db import database_sync_to_async
 from django.db import transaction
 import math
 import random
@@ -16,6 +17,7 @@ class PlayerState(models.Model):
     joined_at = models.DateTimeField(auto_now_add=True)
     final_score = models.IntegerField(null=True, blank=True)
     side = models.CharField(max_length=20, blank=True)
+    is_ready = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ['game', 'player', 'is_active']
@@ -168,6 +170,10 @@ class BaseGameRoom(models.Model):
         abstract = True
 
 class GameRoom(BaseGameRoom):
+    players = models.ManyToManyField(
+        'auth.User',
+        related_name='game_rooms'
+    )
     def get_players(self):
         return self.player_states.filter(is_active=True)
 
@@ -188,6 +194,23 @@ class GameRoom(BaseGameRoom):
             status='WAITING',
             is_active = True
         )
+
+    @database_sync_to_async
+    def set_player_ready(self, player):
+        """Set a player's ready status"""
+        player_state = self.player_states.filter(player=player, is_active=True).first()
+        if not player_state:
+            raise ValidationError("Player not in this game")
+        
+        player_state.is_ready = True
+        player_state.save()
+        return player_state.is_ready
+
+    @database_sync_to_async
+    def all_players_ready(self):
+        """Check if all active players are ready"""
+        active_players = self.get_players()
+        return active_players.count() > 0 and all(ps.is_ready for ps in active_players)
 
     def join_game(self, player): # Player is User object
         if self.status != 'WAITING':
