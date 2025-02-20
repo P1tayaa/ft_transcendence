@@ -13,7 +13,7 @@ class MyWebSocket {
     this.host;
     this.isSpectator;
 
-    this.serverState;
+    this.serverState = null;
     this.winner = "";
     this.game_over = false;
     this.myPos = null;
@@ -134,6 +134,15 @@ class MyWebSocket {
     }
   }
 
+  async askAllReady() {
+    console.log("askAllReady")
+    const playerRequest = {
+      type: 'is_all_players_ready',
+    }
+    this.socket.send(JSON.stringify(playerRequest))
+  }
+
+
   async player_ready() {
     console.log("setting player ready")
     const playerRequest = {
@@ -164,12 +173,13 @@ class MyWebSocket {
 
       this.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        console.log('Received:', data);
 
         // if (data.type === "gameState") {
         //   this.serverState = data; // Store the received game state
         // } else
         if (data.type === "game_state_update") {
+
+          // console.log('Received:', data);
           this.serverState = data.state;
           if (data.game_over) {
             this.winner = data.winner;
@@ -178,14 +188,17 @@ class MyWebSocket {
         } else if (data.type === "which_paddle") {
           this.myPos = data.position;
         } else if (data.type === "started_game") {
+          console.log(started_game)
           this.serverState = data.state;
           this.gameStarted = true;
         } else if (data.type === "failed_to_start_game") {
-          console.log(data.state);
-          console.log(data.checks);
-          console.log(data.config_player_count);
+          // console.log(data.state);
+          console.log("failed_to_start_game", data.checks);
+          // console.log(data.config_player_count);
         } else if (data.type === 'is_all_players_ready') {
-          this.allPlayerReady = true
+
+          console.log('is_all_players_ready:', data.value);
+          this.allPlayerReady = data.value;
         }
 
       };

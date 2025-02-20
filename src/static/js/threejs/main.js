@@ -61328,7 +61328,7 @@ class MyWebSocket {
     this.socket = null;
     this.host;
     this.isSpectator;
-    this.serverState;
+    this.serverState = null;
     this.winner = "";
     this.game_over = false;
     this.myPos = null;
@@ -61433,6 +61433,13 @@ class MyWebSocket {
       }
     }
   }
+  async askAllReady() {
+    console.log("askAllReady");
+    const playerRequest = {
+      type: 'is_all_players_ready'
+    };
+    this.socket.send(JSON.stringify(playerRequest));
+  }
   async player_ready() {
     console.log("setting player ready");
     const playerRequest = {
@@ -61453,12 +61460,12 @@ class MyWebSocket {
       };
       this.socket.onmessage = event => {
         const data = JSON.parse(event.data);
-        console.log('Received:', data);
 
         // if (data.type === "gameState") {
         //   this.serverState = data; // Store the received game state
         // } else
         if (data.type === "game_state_update") {
+          // console.log('Received:', data);
           this.serverState = data.state;
           if (data.game_over) {
             this.winner = data.winner;
@@ -61467,14 +61474,16 @@ class MyWebSocket {
         } else if (data.type === "which_paddle") {
           this.myPos = data.position;
         } else if (data.type === "started_game") {
+          console.log(started_game);
           this.serverState = data.state;
           this.gameStarted = true;
         } else if (data.type === "failed_to_start_game") {
-          console.log(data.state);
-          console.log(data.checks);
-          console.log(data.config_player_count);
+          // console.log(data.state);
+          console.log("failed_to_start_game", data.checks);
+          // console.log(data.config_player_count);
         } else if (data.type === 'is_all_players_ready') {
-          this.allPlayerReady = true;
+          console.log('is_all_players_ready:', data.value);
+          this.allPlayerReady = data.value;
         }
       };
       this.socket.onclose = event => {
@@ -61702,8 +61711,6 @@ class Pong {
           gameScene.moveAssetBy(Padle, getRightSpeed(Padle, input[Padle], this.settings, this));
         }
       });
-
-      // Get Positions
     }
     const BallPos = gameScene.getAssetPossition('Ball');
     this.checkCollisions(BallPos, gameScene);
@@ -105893,10 +105900,13 @@ class Init {
     }
   }
   async waitForGameStart() {
-    this.pongLogic.socket.player_ready();
-    while (!this.pongLogic.socket.allPlayerReady) {
+    while (this.pongLogic.socket.serverState === null) {
       await new Promise(resolve => setTimeout(resolve, 100));
-      this.pongLogic.socket.tryStartGame();
+      if (this.pongLogic.socket.allPlayerReady) {
+        this.pongLogic.socket.tryStartGame();
+      } else {
+        this.pongLogic.socket.askAllReady();
+      }
     }
     console.log("Game has started!");
   }
@@ -105918,7 +105928,9 @@ class Init {
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new score(this.gameScene.getScene(), this.settings.playerSide);
     this.loadAssets(() => {
+      console.log("assets finsihed loading ?");
       this.doneLoadingAssets = true;
+      this.pongLogic.socket.player_ready();
       this.lightManager.setupLights();
     });
     if (this.settings.mode === Mode.NETWORKED) await this.waitForGameStart();
@@ -105963,7 +105975,9 @@ class main {
       // Assets are still loading; skip rendering
       return;
     }
-    this.allPowers.update(this.gameScene, this.pongLogic);
+    if (this.init.settings.this.powerup) {
+      this.allPowers.update(this.gameScene, this.pongLogic);
+    }
     const input = this.init.controlHandler.getPaddleSpeeds();
     this.pongLogic.update(input, this.gameScene);
     if (init.settings.mode === Mode.NETWORKED) {

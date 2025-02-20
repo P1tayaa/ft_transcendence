@@ -111,10 +111,13 @@ export default class Init {
   }
 
   async waitForGameStart() {
-    this.pongLogic.socket.player_ready();
-    while (!this.pongLogic.socket.allPlayerReady) {
+    while (this.pongLogic.socket.serverState === null) {
       await new Promise(resolve => setTimeout(resolve, 100));
-      this.pongLogic.socket.tryStartGame()
+      if (this.pongLogic.socket.allPlayerReady) {
+        this.pongLogic.socket.tryStartGame()
+      } else {
+        this.pongLogic.socket.askAllReady();
+      }
     }
     console.log("Game has started!");
   };
@@ -139,10 +142,10 @@ export default class Init {
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new Score(this.gameScene.getScene(), this.settings.playerSide);
     this.loadAssets(() => {
-
-
+      console.log("assets finsihed loading ?")
       this.doneLoadingAssets = true;
 
+      this.pongLogic.socket.player_ready();
       this.lightManager.setupLights();
     });
 
