@@ -71,8 +71,8 @@ class GameConsumer(BaseConsumer):
             'powerUps': {},
             'pongLogic': {
                 'ballPos': {'x': 0, 'y': 0},
-                'ballSpeed': 5,
-                'ballSize': 10,
+                'ballSpeed': {'x': 5, 'y' : 5},
+                'ballSize': {'x': 1, 'y': 1},
                 'lastWinner': None,
                 'lastContact': None,
                 'lastLoser': None,
@@ -275,8 +275,8 @@ class GameConsumer(BaseConsumer):
 
     async def run_game_loop(self):
         while self.game_state['is_playing']:
-            self.game_state['pongLogic']['ballPos']['x'] += self.game_state['pongLogic']['ballSpeed']
-            self.game_state['pongLogic']['ballPos']['y'] += self.game_state['pongLogic']['ballSpeed']
+            self.game_state['pongLogic']['ballPos']['x'] += self.game_state['pongLogic']['ballSpeed']['x']
+            self.game_state['pongLogic']['ballPos']['y'] += self.game_state['pongLogic']['ballSpeed']['y']
 
             await self.channel_layer.group_send(
                 self.room_group_name,
