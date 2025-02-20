@@ -153,6 +153,7 @@ input {
 #chat-messages {
 	display: flex;
 	flex-direction: column;
+	justify-content: flex-end;
 	align-items: flex-start;
 	gap: 10px;
 	flex: 1 0 0;
@@ -239,8 +240,9 @@ input {
 		</div>
 		<div id="chat">
 			<ol id="chat-messages">
-				<li class="message-other">Hello back</li>
-				<li class="message-self">Hello!</li>
+				<li class="message-other">Hello!</li>
+				<li class="message-self">Hello friend!</li>
+				<li class="message-self">How are you?</li>
 			</ol>
 			<div id="chat-input">
 				<input type="text" placeholder="Type a message...">
