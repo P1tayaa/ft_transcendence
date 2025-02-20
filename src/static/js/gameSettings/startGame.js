@@ -47,9 +47,6 @@ export async function initializeGame(config) {
     Spectator: false
   }
 
-  if (gameConfig.mode === "Local Ws Bots") {
-    gameConfig.bots = true;
-  }
 
   switch (gameConfig.playerCount) {
     case "2":
@@ -71,17 +68,45 @@ export async function initializeGame(config) {
       break;
   }
 
-  const datainfo = await make_room(gameConfig);
+
+
+  if (gameConfig.mode === "localsolo") {
+    // Enable bot mode
+    gameConfig.bots = true;
+
+    // Pick a random index from the playerside array
+    const playerIndex = Math.floor(Math.random() * gameConfig.playerside.length);
+    for (let i = 0; i < gameConfig.playerside.length; i++) {
+      if (i !== playerIndex) {
+        gameConfig.botsSide.push(gameConfig.playerside[i]);
+      }
+    }
+    // Keep one random side for the player
+    gameConfig.playerside = [gameConfig.playerside[playerIndex]];
+
+    // Move all other sides to botsSide
+  }
+
+
+  try {
+
+    const datainfo = await make_room(gameConfig);
+
+    console.log("the responce of the ", (datainfo));
+
+    setTimeout(() => {
+      document.dispatchEvent(new CustomEvent("startGame", { detail: { gameConfig: gameConfig, room_name: datainfo.room_name } }));
+    }, 3000);
+    console.log('Initializing game with configuration:', config);
+  } catch (error) {
+    console.error('Error fetching matches:', error);
+    alert('An error occurred while searching for friends.');
+  }
 
 
 
 
 
-  setTimeout(() => {
-    document.dispatchEvent(new CustomEvent("startGame", { detail: { gameConfig: gameConfig, gameInfo: datainfo } }));
-  }, 3000);
-  console.log('Initializing game with configuration:', config);
-  // alert('Game is initializing with your selected configuration. Check the console for details.');
 }
 
 export default initializeGame;

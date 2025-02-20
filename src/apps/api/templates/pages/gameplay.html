@@ -1,9 +1,44 @@
 <!-- Gameplay Page -->
 
 <main>
+
+<style>
+  .hidden {
+  display: none;
+}
+</style>
+
+
+<div id="matchmaking"">
+
+<h2>Available Matches</h2>
+<table border="1">
+    <thead>
+        <tr>
+            <th>Room Name</th>
+            <th>Players</th>
+            <th>Mode</th>
+            <th>Map Style</th>
+            <th>Powerups</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody id="roomsTableBody">
+        <!-- Dynamic rows will be inserted here -->
+    </tbody>
+</table>
+
+<button id="clearRooms"> clear all rooms</button>
+ 
+ <script type="module" src="../static/js/gameSettings/joinGame.js"></script> 
+
+</div>
+ 
+
+
+
   <div id="gameplay">
         <canvas id="pong-game" width="960" height="720">Your browser does not support the canvas element.</canvas>
   </div>
-  
   <script type="module" src="../static/js/threejs/main.js"> </script>
 </main>

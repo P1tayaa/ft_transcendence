@@ -197,8 +197,8 @@ class GameRoom(BaseGameRoom):
             return ValidationError("Game room is full")
 
         with transaction.atomic():
-            if self.player_states.filter(player=player, is_active=True).exists():
-                raise ValidationError("Player already in game")
+            # if self.player_states.filter(player=player, is_active=True).exists():
+            #     raise ValidationError("Player already in game")
             available_side = self.get_available_sides()
             if not available_side:
                 raise ValidationError("No available sides")

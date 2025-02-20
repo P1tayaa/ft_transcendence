@@ -6,7 +6,7 @@ import ControlHandler from './control.js';
 import Pong from './pongLogic/pong.js';
 import Score from './pongLogic/score.js';
 import { initPowerUp, AllPowerUp } from './powerUp/AllPowerUp.js';
-import { MapStyle, get_settings, Setting } from "./pongLogic/setting.js";
+import { Mode, MapStyle, get_settings, Setting } from "./pongLogic/setting.js";
 const assetsPath = "http://localhost:8000/static/glfw/";
 
 
@@ -106,12 +106,21 @@ export default class Init {
   checkAllAssetsLoaded(callback) {
     console.log(this.assetsLoaded + "= loaded and total =" + this.totalAssets);
     if (this.assetsLoaded === this.totalAssets) {
-      hideLoadingScreen();
       callback();
     }
   }
 
-  async initialize(settings, websocketData) {
+  async waitForGameStart() {
+    while (!this.pongLogic.socket.isPlaying()) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      this.pongLogic.socket.tryStartGame()
+    }
+    console.log("Game has started!");
+  };
+
+
+
+  async initialize(settings, roomName) {
     showLoadingScreen();
     // try {
     //   const json_settings = await get_settings(0);
@@ -123,15 +132,23 @@ export default class Init {
     // }
     this.settings = new Setting(settings);
     this.countAssetToLoad();
-    this.pongLogic.initialize(this.settings, websocketData);
+    await this.pongLogic.initialize(this.settings, roomName);
     this.controlHandler = new ControlHandler(this.settings);
+    await this.controlHandler.Init(this.pongLogic.socket);
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new Score(this.gameScene.getScene(), this.settings.playerSide);
     this.loadAssets(() => {
+
+
       this.doneLoadingAssets = true;
-      // Initialize lights, controls, and start the game loop
+
       this.lightManager.setupLights();
-      // You can trigger other initializations here
     });
+
+    if (this.settings.mode === Mode.NETWORKED)
+      await this.waitForGameStart();
+
+    hideLoadingScreen();
   }
 }
+

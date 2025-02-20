@@ -76,7 +76,7 @@ export class Setting {
     this.powerup = setting_json.powerup == "true"; // Convert to boolean
     this.powerupList = this.parsePoweruplist(setting_json.poweruplist);
     this.playercount = parseInt(setting_json.playercount) || 2; // Default to 2 players
-    this.mapStyle = this.parseMapStyle(setting_json["map style"]);
+    this.mapStyle = this.parseMapStyle(setting_json["map_style"]);
     this.playerSide = this.parseMultipleSides(setting_json.playerside);
     this.bots = setting_json.bots == "true"; // Convert to boolean
     this.botsSide = this.parseMultipleSides(setting_json.botsSide);

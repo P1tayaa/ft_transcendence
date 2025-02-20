@@ -84,32 +84,6 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                    'type': 'room_list',
                    'rooms': formatted_rooms
                }))
-        elif message_type == 'find_random':
-            try:
-                game_room = await database_sync_to_async(MatchmakingQueue.find_random_match)(self.scope['user'])
-                if game_room:
-                    await self.send(json.dumps({
-                           'type': 'match_found',
-                           'room_name': game_room.room_name
-                       }))
-                else:
-                    await self.send(json.dumps({
-                           'type': 'queued',
-                           'message': 'Waiting for games...'
-                       }))
-            except ValidationError as e:
-                await self.send(json.dumps({
-                       'type': 'error',
-                       'message': str(e)
-                   }))
-        elif message_type == 'cancel_queue':
-            if hasattr(self, 'queue_entry'):
-                await database_sync_to_async(self.queue_entry.cancel_queue())()
-                await self.send(json.dumps({
-                       'type': 'queue_cancelled'
-                   }))
-
-
 # frontend usage
 # // List available rooms
 # matchmakingSocket.send(JSON.stringify({

@@ -33,6 +33,7 @@ from apps.api.views.pages import (
     register,
     configGame,
     gameStarting,
+    gameSpectate,
 )
 
 
@@ -70,5 +71,7 @@ urlpatterns = [
     path("register/", register, name="register"),
     path("configGame/", configGame, name="configGame"),
     path("gameStarting/", gameStarting, name="gameStarting"),
+
+    path("gameSpectate/",gameSpectate, name="gameSpectate"),
     # ... other paths
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -1,3 +1,10 @@
+//paddle_mode
+// chat_message
+// ctart_game
+// update_game
+// consumers.py is where you can find all
+
+import { intToPlayerSide, PlayerSide } from './setting.js'
 
 
 class MyWebSocket {
@@ -5,12 +12,63 @@ class MyWebSocket {
     this.socket = null;
     this.host;
     this.isSpectator;
+
+    this.serverState;
+    this.winner = "";
+    this.game_over = false;
+    this.myPos = null;
+    this.myPosStruc;
+    this.gameStarted = false;
   }
 
-  init(settings, websocketData) {
+  isPlaying() {
+    if (this.serverState) {
+
+      return true;
+    } else {
+      console.log("server state not on yet");
+      return false;
+    }
+  }
+
+  tryStartGame() {
+    this.socket.send(JSON.stringify({ type: 'start_game' }));
+  }
+
+  async getWhichPadle() {
+
+
+    await new Promise((resolve) => {
+      const intervalId = setInterval(() => {
+        if (this.myPos !== null) {
+          clearInterval(intervalId);
+          resolve(this.myPos);
+        }
+      }, 100);
+    });
+
+
+
+    console.log(this.myPos);
+    if (this.myPos === "left") {
+      this.myPosStruc = PlayerSide.LEFT;
+    } else if (this.myPos === "right") {
+      this.myPosStruc = PlayerSide.RIGHT;
+    } else if (this.myPos === "bottom") {
+      this.myPosStruc = PlayerSide.BOTTOM;
+    } else if (this.myPos === "top") {
+      this.myPosStruc = PlayerSide.TOP;
+    } else {
+      console.error("Invalid position value:", this.myPos);
+    }
+
+    return intToPlayerSide(this.myPosStruc);
+  }
+
+  async init(settings, roomName) {
     this.host = settings.host;
     this.isSpectator = settings.isSpectator;
-    this.startWebSocket(websocketData);
+    await this.startWebSocket(roomName);
   }
 
   getPaddlePosition() {
@@ -21,12 +79,11 @@ class MyWebSocket {
   }
 
 
-  sendPaddlePosition(paddleInput, paddleKey) {
+  sendPaddlePosition(paddleInput, paddleKey, rotation) {
     const paddleInfo = {
-      settings: {
-        paddleKey: paddleKey,
-        paddleInput: paddleInput
-      }
+      type: 'paddle_move',
+      position: paddleInput,
+      rotation: rotation,
     }
     this.socket.send(JSON.stringify(paddleInfo))
   }
@@ -76,36 +133,60 @@ class MyWebSocket {
     }
   }
 
-  startWebSocket(websocketData) {
+  async startWebSocket(roomName) {
     console.log("is this called yet");
-    const roomName = websocketData.room_name;
+    // const roomName = websocketData.room_name;
     const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsPath = this.isSpectator ? 'spectate' : 'room';
-    this.socket = new WebSocket(
-      `${wsScheme}//${window.location.host}/ws/${wsPath}/${roomName}/`
-    );
 
 
-    this.socket.onopen = () => {
-      console.log('Connected to WebSocket');
-    };
+    await new Promise((resolve, reject) => {
 
-    this.socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log('Received:', data);
+      this.socket = new WebSocket(
+        `${wsScheme}//${window.location.host}/ws/${wsPath}/${roomName}/`
+      );
 
-      if (data.type === "gameState") {
-        this.serverState = data; // Store the received game state
-      }
-    };
 
-    this.socket.onclose = (event) => {
-      console.warn('WebSocket connection closed', event);
-    };
+      this.socket.onopen = () => {
+        console.log('Connected to WebSocket');
+        resolve();
+      };
 
-    this.socket.onerror = (error) => {
-      console.error('WebSocket Error:', error.message);
-    };
+      this.socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log('Received:', data);
+
+        // if (data.type === "gameState") {
+        //   this.serverState = data; // Store the received game state
+        // } else
+        if (data.type === "game_state_update") {
+          this.serverState = data.state;
+          if (data.game_over) {
+            this.winner = data.winner;
+            this.game_over = true;
+          }
+        } else if (data.type === "which_paddle") {
+          this.myPos = data.position;
+        } else if (data.type === "started_game") {
+          this.serverState = data.state;
+          this.gameStarted = true;
+        } else if (data.type === "failed_to_start_game") {
+          console.log(data.state);
+        }
+
+      };
+
+      this.socket.onclose = (event) => {
+        console.warn('WebSocket connection closed', event);
+      };
+
+      this.socket.onerror = (error) => {
+        console.error('WebSocket Error:', error.message);
+      };
+
+    });
+
+    this.socket.send(JSON.stringify({ type: "which_paddle" }));
   }
 }
 

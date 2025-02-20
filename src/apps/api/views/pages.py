@@ -46,6 +46,10 @@ def configGame(request):
 def gameStarting(request):
     return render(request, "base.html", {"template_name": "pages/gameStarting.html"})
 
+def gameSpectate(request):
+    return render(request, "base.html", {"template_name": "pages/Spectate.html"})
+
+
 
 # @api_view(["POST"])
 # def create_profile(request):

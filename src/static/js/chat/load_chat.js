@@ -166,9 +166,6 @@ class ChatPage {
 
 
 
-
-
-
 async function getChatData(chatId = null) {
   try {
     const url = chatId ? `/api/chat/${chatId}/` : '/api/chat/';

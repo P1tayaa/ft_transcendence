@@ -60889,7 +60889,7 @@ class Setting {
     this.powerup = setting_json.powerup == "true"; // Convert to boolean
     this.powerupList = this.parsePoweruplist(setting_json.poweruplist);
     this.playercount = parseInt(setting_json.playercount) || 2; // Default to 2 players
-    this.mapStyle = this.parseMapStyle(setting_json["map style"]);
+    this.mapStyle = this.parseMapStyle(setting_json["map_style"]);
     this.playerSide = this.parseMultipleSides(setting_json.playerside);
     this.bots = setting_json.bots == "true"; // Convert to boolean
     this.botsSide = this.parseMultipleSides(setting_json.botsSide);
@@ -61080,11 +61080,22 @@ class ControlHandler {
     this.paddleSpeeds = {}; // Store paddle speeds dynamically
     this.acceleration = 0.2; // Default acceleration
     this.debug = false;
-
+  }
+  async Init(socket) {
     // Initialize paddle speeds for active players
-    this.settings.playerSide.forEach(side => {
-      this.paddleSpeeds[side] = 0;
-    });
+    if (this.settings.Mode == Mode.LOCAL) {
+      this.settings.playerSide.forEach(side => {
+        this.paddleSpeeds[side] = 0;
+      });
+    } else if (this.settings.Mode == Mode.LOCALS_SOLO) {
+      this.settings.playerSide.forEach(side => {
+        this.paddleSpeeds[side] = 0;
+      });
+    } else {
+      const cur_paddle = await socket.getWhichPadle();
+      console.log(cur_paddle);
+      this.paddleSpeeds[cur_paddle] = 0;
+    }
     this.setupControls();
   }
   setupControls() {
@@ -61305,16 +61316,65 @@ function spawnPadles(settings, init, assetsPath, callback) {
   });
 }
 ;// ./src/pongLogic/websocket.js
+//paddle_mode
+// chat_message
+// ctart_game
+// update_game
+// consumers.py is where you can find all
+
+
 class MyWebSocket {
   constructor() {
     this.socket = null;
     this.host;
     this.isSpectator;
+    this.serverState;
+    this.winner = "";
+    this.game_over = false;
+    this.myPos = null;
+    this.myPosStruc;
+    this.gameStarted = false;
   }
-  init(settings, websocketData) {
+  isPlaying() {
+    if (this.serverState) {
+      return true;
+    } else {
+      console.log("server state not on yet");
+      return false;
+    }
+  }
+  tryStartGame() {
+    this.socket.send(JSON.stringify({
+      type: 'start_game'
+    }));
+  }
+  async getWhichPadle() {
+    await new Promise(resolve => {
+      const intervalId = setInterval(() => {
+        if (this.myPos !== null) {
+          clearInterval(intervalId);
+          resolve(this.myPos);
+        }
+      }, 100);
+    });
+    console.log(this.myPos);
+    if (this.myPos === "left") {
+      this.myPosStruc = setting_PlayerSide.LEFT;
+    } else if (this.myPos === "right") {
+      this.myPosStruc = setting_PlayerSide.RIGHT;
+    } else if (this.myPos === "bottom") {
+      this.myPosStruc = setting_PlayerSide.BOTTOM;
+    } else if (this.myPos === "top") {
+      this.myPosStruc = setting_PlayerSide.TOP;
+    } else {
+      console.error("Invalid position value:", this.myPos);
+    }
+    return intToPlayerSide(this.myPosStruc);
+  }
+  async init(settings, roomName) {
     this.host = settings.host;
     this.isSpectator = settings.isSpectator;
-    this.startWebSocket(websocketData);
+    await this.startWebSocket(roomName);
   }
   getPaddlePosition() {
     if (this.serverState && this.serverState.settings) {
@@ -61322,12 +61382,11 @@ class MyWebSocket {
     }
     return null; // Return null if no data is available yet
   }
-  sendPaddlePosition(paddleInput, paddleKey) {
+  sendPaddlePosition(paddleInput, paddleKey, rotation) {
     const paddleInfo = {
-      settings: {
-        paddleKey: paddleKey,
-        paddleInput: paddleInput
-      }
+      type: 'paddle_move',
+      position: paddleInput,
+      rotation: rotation
     };
     this.socket.send(JSON.stringify(paddleInfo));
   }
@@ -61373,28 +61432,49 @@ class MyWebSocket {
       }
     }
   }
-  startWebSocket(websocketData) {
+  async startWebSocket(roomName) {
     console.log("is this called yet");
-    const roomName = websocketData.room_name;
+    // const roomName = websocketData.room_name;
     const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsPath = this.isSpectator ? 'spectate' : 'room';
-    this.socket = new WebSocket(`${wsScheme}//${window.location.host}/ws/${wsPath}/${roomName}/`);
-    this.socket.onopen = () => {
-      console.log('Connected to WebSocket');
-    };
-    this.socket.onmessage = event => {
-      const data = JSON.parse(event.data);
-      console.log('Received:', data);
-      if (data.type === "gameState") {
-        this.serverState = data; // Store the received game state
-      }
-    };
-    this.socket.onclose = event => {
-      console.warn('WebSocket connection closed', event);
-    };
-    this.socket.onerror = error => {
-      console.error('WebSocket Error:', error.message);
-    };
+    await new Promise((resolve, reject) => {
+      this.socket = new WebSocket(`${wsScheme}//${window.location.host}/ws/${wsPath}/${roomName}/`);
+      this.socket.onopen = () => {
+        console.log('Connected to WebSocket');
+        resolve();
+      };
+      this.socket.onmessage = event => {
+        const data = JSON.parse(event.data);
+        console.log('Received:', data);
+
+        // if (data.type === "gameState") {
+        //   this.serverState = data; // Store the received game state
+        // } else
+        if (data.type === "game_state_update") {
+          this.serverState = data.state;
+          if (data.game_over) {
+            this.winner = data.winner;
+            this.game_over = true;
+          }
+        } else if (data.type === "which_paddle") {
+          this.myPos = data.position;
+        } else if (data.type === "started_game") {
+          this.serverState = data.state;
+          this.gameStarted = true;
+        } else if (data.type === "failed_to_start_game") {
+          console.log(data.state);
+        }
+      };
+      this.socket.onclose = event => {
+        console.warn('WebSocket connection closed', event);
+      };
+      this.socket.onerror = error => {
+        console.error('WebSocket Error:', error.message);
+      };
+    });
+    this.socket.send(JSON.stringify({
+      type: "which_paddle"
+    }));
   }
 }
 /* harmony default export */ const websocket = (MyWebSocket);
@@ -61437,11 +61517,11 @@ class Pong {
     this.lastContact;
     this.lastLoser;
   }
-  async initialize(settings, websocketData) {
+  async initialize(settings, roomName) {
     this.settings = settings;
     if (this.settings.mode === Mode.NETWORKED) {
       this.mode = this.settings.mode;
-      this.socket.init(this.settings, websocketData);
+      await this.socket.init(this.settings, roomName);
     }
     console.log(`Pong initialized in ${this.mode} mode.`);
   }
@@ -105797,11 +105877,17 @@ class Init {
   checkAllAssetsLoaded(callback) {
     console.log(this.assetsLoaded + "= loaded and total =" + this.totalAssets);
     if (this.assetsLoaded === this.totalAssets) {
-      hideLoadingScreen();
       callback();
     }
   }
-  async initialize(settings, websocketData) {
+  async waitForGameStart() {
+    while (!this.pongLogic.socket.isPlaying()) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      this.pongLogic.socket.tryStartGame();
+    }
+    console.log("Game has started!");
+  }
+  async initialize(settings, roomName) {
     showLoadingScreen();
     // try {
     //   const json_settings = await get_settings(0);
@@ -105813,16 +105899,17 @@ class Init {
     // }
     this.settings = new Setting(settings);
     this.countAssetToLoad();
-    this.pongLogic.initialize(this.settings, websocketData);
+    await this.pongLogic.initialize(this.settings, roomName);
     this.controlHandler = new ControlHandler(this.settings);
+    await this.controlHandler.Init(this.pongLogic.socket);
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new score(this.gameScene.getScene(), this.settings.playerSide);
     this.loadAssets(() => {
       this.doneLoadingAssets = true;
-      // Initialize lights, controls, and start the game loop
       this.lightManager.setupLights();
-      // You can trigger other initializations here
     });
+    if (this.settings.mode === Mode.NETWORKED) await this.waitForGameStart();
+    hideLoadingScreen();
   }
 }
 ;// ./src/main.js
@@ -105831,84 +105918,116 @@ class Init {
 
 
 
-let startInit = false;
-let config = null;
-let datainfo = null;
-document.addEventListener("startGame", event => {
-  const detail = event.detail;
-  config = detail.gameConfig;
-  datainfo = detail.dataInfo;
-  console.log(config);
-  console.log(datainfo);
-  startInit = true;
-  console.log("Game event received! Initializing...");
-});
-document.addEventListener('DOMContentLoaded', () => {
-  const init = new Init();
-  const waitForInit = setInterval(() => {
-    if (startInit) {
-      clearInterval(waitForInit);
-      init.initialize(config, datainfo);
-    }
-  }, 100);
-  const gameScene = init.gameScene;
-  const scene = gameScene.getScene();
-  const lightManager = init.lightManager;
-  // const controlHandler = init.controlHandler;
-  const pongLogic = init.pongLogic;
-  const score = init.score;
-  const allPowers = init.allPower;
-  const canvas = document.getElementById('pong-game');
-  if (!canvas) {
-    console.error('Canvas element with id "pong-game" not found.');
-    return;
+class main {
+  constructor() {
+    this.init = new Init();
   }
-  const renderer = new WebGLRenderer({
-    canvas
-  });
-  renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-  const camera = new PerspectiveCamera(120, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-  camera.position.z = 30;
-  allPowers.activatePowerUp('Star');
-  function animate() {
-    if (init.doneLoadingAssets === false) {
+  init_function() {
+    console.log("les voiture sont rouges");
+    this.gameScene = init.gameScene;
+    this.scene = gameScene.getScene();
+    this.lightManager = init.lightManager;
+    // const controlHandler = init.controlHandler;
+    this.pongLogic = init.pongLogic;
+    this.score = init.score;
+    this.allPowers = init.allPower;
+    this.canvas = document.getElementById('pong-game');
+    if (!canvas) {
+      console.error('Canvas element with id "pong-game" not found.');
+      return;
+    }
+    this.renderer = new WebGLRenderer({
+      canvas
+    });
+    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    this.camera = new PerspectiveCamera(120, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+    this.camera.position.z = 30;
+    this.allPowers.activatePowerUp('Star');
+    this.renderer.setAnimationLoop(this.animate);
+  }
+  animate() {
+    if (this.init.doneLoadingAssets === false) {
       // Assets are still loading; skip rendering
       return;
     }
-    allPowers.update(gameScene, pongLogic);
-    const input = init.controlHandler.getPaddleSpeeds();
-    pongLogic.update(input, gameScene);
+    this.allPowers.update(this.gameScene, this.pongLogic);
+    const input = this.init.controlHandler.getPaddleSpeeds();
+    this.pongLogic.update(input, this.gameScene);
     if (init.settings.mode === Mode.NETWORKED) {
-      pongLogic.socket.update(pongLogic, init.score, init.settings, init.allPower.powerUps);
+      this.pongLogic.socket.update(this.pongLogic, this.init.score, this.init.settings, this.init.allPower.powerUps);
     }
     let Paddle2Win = 0;
     let Paddle1Win = 0;
     let Ball_Reset = false;
-    if (pongLogic.paddleCollided) {
+    if (this.pongLogic.paddleCollided) {
       Paddle2Win = 0;
       Paddle1Win = 0;
       Ball_Reset = false;
     }
-    if (pongLogic.resetBall) {
-      init.score.incrementScore(intToPlayerSide(pongLogic.lastWinner));
+    if (this.pongLogic.resetBall) {
+      this.init.score.incrementScore(intToPlayerSide(this.pongLogic.lastWinner));
       Ball_Reset = true;
-      pongLogic.resetBall = false;
-      gameScene.moveAsset('Ball', {
+      this.pongLogic.resetBall = false;
+      this.gameScene.moveAsset('Ball', {
         x: 0,
         y: 0,
         z: 0
       });
     }
-    updateLightsForActivePlayers(init.lightManager, gameScene, init.settings.playerSide, pongLogic.lastWinner);
+    updateLightsForActivePlayers(this.init.lightManager, this.gameScene, this.init.settings.playerSide, this.pongLogic.lastWinner);
     const ballCurrentSpeed = {
-      x: pongLogic.ballSpeed.x,
-      y: pongLogic.ballSpeed.y,
+      x: this.pongLogic.ballSpeed.x,
+      y: this.pongLogic.ballSpeed.y,
       z: 0
     };
-    gameScene.moveAssetBy('Ball', ballCurrentSpeed);
-    renderer.render(scene, camera);
+    this.gameScene.moveAssetBy('Ball', ballCurrentSpeed);
+    this.renderer.render(this.scene, this.camera);
   }
-  renderer.setAnimationLoop(animate);
+}
+let startInit = false;
+let config = null;
+let roomName;
+document.addEventListener("startGame", event => {
+  const detail = event.detail;
+  config = detail.gameConfig;
+  roomName = detail.room_name;
+  console.log("config received my pong game", config);
+  console.log("room_name received my pong game", roomName);
+  startInit = true;
+  console.log("Game event received! Initializing...");
+});
+document.addEventListener('DOMContentLoaded', () => {
+  const mainClass = new main();
+  let wait_please = false;
+
+  // Create a promise that resolves when initialization is complete
+  const waitForInit = new Promise((resolve, reject) => {
+    const interval = setInterval(async () => {
+      if (startInit) {
+        clearInterval(interval);
+        try {
+          await mainClass.init.initialize(config, roomName);
+          wait_please = true;
+          resolve(); // Resolve the promise once initialization is complete
+        } catch (error) {
+          reject(error); // Reject the promise if an error occurs during initialization
+        }
+      }
+    }, 100);
+  });
+
+  // Use the promise to wait for initialization to complete
+  waitForInit.then(() => {
+    console.log("Initialization complete, you should not print 'please'");
+    mainClass.init_function();
+  }).catch(error => {
+    console.error('Initialization failed:', error);
+  });
+  const wait_please_interval = setInterval(() => {
+    if (wait_please) {
+      clearInterval(wait_please_interval);
+    }
+  }, 100);
 });
 /******/ })()
 ;
