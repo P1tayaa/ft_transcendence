@@ -225,6 +225,23 @@ class GameConsumer(BaseConsumer):
                 and not self.game_state['is_playing']:
                 self.game_state['is_playing'] = True
                 self.game_loop = asyncio.create_task(self.run_game_loop())
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'started_game',
+                        'state': self.game_state,
+                    }
+                )
+            else :
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'failed_to_start_game',
+                        'state': self.game_state,
+                    }
+                )
+
+
 
         elif message_type == 'game_over':
             winner_id = data.get('winner_id')
@@ -315,3 +332,10 @@ class SpectatorConsumer(BaseConsumer):
 
     async def spectator_join(self, event):
         await self.send(text_data = json.dumps(event))
+    
+    async def started_game(self, event):
+        await self.send(text_data = json.dumps(event))
+    async def failed_to_start_game(self, event):
+        await self.send(text_data = json.dumps(event))
+
+

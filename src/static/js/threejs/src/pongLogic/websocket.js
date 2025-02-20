@@ -18,12 +18,13 @@ class MyWebSocket {
     this.game_over = false;
     this.myPos = null;
     this.myPosStruc;
+    this.gameStarted = false;
   }
 
   isPlaying() {
     if (this.serverState) {
 
-      return this.serverState.is_playing;
+      return true;
     } else {
       console.log("server state not on yet");
       return false;
@@ -34,7 +35,20 @@ class MyWebSocket {
     this.socket.send(JSON.stringify({ type: 'start_game' }));
   }
 
-  getWhichPadle() {
+  async getWhichPadle() {
+
+
+    await new Promise((resolve) => {
+      const intervalId = setInterval(() => {
+        if (this.myPos !== null) {
+          clearInterval(intervalId);
+          resolve(this.myPos);
+        }
+      }, 100);
+    });
+
+
+
     console.log(this.myPos);
     if (this.myPos === "left") {
       this.myPosStruc = PlayerSide.LEFT;
@@ -153,7 +167,13 @@ class MyWebSocket {
           }
         } else if (data.type === "which_paddle") {
           this.myPos = data.position;
+        } else if (data.type === "started_game") {
+          this.serverState = data.state;
+          this.gameStarted = true;
+        } else if (data.type === "failed_to_start_game") {
+          console.log(data.state);
         }
+
       };
 
       this.socket.onclose = (event) => {

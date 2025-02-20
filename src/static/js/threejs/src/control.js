@@ -10,23 +10,26 @@ const inputKeys = {
 };
 
 export default class ControlHandler {
-  constructor(settings, socket) {
+  constructor(settings) {
     this.settings = settings; // Get player sides from settings
     this.paddleSpeeds = {}; // Store paddle speeds dynamically
     this.acceleration = 0.2; // Default acceleration
     this.debug = false;
 
+  }
+
+  async Init(socket) {
     // Initialize paddle speeds for active players
-    if (settings.Mode == Mode.LOCAL) {
+    if (this.settings.Mode == Mode.LOCAL) {
       this.settings.playerSide.forEach(side => {
         this.paddleSpeeds[side] = 0;
       });
-    } else if (settings.Mode == Mode.LOCALS_SOLO) {
+    } else if (this.settings.Mode == Mode.LOCALS_SOLO) {
       this.settings.playerSide.forEach(side => {
         this.paddleSpeeds[side] = 0;
       });
     } else {
-      const cur_paddle = socket.getWhichPadle();
+      const cur_paddle = await socket.getWhichPadle();
       console.log(cur_paddle)
       this.paddleSpeeds[cur_paddle] = 0;
     }

@@ -113,7 +113,7 @@ export default class Init {
   async waitForGameStart() {
     while (!this.pongLogic.socket.isPlaying()) {
       await new Promise(resolve => setTimeout(resolve, 100));
-      this.pongLogic.socket.tryStartGame();
+      this.pongLogic.socket.tryStartGame()
     }
     console.log("Game has started!");
   };
@@ -133,7 +133,8 @@ export default class Init {
     this.settings = new Setting(settings);
     this.countAssetToLoad();
     await this.pongLogic.initialize(this.settings, roomName);
-    this.controlHandler = new ControlHandler(this.settings, this.pongLogic.socket);
+    this.controlHandler = new ControlHandler(this.settings);
+    await this.controlHandler.Init(this.pongLogic.socket);
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new Score(this.gameScene.getScene(), this.settings.playerSide);
     this.loadAssets(() => {
