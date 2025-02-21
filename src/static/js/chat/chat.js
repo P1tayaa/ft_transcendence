@@ -187,17 +187,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 	
 	await social.init();
 	
-	const messageform = document.getElementById("message-form");
-	messageform.addEventListener("submit", () => {
-		event.preventDefault();
-		const message = document.getElementById("chat-box").value.trim();
-
-		if (message) {
-			social.sendChat(message);
-		}
-	});
-
-
 	const searchForm = document.getElementById("search");
 	searchForm.addEventListener("submit", (event) => {
 		event.preventDefault();
@@ -206,6 +195,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 		if (searchTerm) {
 			social.loadSearchResults(searchTerm);
 		}
+
+	});
+
+	const chatForm = document.getElementById("chat-input");
+	chatForm.addEventListener("submit", (event) => {
+		event.preventDefault();
+
+		const message = document.getElementById("chat-box").value.trim();
+
+		if (message) {
+			social.sendChat(message);
+		}
+
 	});
 
 });
