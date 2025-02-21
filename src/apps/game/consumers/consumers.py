@@ -98,11 +98,28 @@ class GameConsumer(BaseConsumer):
             'position': position
         }
 
-        # paddle for player
-        self.game_state['settings']['paddleLoc'][player_id] = {
-            'y': 0,
-            'rotation': 0
-        }
+        if position == 'left' or 'right':
+            self.game_state['settings']['paddleSize'][player_id] = {
+
+                'x': 1,
+                'y': 8
+            }
+            # paddle for player
+            self.game_state['settings']['paddleLoc'][player_id] = {
+                'y': 0,
+                'rotation': 0
+            }
+        else:
+            self.game_state['settings']['paddleSize'][player_id] = {
+                'x': 8,
+                'y': 1
+            }
+            # paddle for player
+            self.game_state['settings']['paddleLoc'][player_id] = {
+                'x': 0,
+                'rotation': 0
+            }
+            
 
         #score for player
         self.game_state['score'][player_id] = 0
@@ -169,7 +186,7 @@ class GameConsumer(BaseConsumer):
             player_id = str(self.scope['user'].id)
             if player_id in self.game_state['players']:
                 if self.game_state['players'][player_id]['position'] == 'left' or 'right':
-                    self.game_state['settings']['paddleLoc'][player_id] = {
+                    self.game_state['settings']['paddleLoc'][player_id] = {    # map to left or right OR format return key as left or right
                         'y': data['position'],
                         'rotation': data['rotation']
                     }
