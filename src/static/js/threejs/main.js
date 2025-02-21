@@ -61461,6 +61461,7 @@ class MyWebSocket {
       if (this.serverState.settings.paddleLoc) settings.paddleLoc = this.serverState.settings.paddleLoc;
       // settings.paddleLoc = new Map(Object.entries(this.serverState.settings.paddleLoc));
       if (this.serverState.scores) {
+        console.log("-------- was send score");
         scores.scores = this.serverState.scores;
       }
       if (settings.powerup) powerUps = this.serverState.powerUps;
