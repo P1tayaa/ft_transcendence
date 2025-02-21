@@ -4,8 +4,6 @@ import asyncio
 from django.core.exceptions import ValidationError
 from channels.db import database_sync_to_async
 from apps.game.models.game import GameRoom, GameConfig
-from apps.api.management import remap_player_data_by_position
-
 
 def remap_player_data_by_position(game_state):
     position_mapped = {
@@ -69,6 +67,17 @@ class GameConsumer(BaseConsumer):
     def get_player_count(self):
         return self.game_room.get_player_count()
 
+    @database_sync_to_async
+    def get_all_players_state(self):
+        player_states = self.game_room.player_states.filter(is_active=True)
+        return {
+            str(ps.player.id): {
+                'username': ps.player.username,
+                'is_host': ps.player_number == 1,
+                'position': ps.side
+            } for ps in player_states
+        }
+
     async def connect(self):
         await super().connect()
 
@@ -100,6 +109,32 @@ class GameConsumer(BaseConsumer):
              }))
             await self.close()
 
+        # player_states = await database_sync_to_async(lambda: list(self.game_room.player_states.filter(is_active=True)))()
+        # self.game_state = {
+        #     'score': {},
+        #     'players': {},
+        #     'is_playing': False,
+        #     'settings': {
+        #         'paddleSize': {},
+        #         'paddleLoc': {},
+        #     },
+        #     'powerUps': {},
+        #     'pongLogic': {
+        #         'ballPos': {'x': 0, 'y': 0},
+        #         'ballSpeed': {'x': 5, 'y' : 5},
+        #         'ballSize': {'x': 1, 'y': 1},
+        #         'lastWinner': None,
+        #         'lastContact': None,
+        #         'lastLoser': None,
+        #     }
+        # }
+
+        # # new player
+        # player_id = str(self.scope['user'].id)
+        # player_count = len(self.game_state['players'])
+        # is_host = player_count == 0
+        player_states = await database_sync_to_async(lambda: list(self.game_room.player_states.filter(is_active=True)))()
+
         self.game_state = {
             'score': {},
             'players': {},
@@ -111,7 +146,7 @@ class GameConsumer(BaseConsumer):
             'powerUps': {},
             'pongLogic': {
                 'ballPos': {'x': 0, 'y': 0},
-                'ballSpeed': {'x': 5, 'y' : 5},
+                'ballSpeed': {'x': 0.2, 'y' : 0.1},
                 'ballSize': {'x': 1, 'y': 1},
                 'lastWinner': None,
                 'lastContact': None,
@@ -119,10 +154,23 @@ class GameConsumer(BaseConsumer):
             }
         }
 
-        # new player
+        # Initialize with all current players
+        for ps in player_states:
+            player_id = str(ps.player.id)
+            self.game_state['players'][player_id] = {
+                'username': ps.player.username,
+                'is_host': ps.player_number == 1,  # first player is host
+                'position': ps.side
+            }
+            self.game_state['score'][player_id] = ps.score
+            self.game_state['settings']['paddleLoc'][player_id] = {
+                'y': 0,
+                'rotation': 0
+            }
+
+        # Add the new connecting player
         player_id = str(self.scope['user'].id)
-        player_count = len(self.game_state['players'])
-        is_host = player_count == 0
+        player_state = await database_sync_to_async(lambda: self.game_room.player_states.get(player=self.scope['user'], is_active=True))()
 
         # position
         player_state = await database_sync_to_async(lambda: self.game_room.player_states.get(player=self.scope['user'], is_active=True))()
@@ -164,11 +212,12 @@ class GameConsumer(BaseConsumer):
         #score for player
         self.game_state['score'][player_id] = 0
 
+        all_players = self.get_all_players_state()
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 'type': 'player_update',
-                'players': self.game_state['players']
+                'players': all_players
             }
         )
 
@@ -242,7 +291,16 @@ class GameConsumer(BaseConsumer):
                         'state': self.game_state
                     }
                 )
-               
+
+        elif message_type == 'set_ball_velocity':
+            self.game_state['pongLogic']['ballSpeed']['x'] = data['x']
+            self.game_state['pongLogic']['ballSpeed']['y'] = data['y']
+
+        elif message_type == 'change_paddle_size':
+            player_id = str(self.scope['user'].id)
+            self.game_state['settings']['paddleSize'][player_id]['x'] = data['x']
+            self.game_state['settings']['paddleSize'][player_id]['y'] = data['y']
+
         elif message_type == 'chat_message':
             await self.channel_layer.group_send(
                 self.room_group_name,
