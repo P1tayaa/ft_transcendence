@@ -52,7 +52,7 @@ export default class Init {
     this.controlHandler;
     this.pongLogic = new Pong();
     this.score;
-    this.allPower = new AllPowerUp();
+    this.allPower;
     this.settings;
   }
 
@@ -126,15 +126,9 @@ export default class Init {
 
   async initialize(settings, roomName) {
     showLoadingScreen();
-    // try {
-    //   const json_settings = await get_settings(0);
-    //   console.log(json_settings);
-    //   console.log(this.settings);
-    // } catch {
-    //   console.error('Error: An error occurred. Please try again.', error);
-    //   this.settings = new Setting();
-    // }
     this.settings = new Setting(settings);
+    if (this.settings.powerup)
+      this.allPower = new AllPowerUp();
     this.countAssetToLoad();
     await this.pongLogic.initialize(this.settings, roomName);
     this.controlHandler = new ControlHandler(this.settings);
