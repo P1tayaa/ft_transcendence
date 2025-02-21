@@ -351,7 +351,7 @@ class GameConsumer(BaseConsumer):
 
     async def game_state_update(self, event):
         if 'state' in event:
-            new_return = remap_player_data_by_position(event['state'])
+            position_mapped_state = remap_player_data_by_position(event['state'])
             await self.send(text_data=json.dumps({
                 'type': 'game_state_update',
                 'state': position_mapped_state
