@@ -12,8 +12,10 @@ from .management.user_management import (
     remove_friend,
 )
 from .management.chat_management import (
-    get_chat_data,
     add_message,
+    get_chats,
+    mark_messages_read,
+    update_typing_status,
 )
 from .management.score_management import (
     add_score,
@@ -42,7 +44,6 @@ urlpatterns = [
     path("logout/", logout_user, name="logout_user"),
     path("auth-status/", check_auth_status, name="check_auth_status"),
     path("me/", get_current_user, name="current_user"),
-    path("get_chat_data/", get_chat_data, name="get_chat_data"),
     path(
         "fetch_matching_usernames/",
         fetch_matching_usernames,
@@ -56,6 +57,10 @@ urlpatterns = [
     path("score/recent", get_recent_score, name="get_recent_score"),
     path("score/highscore", get_highscore, name="get_highscore"),
     path("add_message/", add_message, name="add_message"),
+    path("chats/", get_chats, name="get_chats"),
+    path("chats/message/", add_message, name="add_message"),
+    path("chats/message/typing", update_typing_status, name="update_typing"),
+    path("chats/message/read", mark_messages_read, name="mark_messages_read"),
     path("create_game/", create_game_room, name="create_game_room"),
     path("get_config_game_room/", get_config_game_room, name="get_config_game_room"),
     path("clear_game_rooms/", clear_game_rooms, name="clear_game_rooms"),
