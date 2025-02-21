@@ -4,6 +4,46 @@ import asyncio
 from django.core.exceptions import ValidationError
 from channels.db import database_sync_to_async
 from apps.game.models.game import GameRoom, GameConfig
+from apps.api.management import remap_player_data_by_position
+
+
+def remap_player_data_by_position(game_state):
+    position_mapped = {
+        'score': {},
+        'players': {},
+        'settings': {
+            'paddleSize': {},
+            'paddleLoc': {},
+        }
+    }
+
+    # Create mapping of position to player data
+    for player_id, player_data in game_state['players'].items():
+        position = player_data['position']
+    
+        # Map scores
+        if player_id in game_state['score']:
+            position_mapped['score'][position] = game_state['score'][player_id]
+        
+        # Map player info
+        position_mapped['players'][position] = {
+            'username': player_data['username'],
+            'is_host': player_data['is_host']
+        }
+    
+        # Map paddle settings
+        if player_id in game_state['settings']['paddleSize']:
+            position_mapped['settings']['paddleSize'][position] = game_state['settings']['paddleSize'][player_id]
+        
+        if player_id in game_state['settings']['paddleLoc']:
+            position_mapped['settings']['paddleLoc'][position] = game_state['settings']['paddleLoc'][player_id]
+
+    # Copy other game state data that doesn't need remapping
+    position_mapped['is_playing'] = game_state['is_playing']
+    position_mapped['powerUps'] = game_state['powerUps']
+    position_mapped['pongLogic'] = game_state['pongLogic']
+
+    return position_mapped
 
 class BaseConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -309,48 +349,10 @@ class GameConsumer(BaseConsumer):
 
             asyncio.sleep(1/60) # apparently for 60 fps
 
-    def remap_player_data_by_position(game_state):
-        position_mapped = {
-            'score': {},
-            'players': {},
-            'settings': {
-                'paddleSize': {},
-                'paddleLoc': {},
-            }
-        }
-    
-        # Create mapping of position to player data
-        for player_id, player_data in game_state['players'].items():
-            position = player_data['position']
-        
-            # Map scores
-            if player_id in game_state['score']:
-                position_mapped['score'][position] = game_state['score'][player_id]
-            
-            # Map player info
-            position_mapped['players'][position] = {
-                'username': player_data['username'],
-                'is_host': player_data['is_host']
-            }
-        
-            # Map paddle settings
-            if player_id in game_state['settings']['paddleSize']:
-                position_mapped['settings']['paddleSize'][position] = game_state['settings']['paddleSize'][player_id]
-            
-            if player_id in game_state['settings']['paddleLoc']:
-                position_mapped['settings']['paddleLoc'][position] = game_state['settings']['paddleLoc'][player_id]
-    
-        # Copy other game state data that doesn't need remapping
-        position_mapped['is_playing'] = game_state['is_playing']
-        position_mapped['powerUps'] = game_state['powerUps']
-        position_mapped['pongLogic'] = game_state['pongLogic']
-    
-        return position_mapped
-
 
     async def game_state_update(self, event):
         if 'state' in event:
-            new_return = remap_player_data_by_position(event['state'])
+            position_mapped_state = remap_player_data_by_position(event['state'])
             await self.send(text_data=json.dumps({
                 'type': 'game_state_update',
                 'state': position_mapped_state
