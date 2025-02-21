@@ -61416,7 +61416,7 @@ class MyWebSocket {
     }
     let paddleInfo = {
       type: 'paddle_move',
-      position: paddleInput,
+      position: 4,
       rotation: rotation
     };
     // console.log(paddleInput)
@@ -61457,12 +61457,14 @@ class MyWebSocket {
       pongLogic.lastLoser = this.serverState.pongLogic.lastLoser;
 
       // Convert received objects back to maps
-      settings.paddleSize = new Map(Object.entries(this.serverState.settings.paddleSize));
-      settings.paddleLoc = new Map(Object.entries(this.serverState.settings.paddleLoc));
+      if (this.serverState.settings.paddleSize) settings.paddleSize = this.serverState.settings.paddleSize;
+      if (this.serverState.settings.paddleLoc) settings.paddleLoc = this.serverState.settings.paddleLoc;
+      // settings.paddleLoc = new Map(Object.entries(this.serverState.settings.paddleLoc));
       if (this.serverState.scores) {
-        scores.scores = new Map(Object.entries(this.serverState.scores));
+        scores.scores = this.serverState.scores;
       }
-      if (settings.powerup) powerUps = new Map(Object.entries(this.serverState.powerUps));
+      if (settings.powerup) powerUps = this.serverState.powerUps;
+      console.log(settings.paddleSize, settings.paddleLoc, scores.scores);
     }
     // }
   }
@@ -61739,8 +61741,8 @@ class Pong {
   }
   update(input, gameScene) {
     if (this.mode === Mode.NETWORKED) {
-      console.log(input);
-      this.socket.sendPaddlePosition(input[this.playerSide] + this.settings.paddleLoc[this.playerSide], this.playerSide);
+      // console.log(input, this.settings.paddleLoc);
+      this.socket.sendPaddlePosition(input + this.settings.paddleLoc[this.playerSide], this.playerSide);
     } else if (this.mode === Mode.LOCAL) {
       this.settings.playerSide.forEach(Padle => {
         if (input[Padle] !== 0) {
@@ -106009,6 +106011,9 @@ class main {
     }
     if (this.init.settings.powerup) {
       this.allPowers.update(this.gameScene, this.pongLogic);
+    }
+    if (this.init.controlHandler.debug) {
+      doneLoadingAssets = true;
     }
     const input = this.init.controlHandler.getPaddleSpeeds();
     this.pongLogic.update(input, this.gameScene);

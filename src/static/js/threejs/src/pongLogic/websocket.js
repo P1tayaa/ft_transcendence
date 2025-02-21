@@ -86,9 +86,10 @@ class MyWebSocket {
     if (!rotation) {
       rotation = 0;
     }
+
     let paddleInfo = {
       type: 'paddle_move',
-      position: paddleInput,
+      position: 4,
       rotation: rotation,
     }
     // console.log(paddleInput)
@@ -130,14 +131,17 @@ class MyWebSocket {
       pongLogic.lastLoser = this.serverState.pongLogic.lastLoser;
 
       // Convert received objects back to maps
-      settings.paddleSize = new Map(Object.entries(this.serverState.settings.paddleSize));
-      settings.paddleLoc = new Map(Object.entries(this.serverState.settings.paddleLoc));
+      if (this.serverState.settings.paddleSize)
+        settings.paddleSize = this.serverState.settings.paddleSize;
+      if (this.serverState.settings.paddleLoc)
+        settings.paddleLoc = this.serverState.settings.paddleLoc;
+      // settings.paddleLoc = new Map(Object.entries(this.serverState.settings.paddleLoc));
       if (this.serverState.scores) {
-
-        scores.scores = new Map(Object.entries(this.serverState.scores));
+        scores.scores = this.serverState.scores;
       }
       if (settings.powerup)
-        powerUps = new Map(Object.entries(this.serverState.powerUps));
+        powerUps = this.serverState.powerUps;
+      console.log(settings.paddleSize, settings.paddleLoc, scores.scores)
     }
     // }
   }

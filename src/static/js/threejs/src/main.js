@@ -52,6 +52,10 @@ class main {
       this.allPowers.update(this.gameScene, this.pongLogic);
     }
 
+    if (this.init.controlHandler.debug) {
+      doneLoadingAssets = true;
+    }
+
 
     const input = this.init.controlHandler.getPaddleSpeeds();
 
