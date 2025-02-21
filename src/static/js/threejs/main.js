@@ -61424,6 +61424,14 @@ class MyWebSocket {
   }
   update(pongLogic, scores, settings, powerUps) {
     // if (this.host) {
+    //   const update = {
+    //     type: "set_ball_velocity",
+    //     x: 0,
+    //     y: 0,
+    //   }
+    //   this.socket.send(JSON.stringify(update));
+    // }
+    // if (this.host) {
     //   // Convert maps to plain objects before sending
     //   const gameState = {
     //     type: 'gameState',
@@ -61496,7 +61504,7 @@ class MyWebSocket {
       };
       this.socket.onmessage = event => {
         const data = JSON.parse(event.data);
-
+        console.log("message receive :", event.data);
         // if (data.type === "gameState") {
         //   this.serverState = data; // Store the received game state
         // } else
