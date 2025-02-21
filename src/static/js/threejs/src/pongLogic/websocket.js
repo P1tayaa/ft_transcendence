@@ -97,6 +97,14 @@ class MyWebSocket {
   }
 
   update(pongLogic, scores, settings, powerUps) {
+    if (this.host) {
+      const update = {
+        type: "set_ball_velocity",
+        x: 0,
+        y: 0,
+      }
+      this.socket.send(JSON.stringify(update));
+    }
     // if (this.host) {
     //   // Convert maps to plain objects before sending
     //   const gameState = {
