@@ -13,8 +13,13 @@ const GET_ME_URL = "http://localhost:8000/api/me"
 // "date_joined": user.date_joined.isoformat(),
 // "highscore": profile.highscore,
 export async function getUserName() {
-  return await getRequest(GET_ME_URL).username
-
+  try {
+    const data = await getRequest(GET_ME_URL);
+    return data.username;
+  } catch (error) {
+    console.error('User not logged in, redirecting', error);
+    window.location.href = "/login";
+  }
 }
 
 export async function getRequest(url, data) {
@@ -26,9 +31,9 @@ export async function getRequest(url, data) {
       throw new Error('CSRF token not found');
     }
 
-    const response = null;
+    let response = null;
     if (data) {
-      response = await fetch(GET_ME_URL, {
+      response = await fetch(url, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -50,11 +55,11 @@ export async function getRequest(url, data) {
 
     }
     if (!response.ok) {
-      const errorData = await response.json();
+      let errorData = await response.json();
       throw new Error(errorData.error || 'Failed to logout');
     }
 
-    const responce_data = await response.json();
+    let responce_data = await response.json();
     return responce_data;
 
   } catch (error) {

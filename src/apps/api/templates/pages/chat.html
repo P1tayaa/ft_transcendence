@@ -1,16 +1,47 @@
 <!-- Chat Page -->
+<!DOCTYPE html>
 
-<main>
-  <section id="chat">
-    <h2>Connect with Players</h2>
-    <script src="../simpleJavaScripts/displayMessages.js"></script>
-    <div id="chat-box">
-      <p><strong>Player1:</strong> Hi! Ready for a game?</p>
-      <p><strong>Player2:</strong> Absolutely!</p>
-    </div>
+<link rel="stylesheet" href="../static/css/chat.css">
 
-    <script src="../simpleJavaScripts/sendMessage.js"></script>
-    <input type="text" placeholder="Type your message here...">
-    <button>Send</button>
-  </section>
-</main>
+ 
+<div id="social">
+	<div id="sidebar">
+		<div id="profile-link">
+			<!-- <img src="/home/opelser/Desktop/transcendence/public/images/worm-avatar.png"
+            alt="Username123's Avatar" width="64" height="64"></img> -->
+			<a href="#Username123">Username123</a>
+		</div>
+		<form id="search">
+			<input id="search-box" type="search" placeholder="Enter a username..."></input>
+    </form>
+		<ol id="friends">
+		</ol>
+	</div>
+
+	<div id="content">
+		<div id="profile">
+			<!-- <img src="/home/opelser/Desktop/transcendence/public/images/worm-avatar.png" 
+            alt="Jane's Avatar" width="128" height="128"></img> -->
+			<h2>Jane Doe</h2>
+			<div id="profile-buttons">
+				<button>Add friend</button>
+				<button>Block</button>
+			</div>
+		</div>
+		<div id="tab-select">
+			<button>History</button>
+			<button>Stats</button>
+			<button>Chat</button>
+		</div>
+		<div id="chat">
+			<ol id="chat-messages">
+			</ol>
+      <form id="chat-input">
+        <input id="chat-box" type="text" placeholder="Type a message..."></input>
+        <button>Invite to game</button>
+      </form>
+		</div>
+	</div>
+</div>
+
+<script type="module" src="../static/js/chat/chat.js"></script>
