@@ -85,9 +85,12 @@ class GameConsumer(BaseConsumer):
         is_host = player_count == 0
 
         # position
-        available_positions = await database_sync_to_async(self.game_room.config.player_sides.copy)()
-        used_positions = set(p['position'] for p in self.game_state['players'].values() if 'position' in p)
-        position = next(pos for pos in available_positions if pos not in used_positions)
+        player_state = await database_sync_to_async(lambda: self.game_room.player_states.get(player=self.scope['user'], is_active=True))()
+        position = player_state.side
+        # available_positions = await database_sync_to_async(self.game_room.get_available_sides)()
+        # if not available_positions:
+        #     raise ValidationError("No available sides")
+        # position = available_positions[0]
 
         self.game_state['players'][player_id] = {
             'username': self.scope['user'].username,
