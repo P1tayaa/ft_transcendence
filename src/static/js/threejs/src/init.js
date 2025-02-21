@@ -52,7 +52,7 @@ export default class Init {
     this.controlHandler;
     this.pongLogic = new Pong();
     this.score;
-    this.allPower = new AllPowerUp();
+    this.allPower;
     this.settings;
   }
 
@@ -111,10 +111,13 @@ export default class Init {
   }
 
   async waitForGameStart() {
-    this.pongLogic.socket.player_ready();
-    while (!this.pongLogic.socket.allPlayerReady) {
+    while (this.pongLogic.socket.serverState === null) {
       await new Promise(resolve => setTimeout(resolve, 100));
-      this.pongLogic.socket.tryStartGame()
+      if (this.pongLogic.socket.allPlayerReady) {
+        this.pongLogic.socket.tryStartGame()
+      } else {
+        this.pongLogic.socket.askAllReady();
+      }
     }
     console.log("Game has started!");
   };
@@ -123,15 +126,9 @@ export default class Init {
 
   async initialize(settings, roomName) {
     showLoadingScreen();
-    // try {
-    //   const json_settings = await get_settings(0);
-    //   console.log(json_settings);
-    //   console.log(this.settings);
-    // } catch {
-    //   console.error('Error: An error occurred. Please try again.', error);
-    //   this.settings = new Setting();
-    // }
     this.settings = new Setting(settings);
+    if (this.settings.powerup)
+      this.allPower = new AllPowerUp();
     this.countAssetToLoad();
     await this.pongLogic.initialize(this.settings, roomName);
     this.controlHandler = new ControlHandler(this.settings);
@@ -139,10 +136,10 @@ export default class Init {
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new Score(this.gameScene.getScene(), this.settings.playerSide);
     this.loadAssets(() => {
-
-
+      console.log("assets finsihed loading ?")
       this.doneLoadingAssets = true;
 
+      this.pongLogic.socket.player_ready();
       this.lightManager.setupLights();
     });
 

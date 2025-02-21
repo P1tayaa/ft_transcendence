@@ -10,22 +10,24 @@ class main {
   constructor() {
 
     this.init = new Init();
-
+    this.gameScene = null;
+    this.animate = this.animate.bind(this);
   }
 
   init_function() {
 
     console.log("les voiture sont rouges");
-    this.gameScene = init.gameScene;
+    this.gameScene = this.init.gameScene;
 
-    this.scene = gameScene.getScene();
-    this.lightManager = init.lightManager;
+    this.scene = this.gameScene.getScene();
+    this.lightManager = this.init.lightManager;
     // const controlHandler = init.controlHandler;
-    this.pongLogic = init.pongLogic;
-    this.score = init.score;
-    this.allPowers = init.allPower;
+    this.pongLogic = this.init.pongLogic;
+    this.score = this.init.score;
+    if (this.init.settings.powerup)
+      this.allPowers = this.init.allPower;
 
-    this.canvas = document.getElementById('pong-game');
+    const canvas = document.getElementById('pong-game');
     if (!canvas) {
       console.error('Canvas element with id "pong-game" not found.');
       return;
@@ -36,7 +38,8 @@ class main {
     this.camera = new THREE.PerspectiveCamera(120, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
     this.camera.position.z = 30;
 
-    this.allPowers.activatePowerUp('Star')
+
+    // this.allPowers.activatePowerUp('Star')
     this.renderer.setAnimationLoop(this.animate);
 
   }
@@ -45,15 +48,20 @@ class main {
       // Assets are still loading; skip rendering
       return;
     }
-
-    this.allPowers.update(this.gameScene, this.pongLogic);
+    if (this.init.settings.powerup) {
+      this.allPowers.update(this.gameScene, this.pongLogic);
+    }
 
 
     const input = this.init.controlHandler.getPaddleSpeeds();
 
     this.pongLogic.update(input, this.gameScene);
-    if (init.settings.mode === Mode.NETWORKED) {
-      this.pongLogic.socket.update(this.pongLogic, this.init.score, this.init.settings, this.init.allPower.powerUps);
+    if (this.init.settings.mode === Mode.NETWORKED) {
+      if (this.init.settings.powerup) {
+        this.pongLogic.socket.update(this.pongLogic, this.init.score, this.init.settings, this.init.allPower.powerUps);
+      } else {
+        this.pongLogic.socket.update(this.pongLogic, this.init.score, this.init.settings);
+      }
     }
     let Paddle2Win = 0;
     let Paddle1Win = 0;
@@ -137,12 +145,12 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Initialization failed:', error);
     });
 
-  const wait_please_interval = setInterval(() => {
-    if (wait_please) {
-      clearInterval(wait_please_interval)
-
-    }
-  }, 100)
+  // const wait_please_interval = setInterval(() => {
+  //   if (wait_please) {
+  //     clearInterval(wait_please_interval)
+  //
+  //   }
+  // }, 100)
 
 
 

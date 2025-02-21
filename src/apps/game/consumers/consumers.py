@@ -326,7 +326,8 @@ class GameConsumer(BaseConsumer):
             if player_id in self.game_state['players'] \
                 and self.game_state['players'][player_id]['is_host'] \
                 and not self.game_state['is_playing'] \
-                and current_player_count >= self.game_room.config.player_count:
+                and current_player_count >= self.game_room.config.player_count \
+                and self.game_room.all_players_ready():
                 self.game_state['is_playing'] = True
                 self.game_loop = asyncio.create_task(self.run_game_loop())
                 await self.channel_layer.group_send(

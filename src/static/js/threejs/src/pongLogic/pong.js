@@ -84,7 +84,6 @@ class Pong {
     }
   }
 
-
   localCollisionDetection(ballPosition3D, gameScene) {
     this.ballPos = { x: ballPosition3D.x, y: ballPosition3D.y };
 
@@ -211,17 +210,15 @@ class Pong {
 
   update(input, gameScene) {
     if (this.mode === Mode.NETWORKED) {
-      this.socket.sendPaddlePosition(input[this.playerSide], this.playerSide);
+      console.log(input);
+      this.socket.sendPaddlePosition(input[this.playerSide] + this.settings.paddleLoc[this.playerSide], this.playerSide);
     } else if (this.mode === Mode.LOCAL) {
       this.settings.playerSide.forEach(Padle => {
         if (input[Padle] !== 0) {
           gameScene.moveAssetBy(Padle, getRightSpeed(Padle, input[Padle], this.settings, this));
         }
       });
-
-      // Get Positions
     }
-
     const BallPos = gameScene.getAssetPossition('Ball');
     this.checkCollisions(BallPos, gameScene);
   }

@@ -13,11 +13,11 @@ class MyWebSocket {
     this.host;
     this.isSpectator;
 
-    this.serverState;
+    this.serverState = null;
     this.winner = "";
     this.game_over = false;
     this.myPos = null;
-    this.myPosStruc;
+    this.myPosStruc = null;
     this.gameStarted = false;
     this.allPlayerReady = false;
   }
@@ -36,14 +36,15 @@ class MyWebSocket {
     this.socket.send(JSON.stringify({ type: 'start_game' }));
   }
 
-  async getWhichPadle() {
-
-
+  async getWhichPadle(socket) {
     await new Promise((resolve) => {
       const intervalId = setInterval(() => {
         if (this.myPos !== null) {
           clearInterval(intervalId);
           resolve(this.myPos);
+        } else {
+          socket.socket.send(JSON.stringify({ type: "which_paddle" }));
+
         }
       }, 100);
     });
@@ -62,8 +63,9 @@ class MyWebSocket {
     } else {
       console.error("Invalid position value:", this.myPos);
     }
+    console.log(this.myPosStruc);
 
-    return intToPlayerSide(this.myPosStruc);
+    return this.myPosStruc;
   }
 
   async init(settings, roomName) {
@@ -81,58 +83,73 @@ class MyWebSocket {
 
 
   sendPaddlePosition(paddleInput, paddleKey, rotation) {
-    const paddleInfo = {
+    if (!rotation) {
+      rotation = 0;
+    }
+    let paddleInfo = {
       type: 'paddle_move',
       position: paddleInput,
       rotation: rotation,
     }
+    // console.log(paddleInput)
     this.socket.send(JSON.stringify(paddleInfo))
   }
 
   update(pongLogic, scores, settings, powerUps) {
-    if (this.host) {
-      // Convert maps to plain objects before sending
-      const gameState = {
-        type: 'gameState',
-        pongLogic: {
-          ballPos: pongLogic.ballPos,
-          ballSpeed: pongLogic.ballSpeed,
-          ballSize: pongLogic.ballSize,
-          lastWinner: pongLogic.lastWinner,
-          lastContact: pongLogic.lastContact,
-          lastLoser: pongLogic.lastLoser,
-        },
-        settings: {
-          paddleSize: settings.paddleSize,
-          paddleLoc: settings.paddleLoc,
-          // paddleSize: settings.paddleSize,
-          // paddleLoc: Object.fromEntries(settings.paddleLoc.entries),
-        },
-        // powerUps: Object.fromEntries(powerUps),
-        // scores: Object.fromEntries(scores.scores),
-        powerUps: powerUps,
-        scores: scores.scores,
-      };
-      this.socket.send(JSON.stringify(gameState));
-    } else {
-      // If this client is not the host, overwrite local values with server values
-      if (this.serverState) {
-        pongLogic.ballSpeed = this.serverState.pongLogic.ballSpeed;
-        pongLogic.ballSize = this.serverState.pongLogic.ballSize;
-        pongLogic.lastWinner = this.serverState.pongLogic.lastWinner;
-        pongLogic.lastContact = this.serverState.pongLogic.lastContact;
-        pongLogic.lastLoser = this.serverState.pongLogic.lastLoser;
+    // if (this.host) {
+    //   // Convert maps to plain objects before sending
+    //   const gameState = {
+    //     type: 'gameState',
+    //     pongLogic: {
+    //       ballPos: pongLogic.ballPos,
+    //       ballSpeed: pongLogic.ballSpeed,
+    //       ballSize: pongLogic.ballSize,
+    //       lastWinner: pongLogic.lastWinner,
+    //       lastContact: pongLogic.lastContact,
+    //       lastLoser: pongLogic.lastLoser,
+    //     },
+    //     settings: {
+    //       paddleSize: settings.paddleSize,
+    //       paddleLoc: settings.paddleLoc,
+    //       // paddleSize: settings.paddleSize,
+    //       // paddleLoc: Object.fromEntries(settings.paddleLoc.entries),
+    //     },
+    //     // powerUps: Object.fromEntries(powerUps),
+    //     // scores: Object.fromEntries(scores.scores),
+    //     powerUps: powerUps,
+    //     scores: scores.scores.scores,
+    //   };
+    //   this.socket.send(JSON.stringify(gameState));
+    // } else {
+    // If this client is not the host, overwrite local values with server values
+    if (this.serverState) {
+      pongLogic.ballSpeed = this.serverState.pongLogic.ballSpeed;
+      pongLogic.ballSize = this.serverState.pongLogic.ballSize;
+      pongLogic.lastWinner = this.serverState.pongLogic.lastWinner;
+      pongLogic.lastContact = this.serverState.pongLogic.lastContact;
+      pongLogic.lastLoser = this.serverState.pongLogic.lastLoser;
 
-        // Convert received objects back to maps
-        settings.paddleSize = new Map(Object.entries(this.serverState.settings.paddleSize));
-        settings.paddleLoc = new Map(Object.entries(this.serverState.settings.paddleLoc));
+      // Convert received objects back to maps
+      settings.paddleSize = new Map(Object.entries(this.serverState.settings.paddleSize));
+      settings.paddleLoc = new Map(Object.entries(this.serverState.settings.paddleLoc));
+      if (this.serverState.scores) {
 
         scores.scores = new Map(Object.entries(this.serverState.scores));
-
-        powerUps = new Map(Object.entries(this.serverState.powerUps));
       }
+      if (settings.powerup)
+        powerUps = new Map(Object.entries(this.serverState.powerUps));
     }
+    // }
   }
+
+  async askAllReady() {
+    console.log("askAllReady")
+    const playerRequest = {
+      type: 'is_all_players_ready',
+    }
+    this.socket.send(JSON.stringify(playerRequest))
+  }
+
 
   async player_ready() {
     console.log("setting player ready")
@@ -164,28 +181,33 @@ class MyWebSocket {
 
       this.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        console.log('Received:', data);
 
         // if (data.type === "gameState") {
         //   this.serverState = data; // Store the received game state
         // } else
         if (data.type === "game_state_update") {
+
+          // console.log('Received:', data);
           this.serverState = data.state;
           if (data.game_over) {
             this.winner = data.winner;
             this.game_over = true;
           }
         } else if (data.type === "which_paddle") {
+          console.log("assked witch paddle I was")
           this.myPos = data.position;
         } else if (data.type === "started_game") {
+          console.log("started_game")
           this.serverState = data.state;
           this.gameStarted = true;
         } else if (data.type === "failed_to_start_game") {
-          console.log(data.state);
-          console.log(data.checks);
-          console.log(data.config_player_count);
+          // console.log(data.state);
+          console.log("failed_to_start_game", data.checks);
+          // console.log(data.config_player_count);
         } else if (data.type === 'is_all_players_ready') {
-          this.allPlayerReady = true
+
+          console.log('is_all_players_ready:', data.value);
+          this.allPlayerReady = data.value;
         }
 
       };
@@ -201,7 +223,9 @@ class MyWebSocket {
     });
 
     this.socket.send(JSON.stringify({ type: "which_paddle" }));
+    console.log("finished with connecting to websocket ");
   }
+
 }
 
 
