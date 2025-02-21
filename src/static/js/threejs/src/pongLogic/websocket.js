@@ -86,9 +86,10 @@ class MyWebSocket {
     if (!rotation) {
       rotation = 0;
     }
+
     let paddleInfo = {
       type: 'paddle_move',
-      position: paddleInput,
+      position: 4,
       rotation: rotation,
     }
     // console.log(paddleInput)
@@ -96,6 +97,14 @@ class MyWebSocket {
   }
 
   update(pongLogic, scores, settings, powerUps) {
+    // if (this.host) {
+    //   const update = {
+    //     type: "set_ball_velocity",
+    //     x: 0,
+    //     y: 0,
+    //   }
+    //   this.socket.send(JSON.stringify(update));
+    // }
     // if (this.host) {
     //   // Convert maps to plain objects before sending
     //   const gameState = {
@@ -130,14 +139,18 @@ class MyWebSocket {
       pongLogic.lastLoser = this.serverState.pongLogic.lastLoser;
 
       // Convert received objects back to maps
-      settings.paddleSize = new Map(Object.entries(this.serverState.settings.paddleSize));
-      settings.paddleLoc = new Map(Object.entries(this.serverState.settings.paddleLoc));
+      if (this.serverState.settings.paddleSize)
+        settings.paddleSize = this.serverState.settings.paddleSize;
+      if (this.serverState.settings.paddleLoc)
+        settings.paddleLoc = this.serverState.settings.paddleLoc;
+      // settings.paddleLoc = new Map(Object.entries(this.serverState.settings.paddleLoc));
       if (this.serverState.scores) {
-
-        scores.scores = new Map(Object.entries(this.serverState.scores));
+        console.log("-------- was send score")
+        scores.scores = this.serverState.scores;
       }
       if (settings.powerup)
-        powerUps = new Map(Object.entries(this.serverState.powerUps));
+        powerUps = this.serverState.powerUps;
+      console.log(settings.paddleSize, settings.paddleLoc, scores.scores)
     }
     // }
   }
@@ -181,7 +194,7 @@ class MyWebSocket {
 
       this.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-
+        console.log("message receive :", event.data)
         // if (data.type === "gameState") {
         //   this.serverState = data; // Store the received game state
         // } else
