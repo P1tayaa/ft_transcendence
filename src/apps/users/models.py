@@ -1,10 +1,27 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
+
+def user_profile_path(instance, filename):
+    ext = filename.split('.')[-1]
+    return f'profile_pics/user_{instance.user.id}/profile_pic.{ext}'
+
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     highscore = models.IntegerField(default=0)
     most_recent_game_score = models.IntegerField(default=0)
+    profile_picture = models.ImageField(
+        upload_to=user_profile_path,
+        null=True,
+        blank=True,
+        default='default_profile.png'
+    )
+
+    def get_profile_picture_url(self):
+        if self.profile_picture:
+            return self.profile_picture.url
+        return f"{settings.MEDIA_URL}default_profile.png"
 
     def add_friend(self, friend_profile):
         return Friendship.objects.create(profile=self, friend=friend_profile)
