@@ -105882,6 +105882,47 @@ function loadRectangleMap(assetsPath, callback, init) {
   });
 }
 ;
+;// ./src/style/intro.js
+function showLoadingScreen({
+  loadingMessage = "Loading assets...",
+  playerInfo = "You are Player 1",
+  controlInfo = "Use arrow keys to move"
+} = {}) {
+  const loadingDiv = document.createElement('div');
+  loadingDiv.id = 'loading-screen';
+  loadingDiv.style.position = 'fixed';
+  loadingDiv.style.top = '0';
+  loadingDiv.style.left = '0';
+  loadingDiv.style.width = '100%';
+  loadingDiv.style.height = '100%';
+  loadingDiv.style.display = 'flex';
+  loadingDiv.style.flexDirection = 'column';
+  loadingDiv.style.justifyContent = 'center';
+  loadingDiv.style.alignItems = 'center';
+  loadingDiv.style.backgroundColor = '#000';
+  loadingDiv.style.color = '#fff';
+  loadingDiv.style.fontSize = '2em';
+
+  // Create elements for each piece of information
+  const loadingMessageElem = document.createElement('p');
+  loadingMessageElem.innerText = loadingMessage;
+  const playerInfoElem = document.createElement('p');
+  playerInfoElem.innerText = playerInfo;
+  const controlInfoElem = document.createElement('p');
+  controlInfoElem.innerText = controlInfo;
+
+  // Append each element to the loading screen
+  loadingDiv.appendChild(loadingMessageElem);
+  loadingDiv.appendChild(playerInfoElem);
+  loadingDiv.appendChild(controlInfoElem);
+  document.body.appendChild(loadingDiv);
+}
+function hideLoadingScreen() {
+  const loadingDiv = document.getElementById('loading-screen');
+  if (loadingDiv) {
+    loadingDiv.remove();
+  }
+}
 ;// ./src/init.js
 // src/init/init.js
 
@@ -105895,30 +105936,6 @@ const assetsPath = "http://localhost:8000/static/glfw/";
 
 
 
-// src/init/loadingScreen.js
-function showLoadingScreen() {
-  const loadingDiv = document.createElement('div');
-  loadingDiv.id = 'loading-screen';
-  loadingDiv.style.position = 'fixed';
-  loadingDiv.style.top = '0';
-  loadingDiv.style.left = '0';
-  loadingDiv.style.width = '100%';
-  loadingDiv.style.height = '100%';
-  loadingDiv.style.display = 'flex';
-  loadingDiv.style.justifyContent = 'center';
-  loadingDiv.style.alignItems = 'center';
-  loadingDiv.style.backgroundColor = '#000';
-  loadingDiv.style.color = '#fff';
-  loadingDiv.style.fontSize = '2em';
-  loadingDiv.innerText = 'Loading...';
-  document.body.appendChild(loadingDiv);
-}
-function hideLoadingScreen() {
-  const loadingDiv = document.getElementById('loading-screen');
-  if (loadingDiv) {
-    loadingDiv.remove();
-  }
-}
 class Init {
   constructor() {
     this.doneLoadingAssets = false;

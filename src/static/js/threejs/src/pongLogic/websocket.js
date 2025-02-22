@@ -12,6 +12,7 @@ class MyWebSocket {
     this.socket = null;
     this.host;
     this.isSpectator;
+    this.Connected = false;
 
     this.serverState = null;
     this.winner = "";
@@ -188,6 +189,7 @@ class MyWebSocket {
 
 
       this.socket.onopen = () => {
+        this.Connected = true;
         console.log('Connected to WebSocket');
         resolve();
       };

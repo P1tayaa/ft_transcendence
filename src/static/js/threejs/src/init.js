@@ -12,34 +12,7 @@ const assetsPath = "http://localhost:8000/static/glfw/";
 
 import { loadClassicMap, loadBathMap, loadCircleMap, loadRectangleMap } from "./init/loadMap.js";
 import { spawnPadles } from './init/loadPadle.js';
-
-
-
-// src/init/loadingScreen.js
-export function showLoadingScreen() {
-  const loadingDiv = document.createElement('div');
-  loadingDiv.id = 'loading-screen';
-  loadingDiv.style.position = 'fixed';
-  loadingDiv.style.top = '0';
-  loadingDiv.style.left = '0';
-  loadingDiv.style.width = '100%';
-  loadingDiv.style.height = '100%';
-  loadingDiv.style.display = 'flex';
-  loadingDiv.style.justifyContent = 'center';
-  loadingDiv.style.alignItems = 'center';
-  loadingDiv.style.backgroundColor = '#000';
-  loadingDiv.style.color = '#fff';
-  loadingDiv.style.fontSize = '2em';
-  loadingDiv.innerText = 'Loading...';
-  document.body.appendChild(loadingDiv);
-}
-
-export function hideLoadingScreen() {
-  const loadingDiv = document.getElementById('loading-screen');
-  if (loadingDiv) {
-    loadingDiv.remove();
-  }
-}
+import { showLoadingScreen, hideLoadingScreen } from "./style/intro.js"
 
 
 export default class Init {
@@ -133,6 +106,15 @@ export default class Init {
     this.countAssetToLoad();
     await this.pongLogic.initialize(this.settings, roomName);
     this.controlHandler = new ControlHandler(this.settings);
+    if (this.settings.mode === Mode.NETWORKED) {
+      sides = null;
+      if (this.pongLogic.socket.myPos) {
+
+      }
+      updateLoadingScreen(this, , this.doneLoadingAssets);
+    }
+    else
+      updateLoadingScreen(this, this.settings.playerSide, this.doneLoadingAssets);
     await this.controlHandler.Init(this.pongLogic.socket);
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new Score(this.gameScene.getScene(), this.settings.playerSide);
