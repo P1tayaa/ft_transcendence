@@ -222,11 +222,9 @@ class GameConsumer(BaseConsumer):
     async def handle_paddle_move(self, data):
         player_id = str(self.scope['user'].id)
         if player_id in self.game_state['players']:
-            position = self.game_state['players'][player_id]['position']
-            is_vertical = position in ['left', 'right']
 
             self.game_state['settings']['paddleLoc'][player_id] = {
-                'y' if is_vertical else 'x': data['position'],
+                'position': data['position'],
                 'rotation': data['rotation']
             }
             await self.broadcast_game_state()
