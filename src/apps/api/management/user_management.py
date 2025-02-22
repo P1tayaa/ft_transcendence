@@ -28,6 +28,8 @@ def serialize_user(current_user, user=None):
 
     if user and user != current_user:
         data["is_friend"]: current_user.profile.is_friend(user.profile)
+    else:
+        data["is_friend"]: False
 
     return data
 
