@@ -2,7 +2,7 @@
 // src/main.js
 import * as THREE from 'three';
 import Init from './init.js';
-import { intToPlayerSide, Mode } from "./pongLogic/setting.js";
+import { Mode } from "./pongLogic/setting.js";
 import { updateLightsForActivePlayers } from "./modelLoading/light_manage.js";
 import { botControl } from './bot.js';
 
@@ -21,7 +21,6 @@ class main {
 
     this.scene = this.gameScene.getScene();
     this.lightManager = this.init.lightManager;
-    // const controlHandler = init.controlHandler;
     this.pongLogic = this.init.pongLogic;
     this.score = this.init.score;
     if (this.init.settings.powerup)
@@ -55,7 +54,10 @@ class main {
         this.pongLogic.socket.update(this.pongLogic, this.init.score, this.init.settings);
       }
     }
-
+    if (this.init.settings.mode === Mode.NETWORKED) {
+      const newBallPos = { x: this.pongLogic.ballPos.x, y: this.pongLogic.ballPos.y, z: 0 };
+      this.gameScene.moveAsset('Ball', newBallPos);
+    } else { }
 
     if (this.init.settings.powerup) {
       this.allPowers.update(this.gameScene, this.pongLogic);
@@ -79,18 +81,17 @@ class main {
       Ball_Reset = false;
     }
 
-    if (this.pongLogic.resetBall) {
-      this.init.score.incrementScore(intToPlayerSide(this.pongLogic.lastWinner));
-      Ball_Reset = true;
-      this.pongLogic.resetBall = false;
-      this.gameScene.moveAsset('Ball', { x: 0, y: 0, z: 0 });
+    if (this.pongLogic.resetBall && this.init.settings.host) {
+      console.log("this.pongLogic.resetBall", this.pongLogic.resetBall);
+      this.pongLogic.reset(this.init);
     }
 
     updateLightsForActivePlayers(this.init.lightManager, this.gameScene, this.init.settings.playerSide, this.pongLogic.lastWinner)
-
-    const ballCurrentSpeed = { x: this.pongLogic.ballSpeed.x, y: this.pongLogic.ballSpeed.y, z: 0 };
-    this.gameScene.moveAssetBy('Ball', ballCurrentSpeed);
-
+    if (this.init.settings.mode === Mode.NETWORKED) {
+    } else {
+      const ballCurrentSpeed = { x: this.pongLogic.ballSpeed.x, y: this.pongLogic.ballSpeed.y, z: 0 };
+      this.gameScene.moveAssetBy('Ball', ballCurrentSpeed);
+    }
     this.renderer.render(this.scene, this.camera);
   }
 

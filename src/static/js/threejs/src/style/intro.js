@@ -20,7 +20,7 @@ export function updateStateLoading(init, socket) {
 
 
 function playerSideToControlInfo(sides) {
-  console.log(sides);
+  // console.log(sides);
   const SINGLE_SIDE_MESSAGE = (side) =>
     `You are ${side} and use: [${inputKeys[side]}] and [${inputKeys[side]}]`;
 

@@ -4,7 +4,7 @@
 // update_game
 // consumers.py is where you can find all
 
-import { strToPlayerSide, PlayerSide } from './setting.js'
+import { intToPlayerSide, strToPlayerSide, PlayerSide } from './setting.js'
 
 
 class MyWebSocket {
@@ -64,14 +64,6 @@ class MyWebSocket {
     }
     return null; // Return null if no data is available yet
   }
-  getBallPosition() {
-    if (this.serverState && this.serverState.settings) {
-      return this.serverState.settings.ballSize;
-    }
-    return null; // Return null if no data is available yet
-  }
-
-
 
   sendPaddlePosition(paddleInput, settings, rotation) {
     if (!rotation) {
@@ -82,8 +74,45 @@ class MyWebSocket {
       position: paddleInput[this.myPosStruc] + settings.paddleLoc[this.myPosStruc].position,
       rotation: rotation,
     }
+    console.log(paddleInfo.position);
+
     this.socket.send(JSON.stringify(paddleInfo))
   }
+
+  getBallPosition() {
+    if (this.serverState && this.serverState.settings) {
+      return this.serverState.settings.ballSize;
+    }
+    return null; // Return null if no data is available yet
+  }
+  sendBallVelocity(ballPos) {
+    const ballVelocityRequest = {
+      type: "set_ball_velocity",
+      x: ballPos.x,
+      y: ballPos.y
+    }
+    console.log(ballVelocityRequest);
+    this.socket.send(JSON.stringify(ballVelocityRequest));
+  }
+
+  resetRound(pongLogic) {
+
+    let request = {
+      type: "reset_round",
+      lastWinner: intToPlayerSide(pongLogic.lastWinner),
+      lastLoser: "",
+    }
+    if (!pongLogic.lastLoser) {
+      request.lastLoser = intToPlayerSide(3 - pongLogic.lastWinner);
+    } else {
+      request.lastLoser = intToPlayerSide(pongLogic.lastWinner);
+
+    }
+    console.log(request)
+    this.socket.send(JSON.stringify(request));
+  }
+
+
 
   update(pongLogic, scores, settings, powerUps) {
     // if (this.host) {

@@ -50,6 +50,18 @@ export function posSpawn(map, position) {
   return (positionSpawn)
 }
 
+export function getNewPosition(side, mapStyle, position) {
+  const startPos = posSpawn(mapStyle, side);
+
+  if (side === PlayerSide.RIGHT || side === PlayerSide.LEFT) {
+    const newPos = { x: startPos.x, y: position, z: 0 };
+    return newPos;
+  } else {
+    const newPos = { x: position, y: startPos.y, z: 0 };
+    return newPos;
+  }
+}
+
 function checkBounderyPadle(settings, name, pongLogic, speed) {
   if (name === PlayerSide.LEFT || name == PlayerSide.RIGHT) {
     if ((Math.abs(settings.paddleLoc[name] + speed) + settings.paddleSize[name].y / 2) >= pongLogic.playArea.depth / 2) {

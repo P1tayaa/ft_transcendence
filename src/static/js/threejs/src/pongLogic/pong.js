@@ -3,9 +3,9 @@
 
 
 import { PlayerSide, Mode, MapStyle, get_settings, Setting } from "./setting.js";
-import { getRightSpeed, posSpawn } from "../init/loadPadle.js"
+import { getNewPosition, getRightSpeed, posSpawn } from "../init/loadPadle.js"
 import MyWebSocket from "./websocket.js"
-
+import intToPlayerSide from "./setting.js"
 
 class Pong {
   constructor() {
@@ -28,6 +28,10 @@ class Pong {
 
     this.lastContact;
     this.lastLoser;
+  }
+
+  initBallVelocity() {
+    return { x: 0.5, y: 0 }
   }
 
   async initialize(settings, roomName) {
@@ -78,10 +82,55 @@ class Pong {
       this.localCollisionDetection(ballPosition3D, gameScene);
     } else if (this.mode === Mode.NETWORKED) {
       if (this.socket.host) {
-        this.localCollisionDetection(ballPosition3D, gameScene);
+        this.networkedCollisionDetection(ballPosition3D, gameScene);
       }
     }
   }
+
+  networkedCollisionDetection(ballPosition3D, gameScene) {
+    const activePaddles =
+      this.settings.playerSide.map(side => ({
+        side,
+        position: gameScene.getAssetPossition(side),
+        size: this.settings.paddleSize[side],
+      }));
+
+    const ballBox = this.createBoundingBox(this.ballPos, this.ballSize);
+    this.paddle_collided = false;
+    this.reset_ball = false;
+
+    // Check for paddle collisions
+    activePaddles.forEach(({ side, position, size }) => {
+      const paddleBox = this.createBoundingBox(position, size);
+
+      if (this.intersectsBox(ballBox, paddleBox)) {
+        this.handlePaddleCollision(side, this.ballPos, position);
+        this.socket.sendBallVelocity(this.ballPos);
+        return;
+      }
+    });
+
+    // Check for wall collisions (top & bottom bounds)
+    if (Math.abs(this.ballPos.y) >= this.playArea.depth / 2) {
+      if (this.settings.playercount == 2) {
+        this.ballSpeed.y = -this.ballSpeed.y;
+        this.socket.sendBallVelocity(this.ballPos);
+        return;
+      } else {
+        this.handleBallOutOfBounds(this.ballPos);
+      }
+    }
+
+    // Check if ball is out of bounds (left & right bounds)
+    if (Math.abs(this.ballPos.x) >= this.playArea.width / 2) {
+      this.handleBallOutOfBounds(this.ballPos);
+    }
+    // Cap the Y speed
+    if (Math.abs(this.ballSpeed.y) > this.ySpeedCap) {
+      this.ballSpeed.y = this.ballSpeed.y < 0 ? -this.ySpeedCap : this.ySpeedCap;
+    }
+  }
+
 
   localCollisionDetection(ballPosition3D, gameScene) {
     if (this.mode !== Mode.NETWORKED) {
@@ -180,8 +229,8 @@ class Pong {
 
     }
 
-
-    this.ballSpeed = { x: 0.5, y: 0 };
+    if (this.settings.mode !== Mode.NETWORKED)
+      this.ballSpeed = { x: 0.5, y: 0 };
   }
 
   defineLastWinner(paddle) {
@@ -205,19 +254,20 @@ class Pong {
 
   }
 
-  networkedCollisionDetection() {
-  }
-
   moveBall() {
     if (this.mode === 'local') {
       this.ballPosition.x += this.ballSpeed.x;
       this.ballPosition.y += this.ballSpeed.y;
     }
-    // In networked mode, ball movement is handled by the server
   }
+
+
 
   update(input, gameScene) {
     if (this.mode === Mode.NETWORKED) {
+      this.settings.playerSide.forEach(Padle => {
+        gameScene.moveAsset(Padle, getNewPosition(Padle, this.settings.mapStyle, this.settings.paddleLoc[Padle].position));
+      });
       // console.log(input, this.settings.paddleLoc);
       this.socket.sendPaddlePosition(input, this.settings);
     } else if (this.mode === Mode.LOCAL) {
@@ -236,6 +286,22 @@ class Pong {
     }
     const BallPos = gameScene.getAssetPossition('Ball');
     this.checkCollisions(BallPos, gameScene);
+  }
+
+  reset(init) {
+    console.log(this.ballPos)
+    if (this.settings.mode === Mode.NETWORKED) {
+      this.socket.resetRound(this);
+    } else {
+      init.score.incrementScore(intToPlayerSide(this.lastWinner));
+    }
+    // Ball_Reset = true;
+    this.resetBall = false;
+    if (this.settings.mode === Mode.NETWORKED) {
+      this.socket.sendBallVelocity(this.initBallVelocity());
+      this.ballPos = { x: 0, y: 0 };
+    }
+    init.gameScene.moveAsset('Ball', { x: 0, y: 0, z: 0 });
   }
 
   destroy() {

@@ -89,21 +89,22 @@ export class Setting {
     console.log(setting_json);
     // Parse the JSON and fill in the settings
     this.mode = this.parseMode(setting_json.mode);
-    console.log(this.mode);
+    console.log("this.mode", this.mode);
     this.serverurl = setting_json.serverurl || "http://localhost:8000/api/";
     this.powerup = setting_json.powerup; // Convert to boolean
+    console.log("this.powerup", this.powerup);
     this.powerupList = this.parsePoweruplist(setting_json.poweruplist);
     this.playercount = parseInt(setting_json.playerCount); // Default to 2 players
     this.mapStyle = this.parseMapStyle(setting_json["map_style"]);
     this.playerSide = this.parseMultipleSides(setting_json.playerside);
     this.bots = setting_json.bots; // Convert to boolean
-    console.log(this.bots);
+    console.log("this.bots", this.bots);
     this.botsSide = this.parseMultipleSides(setting_json.botsSide);
-    console.log(this.botsSide);
+    console.log("this.botsSide", this.botsSide);
     this.host = setting_json.host;
-    console.log(this.host);
+    console.log("this.host", this.host);
     this.isSpectator = setting_json.isSpectator;
-    console.log(this.isSpectator);
+    console.log("this.isSpectator", this.isSpectator);
     this.justMePaddle = null;
     this.paddleSize = {};
     this.paddleLoc = {};
