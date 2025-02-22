@@ -61442,12 +61442,14 @@ class MyWebSocket {
     }
     let paddleInfo = {
       type: 'paddle_move',
-      position: paddleInput[this.myPosStruc] + settings.paddleLoc[this.myPosStruc],
+      position: paddleInput[this.myPosStruc] + settings.paddleLoc[this.myPosStruc].y,
       rotation: rotation
     };
-    console.log(settings.paddleLoc, this.myPosStruc);
-    console.log(paddleInfo);
-    console.log(paddleInput);
+    console.log("the posstruct:", this.myPosStruc);
+    console.log("the input", paddleInput[this.myPosStruc]);
+    console.log("all locs", settings.paddleLoc);
+    console.log("pos of current", settings.paddleLoc[this.myPosStruc]);
+    console.log("the new possition", paddleInput[this.myPosStruc] + settings.paddleLoc[this.myPosStruc].y);
     this.socket.send(JSON.stringify(paddleInfo));
   }
   update(pongLogic, scores, settings, powerUps) {

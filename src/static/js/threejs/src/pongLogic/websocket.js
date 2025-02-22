@@ -79,12 +79,9 @@ class MyWebSocket {
     }
     let paddleInfo = {
       type: 'paddle_move',
-      position: paddleInput[this.myPosStruc] + settings.paddleLoc[this.myPosStruc],
+      position: paddleInput[this.myPosStruc] + settings.paddleLoc[this.myPosStruc].position,
       rotation: rotation,
     }
-    console.log(settings.paddleLoc, this.myPosStruc)
-    console.log(paddleInfo);
-    console.log(paddleInput);
     this.socket.send(JSON.stringify(paddleInfo))
   }
 
