@@ -1,5 +1,8 @@
 from django.urls import path
-# from .views import views
+from django.conf import settings
+from django.conf.urls.static import static
+
+
 from .management.user_management import (
     get_current_user,
     register_user,
@@ -72,5 +75,4 @@ urlpatterns = [
     path('tournament/<int:tournament_id>/join', join_tournament, name="join_tournament"),
     path('tournament/<int:tournament_id>/get_data', get_tournament_data, name="get_tournament_data"),
     path('tournament/<int:match_id>/update_scores', update_match_score, name="update_match_scores"),
-
 ]

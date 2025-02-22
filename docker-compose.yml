@@ -9,7 +9,7 @@ services:
       dockerfile: src/Dockerfile
     volumes:
       - ./src:/app/src
-      # - .:/app
+      - django_media:/app/src/apps/users/media
     ports:
       - "8000:8000"
     depends_on:
@@ -31,3 +31,4 @@ services:
       - .env
 volumes:
   postgres_data:
+  django_media:
