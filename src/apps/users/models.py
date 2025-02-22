@@ -113,15 +113,39 @@ class Profile(models.Model):
         )
 
 
-class ScoreHistory(models.Model):
-    profile = models.ForeignKey(
-        Profile, on_delete=models.CASCADE, related_name="scores"
-    )
-    score = models.IntegerField(default=0)
+class Game(models.Model):
     date = models.DateTimeField(auto_now_add=True)
+    winner = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, related_name='games_won')
 
     class Meta:
         ordering = ["-date"]
+
+    @property
+    def player_count(self):
+        return self.player_scores.count()
+
+    @classmethod
+    def save_game_result(cls, game_state, winner_id):
+        game = cls.objects.create(winner_id=winner_id)
+        for player_id, player_data in game_state['players'].items():
+            PlayerScore.objects.create(
+                game=game,
+                profile_id=player_id,
+                score=game_state['score'][player_id],
+                position=player_data['position']
+            )
+        return game
+
+
+class PlayerScore(models.Model):
+    game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="player_scores")
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="scores")
+    score = models.IntegerField(default=0)
+    position = models.CharField(max_length=20)
+
+    class Meta:
+        ordering = ["-game__date"]
+        unique_together = ['game', 'profile']
 
 
 class Friendship(models.Model):

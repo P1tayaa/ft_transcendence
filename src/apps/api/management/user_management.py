@@ -30,7 +30,6 @@ def serialize_user(current_user, user=None):
         data["is_friend"]: current_user.profile.is_friend(user.profile)
 
     return data
-        
 
 
 # User.objects.create_user should add to database itself
