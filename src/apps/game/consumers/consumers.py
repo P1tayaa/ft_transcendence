@@ -88,7 +88,9 @@ class GameConsumer(BaseConsumer):
                 GameConsumer.active_games[self.room_name] = self.create_initial_gamestate()
 
             self.game_state = GameConsumer.active_games[self.room_name]
-            # self.game_state = self.create_initial_gamestate()
+            if self.game_room.config.powerups_enabled:
+                for powerup in self.game_room.config.powerup_list:
+                    self.game_state['powerUps'][powerup] = False
 
             join_result = await database_sync_to_async(self.game_room.join_game)(self.scope['user'])
 
@@ -138,7 +140,6 @@ class GameConsumer(BaseConsumer):
                 'ballSpeed': {'x': 0.2, 'y': 0.1},
                 'ballSize': {'x': 1, 'y': 1},
                 'lastWinner': None,
-                'lastContact': None,
                 'lastLoser': None,
             }
         }
@@ -162,8 +163,61 @@ class GameConsumer(BaseConsumer):
             await self.handle_player_ready()
         elif message_type == 'start_game':
             await self.handle_start_game()
+        elif message_type == 'set_ball_velocity':
+            await self.handle_ball_velocity(data)
+        elif message_type == 'set_paddle_size':
+            await self.handle_paddle_size(data)
+        elif message_type == 'toggle_powerup':
+            await self.handle_toggle_powerup()
+        elif message_type == 'update_score':
+            await self.handle_update_score(data)
+        elif message_type == 'reset_round':
+            await self.handle_reset_round()
         elif message_type == 'game_over':
             await self.handle_game_over(data)
+
+    async def handle_toggle_powerup(self, data):
+        powerup_name = data.get('powerup')
+        if powerup_name in self.game_state['powerUps']:
+            self.game_state['powerUps'][powerup_name] = not self.game_state['powerUps'][powerup_name]
+            await self.broadcast_game_state()
+
+    async def handle_reset_round(self, data):
+        player_id = str(self.scope['user'].id)
+        if player_id in self.game_state['players']:
+            self.game_state['pongLogic']['ballPos'] = {'x': 0, 'y': 0}
+            self.game_state['pongLogic']['ballSpeed'] = {'x': 0, 'y': 0}
+            self.game_state['pongLogic']['lastWinner'] = data['lastWinner']
+            self.game_state['pongLogic']['lastLoser'] = data['lastLoser']
+            await self.broadcast_game_state()
+        
+
+    async def handle_update_score(self, data):
+        scoring_position = data.get('scoring_position')
+
+        for player_id, player_data in self.game_state['players'].items():
+            if player_data['position'] == scoring_position:
+                self.game_state['score'][player_id] = self.game_state['score'].get(player_id, 0) + 1
+                break
+        await self.broadcast_game_state()
+
+    async def handle_ball_velocity(self, data):
+        player_id = str(self.scope['user'].id)
+        if player_id in self.game_state['players']:
+            self.game_state['pongLogic']['ballSpeed'] = {
+                'x': data['x'],
+                'y': data['y']
+            }
+            await self.broadcast_game_state()
+
+    async def handle_paddle_size(self, data):
+        player_id = str(self.scope['user'].id)
+        if player_id in self.game_state['players']:
+            self.game_state['pongLogic']['paddleSize'][player_id] = {
+                'x': data['x'],
+                'y': data['y'],
+            }
+            await self.broadcast_game_state()
 
     async def handle_paddle_move(self, data):
         player_id = str(self.scope['user'].id)
