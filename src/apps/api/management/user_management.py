@@ -19,11 +19,11 @@ def serialize_user(current_user, user=None):
     data = {
         "id": current_user.id,
         "username": current_user.username,
-        "profile": {
+        "stats": {
             "highscore": current_user.profile.highscore,
             "most_recent_game_score": current_user.profile.most_recent_game_score,
-            "profile_picture_url": current_user.profile.get_profile_picture_url(),
         },
+        "avatar": current_user.profile.get_profile_picture_url(),
     }
 
     if user and user != current_user:
