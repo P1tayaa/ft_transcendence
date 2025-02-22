@@ -25,7 +25,6 @@ export async function getUserName() {
 export async function getRequest(url, data) {
   try {
     const csrfToken = getCSRFToken();
-    console.log("Adding Score");
 
     if (!csrfToken) {
       throw new Error('CSRF token not found');

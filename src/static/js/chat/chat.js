@@ -16,51 +16,53 @@ class Social {
 	constructor() {
 		this.currentProfile = null;
 		this.me = null;
-		this.friends = [];
 	}
 
 	async init() {
 		this.me = await getRequest(GET_ME_URL);
 
-		await this.loadProfileSide();
-		await this.loadFriendList();
+		console.log(this.me);
 
-		await this.loadProfile(this.me);
+		this.loadProfileSide();
+		this.loadFriendList();
+
+		this.loadProfile(this.me);
 	}
 
-	async loadProfile(user) {
+	loadProfile(user) {
 		this.currentProfile = user;
 		this.loadProfileTop();
 		this.loadChat();
+
+		if (this.currentProfile === this.me) {
+			document.getElementById("chat-button").style.display = "none";
+		}
 	}
 
 	async loadProfileSide() {
 		// Load user
-		const user = await getRequest(GET_ME_URL);
+		console.log(this.me);
 
 		const img = document.createElement("img");
-		img.src = user.avatar;
-		img.alt = user.username + "'s avatar";
+		img.src = this.me.avatar;
+		img.alt = this.me.username + "'s avatar";
 		img.width = 64;
 		img.height = 64;
 
 		const h3 = document.createElement("h3");
-		h3.textContent = user.username;
+		h3.textContent = this.me.username;
 
 		const div = document.getElementById("profile-sidebar");
 		div.appendChild(img);
 		div.appendChild(h3);
 
 		div.addEventListener("click", () => {
-			this.loadProfile(user);
+			this.loadProfile(this.me);
 		});
 	}
 
 	async loadProfileTop() {
-		console.log("Loading profile top");
-		console.log(this.currentProfile);
-
-		const div = document.getElementById("profile");
+		const div = document.getElementById("profile-info");
 		div.innerHTML = "";
 
 		const img = document.createElement("img");
@@ -74,6 +76,36 @@ class Social {
 
 		div.appendChild(img);
 		div.appendChild(h2);
+
+		const divBtn = document.getElementById("profile-buttons");
+		divBtn.innerHTML = "";
+
+		if (this.currentProfile === this.me) {
+			const edit = document.createElement("button");
+			edit.textContent = "Edit Profile";
+			divBtn.appendChild(edit);
+
+			const logout = document.createElement("button");
+			logout.textContent = "Logout";
+			logout.addEventListener("click", () => {
+				window.location.href = "/logout";
+			});
+			divBtn.appendChild(logout);
+			return;
+		}
+
+		const addFriend = document.createElement("button");
+		addFriend.textContent = "Add Friend";
+		addFriend.addEventListener("click", () => {
+			this.addFriend(this.currentProfile.id);
+		});
+		divBtn.appendChild(addFriend);
+
+		const block = document.createElement("button");
+		block.textContent = "Block";
+		divBtn.appendChild(block);
+
+
 	}
 
 	async getFriends() {
@@ -97,25 +129,18 @@ class Social {
 	}
 
 	async loadFriendList() {
-		this.friends = await this.getFriends();
-	
-		console.log("Friends:");
-		console.log(this.friends);
+		const friends = await this.getFriends();
+
+		console.log(friends);
 	
 		// Loop through and create list items
-		this.friends.forEach(friend => {
+		friends.forEach(friend => {
 			const li = document.createElement("li");
 			li.classList.add("friendBox");
 	
 			// Create avatar image
 			const img = document.createElement("img");
-			if (!friend.avatar) {
-				console.log("No avatar found for", friend.username);
-				img.src = "../static/icons/DefaultAvatar.png";
-			} else {
-				console.log("Avatar found for", friend.username);
-				img.src = friend.avatar;
-			}
+			img.src = friend.avatar;
 			img.alt = `${friend.username}'s Avatar`;
 			img.width = 64;
 			img.height = 64;
@@ -150,8 +175,6 @@ class Social {
 		const chatDiv = document.getElementById("chat-messages");
 		chatDiv.innerHTML = "";
 
-		console.log(chats);
-	
 		chats.chats.forEach(message => {
 			const content = message.latest_message.content;
 			const messageDiv = document.createElement("li");
@@ -198,8 +221,7 @@ class Social {
 	async loadSearchResults(searchTerm) {
 		const users = await this.getSearchResults(searchTerm);
 
-		console.log("Search Results:");
-		console.log(users);
+		console.log (users);
 
 		if (!users || users.length === 0) {
 			console.log("No users found.");

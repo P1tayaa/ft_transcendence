@@ -84,9 +84,14 @@ input {
 
 #profile {
 	display: flex;
-	align-items: center;
-	gap: 10px;
 	align-self: stretch;
+}
+
+#profile-info {
+	display: flex;
+	align-items: center;
+	align-self: stretch;
+	gap: 10px;
 }
 
 #profile-buttons {

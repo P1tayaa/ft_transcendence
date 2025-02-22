@@ -3,7 +3,6 @@
 
 <link rel="stylesheet" href="../static/css/chat.css">
 
- 
 <div id="social">
 	<div id="sidebar">
 		<div id="profile-sidebar"></div>
@@ -15,23 +14,21 @@
 
 	<div id="content">
 		<div id="profile">
-			<div id="profile-buttons">
-				<button>Add friend</button>
-				<button>Block</button>
-			</div>
+			<div id="profile-info"></div>
+			<div id="profile-buttons"></div>
 		</div>
 		<div id="tab-select">
-			<button>History</button>
-			<button>Stats</button>
-			<button>Chat</button>
+			<button id="history-button">History</button>
+			<button id="stats-button">Stats</button>
+			<button id="chat-button">Chat</button>
 		</div>
 		<div id="chat">
 			<ol id="chat-messages">
 			</ol>
-      <form id="chat-input">
-        <input id="chat-box" type="text" placeholder="Type a message..."></input>
-        <button>Invite to game</button>
-      </form>
+			<form id="chat-input">
+				<input id="chat-box" type="text" placeholder="Type a message..."></input>
+				<button>Invite to game</button>
+			</form>
 		</div>
 	</div>
 </div>
