@@ -6,7 +6,7 @@ from channels.db import database_sync_to_async
 from django.db import transaction
 import math
 import random
-from apps.users.models import ScoreHistory
+from apps.users.models import PlayerScore, Game
 
 class PlayerState(models.Model):
     game = models.ForeignKey('GameRoom', related_name='player_states', on_delete=models.CASCADE)
@@ -257,14 +257,19 @@ class GameRoom(BaseGameRoom):
             self.status = 'COMPLETED'
             self.save()
 
-            for player_state in self.player_states.filter(is_active=True):
+            game = Game.objects.create(winner=User.objects.get(id=winner_id).profile)
+
+            active_players = self.player_states.filter(is_active=True)
+            for player_state in active_players:
                 final_score = scores.get(str(player_state.player.id), 0)
                 player_state.final_score = final_score
                 player_state.save()
 
-                ScoreHistory.objects.create(
-                    profile = player_state.player.profile,
-                    score=final_score
+                PlayerScore.objects.create(
+                    game=game,
+                    profile=player_state.player.profile,
+                    score=final_score,
+                    position=player_state.side
                 )
 
     @classmethod

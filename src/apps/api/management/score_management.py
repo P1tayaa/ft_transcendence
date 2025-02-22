@@ -1,9 +1,9 @@
 from django.contrib.auth.models import User
-from apps.users.models import ScoreHistory
 from django.contrib.auth.decorators import login_required
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.db import transaction
+from apps.users.models import Game
 
 
 @api_view(["POST"])
@@ -55,10 +55,9 @@ def add_score(request):
 def get_score_history(request):
     try:
         user_id = request.GET.get("user_id")
-
         if user_id:
             try:
-                profile = ScoreHistory.objects.get(id=user_id).profile
+                profile = User.objects.get(id=user_id).profile
             except User.DoesNotExist:
                 return Response(
                     {"success": False, "error": "User not found"}, status=404
@@ -66,16 +65,39 @@ def get_score_history(request):
         else:
             profile = request.user.profile
 
-        scores = profile.get_scores()
-        score_list = [
-            {
-                "score": score.score,
-                "date": score.created_at.isoformat(),
-                "score_id": score.id,
+        games = Game.objects.filter(player_scores__profile=profile).distinct() \
+            .prefetch_related('player_scores__profile__user') \
+            .select_related('winner__user')
+
+        game_history = []
+        for game in games:
+            players = []
+            for player_score in game.player_scores.all():
+                players.append({
+                    "player": {
+                        "id": player_score.profile.user.id,
+                        "username": player_score.profile.user.username,
+                    },
+                    "score": player_score.score,
+                    "position": player_score.position
+                })
+
+            game_data = {
+                "game_id": game.id,
+                "date": game.date.isoformat(),
+                "players": players,
+                "winner": {
+                    "id": game.winner.user.id,
+                    "username": game.winner.user.username
+                } if game.winner else None,
+                "player_count": game.player_count
             }
-            for score in scores
-        ]
-        return Response({"success": True, "scores": score_list})
+            game_history.append(game_data)
+
+        return Response({
+            "success": True,
+            "games": game_history
+        })
     except Exception as e:
         return Response({"success": False, "error": str(e)}, status=500)
 
