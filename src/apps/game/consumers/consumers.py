@@ -225,11 +225,9 @@ class GameConsumer(BaseConsumer):
             position = self.game_state['players'][player_id]['position']
             is_vertical = position in ['left', 'right']
 
-            paddle_position = float(data['position'])
-            paddle_rotation = float(data['rotation'])
             self.game_state['settings']['paddleLoc'][player_id] = {
-                'y' if is_vertical else 'x': paddle_position,
-                'rotation': paddle_rotation
+                'y' if is_vertical else 'x': data['position'],
+                'rotation': data['rotation']
             }
             await self.broadcast_game_state()
 
@@ -532,7 +530,15 @@ class GameConsumer(BaseConsumer):
 
     async def game_state_update(self, event):
         if 'state' in event:
-            position_mapped_state = remap_player_data_by_position(event['state'])
+            game_state = event['state']
+            for player_id, paddle_loc in game_state['settings']['paddleLoc'].items():
+                if 'x' in paddle_loc:
+                    paddle_loc['x'] = float(paddle_loc['x'])
+                if 'y' in paddle_loc:
+                    paddle_loc['y'] = float(paddle_loc['y'])
+            paddle_loc['rotation'] = float(paddle_loc.get('rotation', 0))
+
+            position_mapped_state = remap_player_data_by_position(game_state)
             await self.send(text_data=json.dumps({
                 'type': 'game_state_update',
                 'state': position_mapped_state
