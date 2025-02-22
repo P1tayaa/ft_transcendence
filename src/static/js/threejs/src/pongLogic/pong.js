@@ -84,8 +84,9 @@ class Pong {
   }
 
   localCollisionDetection(ballPosition3D, gameScene) {
-    if (this.mode !== Mode.NETWORKED)
+    if (this.mode !== Mode.NETWORKED) {
       this.ballPos = { x: ballPosition3D.x, y: ballPosition3D.y };
+    }
 
     // Get active paddles from game settings
     const activePaddles = [
@@ -218,7 +219,7 @@ class Pong {
   update(input, gameScene) {
     if (this.mode === Mode.NETWORKED) {
       // console.log(input, this.settings.paddleLoc);
-      this.socket.sendPaddlePosition(input + this.settings.paddleLoc[this.playerSide], this.playerSide);
+      this.socket.sendPaddlePosition(input, this.settings);
     } else if (this.mode === Mode.LOCAL) {
       this.settings.playerSide.forEach(Padle => {
         if (input[Padle] !== 0) {

@@ -61436,16 +61436,15 @@ class MyWebSocket {
     }
     return null; // Return null if no data is available yet
   }
-  sendPaddlePosition(paddleInput, paddleKey, rotation) {
+  sendPaddlePosition(paddleInput, settings, rotation) {
     if (!rotation) {
       rotation = 0;
     }
     let paddleInfo = {
       type: 'paddle_move',
-      position: 4,
+      position: paddleInput[this.myPosStruc] + settings.paddleLoc[this.myPosStruc],
       rotation: rotation
     };
-    // console.log(paddleInput)
     this.socket.send(JSON.stringify(paddleInfo));
   }
   update(pongLogic, scores, settings, powerUps) {
@@ -61532,7 +61531,7 @@ class MyWebSocket {
       };
       this.socket.onmessage = event => {
         const data = JSON.parse(event.data);
-        console.log("message receive :", event.data);
+        // console.log("message receive :", event.data)
         // if (data.type === "gameState") {
         //   this.serverState = data; // Store the received game state
         // } else
@@ -61666,10 +61665,12 @@ class Pong {
     }
   }
   localCollisionDetection(ballPosition3D, gameScene) {
-    if (this.mode !== Mode.NETWORKED) this.ballPos = {
-      x: ballPosition3D.x,
-      y: ballPosition3D.y
-    };
+    if (this.mode !== Mode.NETWORKED) {
+      this.ballPos = {
+        x: ballPosition3D.x,
+        y: ballPosition3D.y
+      };
+    }
 
     // Get active paddles from game settings
     const activePaddles = [...this.settings.playerSide.map(side => ({
@@ -61785,7 +61786,7 @@ class Pong {
   update(input, gameScene) {
     if (this.mode === Mode.NETWORKED) {
       // console.log(input, this.settings.paddleLoc);
-      this.socket.sendPaddlePosition(input + this.settings.paddleLoc[this.playerSide], this.playerSide);
+      this.socket.sendPaddlePosition(input, this.settings);
     } else if (this.mode === Mode.LOCAL) {
       this.settings.playerSide.forEach(Padle => {
         if (input[Padle] !== 0) {
@@ -106155,17 +106156,6 @@ class main {
       // Assets are still loading; skip rendering
       return;
     }
-    if (this.init.settings.powerup) {
-      this.allPowers.update(this.gameScene, this.pongLogic);
-    }
-    if (this.init.controlHandler.debug) {
-      doneLoadingAssets = true;
-    }
-    if (this.init.settings.bots) {
-      botControl(this.init.settings, this.gameScene.getAssetPossition('Ball'));
-    }
-    const input = this.init.controlHandler.getPaddleSpeeds();
-    this.pongLogic.update(input, this.gameScene);
     if (this.init.settings.mode === Mode.NETWORKED) {
       if (this.init.settings.powerup) {
         this.pongLogic.socket.update(this.pongLogic, this.init.score, this.init.settings, this.init.allPower.powerUps);
@@ -106173,6 +106163,14 @@ class main {
         this.pongLogic.socket.update(this.pongLogic, this.init.score, this.init.settings);
       }
     }
+    if (this.init.settings.powerup) {
+      this.allPowers.update(this.gameScene, this.pongLogic);
+    }
+    if (this.init.settings.bots) {
+      botControl(this.init.settings, this.gameScene.getAssetPossition('Ball'));
+    }
+    const input = this.init.controlHandler.getPaddleSpeeds();
+    this.pongLogic.update(input, this.gameScene);
     let Paddle2Win = 0;
     let Paddle1Win = 0;
     let Ball_Reset = false;

@@ -48,12 +48,17 @@ class main {
       // Assets are still loading; skip rendering
       return;
     }
-    if (this.init.settings.powerup) {
-      this.allPowers.update(this.gameScene, this.pongLogic);
+    if (this.init.settings.mode === Mode.NETWORKED) {
+      if (this.init.settings.powerup) {
+        this.pongLogic.socket.update(this.pongLogic, this.init.score, this.init.settings, this.init.allPower.powerUps);
+      } else {
+        this.pongLogic.socket.update(this.pongLogic, this.init.score, this.init.settings);
+      }
     }
 
-    if (this.init.controlHandler.debug) {
-      doneLoadingAssets = true;
+
+    if (this.init.settings.powerup) {
+      this.allPowers.update(this.gameScene, this.pongLogic);
     }
 
     if (this.init.settings.bots) {
@@ -64,13 +69,6 @@ class main {
     const input = this.init.controlHandler.getPaddleSpeeds();
 
     this.pongLogic.update(input, this.gameScene);
-    if (this.init.settings.mode === Mode.NETWORKED) {
-      if (this.init.settings.powerup) {
-        this.pongLogic.socket.update(this.pongLogic, this.init.score, this.init.settings, this.init.allPower.powerUps);
-      } else {
-        this.pongLogic.socket.update(this.pongLogic, this.init.score, this.init.settings);
-      }
-    }
     let Paddle2Win = 0;
     let Paddle1Win = 0;
     let Ball_Reset = false;

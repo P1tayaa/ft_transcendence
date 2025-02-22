@@ -73,17 +73,16 @@ class MyWebSocket {
 
 
 
-  sendPaddlePosition(paddleInput, paddleKey, rotation) {
+  sendPaddlePosition(paddleInput, settings, rotation) {
     if (!rotation) {
       rotation = 0;
     }
 
     let paddleInfo = {
       type: 'paddle_move',
-      position: 4,
+      position: paddleInput[this.myPosStruc] + settings.paddleLoc[this.myPosStruc],
       rotation: rotation,
     }
-    // console.log(paddleInput)
     this.socket.send(JSON.stringify(paddleInfo))
   }
 
@@ -187,7 +186,7 @@ class MyWebSocket {
 
       this.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        console.log("message receive :", event.data)
+        // console.log("message receive :", event.data)
         // if (data.type === "gameState") {
         //   this.serverState = data; // Store the received game state
         // } else
