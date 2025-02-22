@@ -207,7 +207,7 @@ def fetch_matching_usernames(request):
             return Response({"success": False, "error": "Username search term is required"}, status=400)
 
         matching_users = User.objects.filter(username__icontains=search).select_related('profile')
-        results = [serialize_user(request.user,matching_user) for matching_user in matching_users]
+        results = [serialize_user(matching_user ,request.user) for matching_user in matching_users]
 
         return Response({
             "success": True,
