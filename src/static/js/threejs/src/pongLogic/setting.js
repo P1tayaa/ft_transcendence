@@ -31,11 +31,11 @@ export const PlayerSide = {
 export function strToPlayerSide(str) {
   if (str === "left") {
     return PlayerSide.LEFT;
-  } else if (this.myPos === "right") {
+  } else if (str === "right") {
     return PlayerSide.RIGHT;
-  } else if (this.myPos === "bottom") {
+  } else if (str === "bottom") {
     return PlayerSide.BOTTOM;
-  } else if (this.myPos === "top") {
+  } else if (str === "top") {
     return PlayerSide.TOP;
   } else {
     console.error("Invalid position value:", this.myPos);

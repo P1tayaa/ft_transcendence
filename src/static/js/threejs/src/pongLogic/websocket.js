@@ -202,9 +202,9 @@ class MyWebSocket {
           // console.log(data.state);
           console.log("failed_to_start_game", data.checks);
           // console.log(data.config_player_count);
-        } else if (data.type === 'is_all_players_ready') {
+        } else if (data.type === 'all_players_ready') {
 
-          console.log('is_all_players_ready:', data.value);
+          console.log('all_players_ready:', data.value);
           this.allPlayerReady = data.value;
         } else if (data.type === "error") {
           console.error(event.data);

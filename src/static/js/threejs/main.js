@@ -60855,11 +60855,11 @@ const setting_PlayerSide = {
 function strToPlayerSide(str) {
   if (str === "left") {
     return setting_PlayerSide.LEFT;
-  } else if (this.myPos === "right") {
+  } else if (str === "right") {
     return setting_PlayerSide.RIGHT;
-  } else if (this.myPos === "bottom") {
+  } else if (str === "bottom") {
     return setting_PlayerSide.BOTTOM;
-  } else if (this.myPos === "top") {
+  } else if (str === "top") {
     return setting_PlayerSide.TOP;
   } else {
     console.error("Invalid position value:", this.myPos);
@@ -61547,8 +61547,8 @@ class MyWebSocket {
           // console.log(data.state);
           console.log("failed_to_start_game", data.checks);
           // console.log(data.config_player_count);
-        } else if (data.type === 'is_all_players_ready') {
-          console.log('is_all_players_ready:', data.value);
+        } else if (data.type === 'all_players_ready') {
+          console.log('all_players_ready:', data.value);
           this.allPlayerReady = data.value;
         } else if (data.type === "error") {
           console.error(event.data);
@@ -105895,8 +105895,8 @@ function updateStateLoading(init, socket) {
 }
 function playerSideToControlInfo(sides) {
   console.log(sides);
-  const SINGLE_SIDE_MESSAGE = side => `You are ${side} and use: [${ControlHandler[side]}] and[${ControlHandler[side]}]`;
-  const MULTIPLE_SIDE_MESSAGE = side => `This is player ${side} and use: [${ControlHandler[side]}] and[${ControlHandler[side]}]`;
+  const SINGLE_SIDE_MESSAGE = side => `You are ${side} and use: [${ControlHandler[side]}] and [${ControlHandler[side]}]`;
+  const MULTIPLE_SIDE_MESSAGE = side => `This is player ${side} and use: [${ControlHandler[side]}] and [${ControlHandler[side]}]`;
   if (sides.length === 1) {
     return SINGLE_SIDE_MESSAGE(sides[0]);
   }
