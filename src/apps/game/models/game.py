@@ -270,36 +270,12 @@ class GameRoom(BaseGameRoom):
     @classmethod
     def get_available_rooms(cls):
         with transaction.atomic():
-            available_rooms = (cls.objects
+            return (cls.objects
                 .select_related('config')
-                .prefetch_related('player_states', 'player_states__player')
                 .filter(
                     is_active=True,
                     status='WAITING'
-                ))
-        
-            rooms_data = []
-            for room in available_rooms:
-                current_players = room.player_states.filter(is_active=True)
-            
-                rooms_data.append({
-                    'id': room.id,
-                    'room_name': room.room_name,
-                    'player_count': current_players.count(),
-                    'max_players': room.config.player_count,
-                    'map_style': room.config.map_style,
-                    'mode': room.config.mode,
-                    'created_at': room.created_at,
-                    'powerups_enabled': room.config.powerups_enabled,
-                    'bots_enabled': room.config.bots_enabled,
-                    'players': [{
-                        'username': player_state.player.username,
-                        'player_number': player_state.player_number,
-                        'is_ready': player_state.is_ready
-                    } for player_state in current_players]
-                })
-        
-            return rooms_data
+                ))    
         
 
 
