@@ -10,6 +10,8 @@ from .management.user_management import (
     add_friend,
     get_friends,
     remove_friend,
+    upload_profile_picture,
+    delete_profile_picture,
 )
 from .management.chat_management import (
     add_message,
@@ -57,6 +59,8 @@ urlpatterns = [
     path("score/recent", get_recent_score, name="get_recent_score"),
     path("score/highscore", get_highscore, name="get_highscore"),
     path("add_message/", add_message, name="add_message"),
+    path("profile/picture/", upload_profile_picture, name="upload_profile_picture"),
+    path("profile/picture/delete", delete_profile_picture, name="delete_profile_picture"),
     path("chats/", get_chats, name="get_chats"),
     path("chats/message/", add_message, name="add_message"),
     path("chats/message/typing", update_typing_status, name="update_typing"),

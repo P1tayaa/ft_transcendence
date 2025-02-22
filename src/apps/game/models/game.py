@@ -182,7 +182,7 @@ class GameRoom(BaseGameRoom):
                 'status': self.status,
                 'players': list(self.player_states.select_related('player')
                             .filter(is_active=True)
-                            .values('player_id', 'player_username', 'player_number', 'side', 'is_ready'))
+                            .values('player_id', 'player_number', 'side', 'is_ready'))
             }
 
     def join_game(self, player):
@@ -266,6 +266,40 @@ class GameRoom(BaseGameRoom):
                     profile = player_state.player.profile,
                     score=final_score
                 )
+
+    @classmethod
+    def get_available_rooms(cls):
+        with transaction.atomic():
+            available_rooms = (cls.objects
+                .select_related('config')
+                .prefetch_related('player_states', 'player_states__player')
+                .filter(
+                    is_active=True,
+                    status='WAITING'
+                ))
+        
+            rooms_data = []
+            for room in available_rooms:
+                current_players = room.player_states.filter(is_active=True)
+            
+                rooms_data.append({
+                    'id': room.id,
+                    'room_name': room.room_name,
+                    'player_count': current_players.count(),
+                    'max_players': room.config.player_count,
+                    'map_style': room.config.map_style,
+                    'mode': room.config.mode,
+                    'created_at': room.created_at,
+                    'powerups_enabled': room.config.powerups_enabled,
+                    'bots_enabled': room.config.bots_enabled,
+                    'players': [{
+                        'username': player_state.player.username,
+                        'player_number': player_state.player_number,
+                        'is_ready': player_state.is_ready
+                    } for player_state in current_players]
+                })
+        
+            return rooms_data
         
 
 
