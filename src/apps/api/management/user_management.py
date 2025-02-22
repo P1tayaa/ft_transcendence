@@ -283,7 +283,7 @@ def get_friends(request):
 
         for friendship in friendships:
             friend_list.append({
-                    **serialize_user(request.user, friendship.friend.user)
+                    **serialize_user(friendship.friend.user, request.user)
                })
         return Response({"success": True, "friends": friend_list})
     except Exception as e:
