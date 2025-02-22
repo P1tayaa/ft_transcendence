@@ -50,8 +50,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         message_type = data.get('type')
 
         if message_type == 'list_rooms':
-            rooms = await database_sync_to_async(list)(
-            GameRoom.get_available_rooms(self).values(
+            rooms = await database_sync_to_async(GameRoom.get_available_rooms)()
+            rooms_data = await database_sync_to_async(lambda: list(rooms.values(
                 'room_name',
                 'config__mode',
                 'config__player_count',
@@ -63,8 +63,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 'config__bot_sides',
                 'config__is_host',
                 'config__spectator_enabled'
-                )
-            )
+            )))()
+
             formatted_rooms = [{
             'room_name': room['room_name'],
             'config': {
@@ -79,7 +79,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 'host': str(room['config__is_host']),
                 'Spectator': str(room['config__spectator_enabled'])
                 }
-            } for room in rooms]
+            } for room in rooms_data]
             await self.send(json.dumps({
                    'type': 'room_list',
                    'rooms': formatted_rooms

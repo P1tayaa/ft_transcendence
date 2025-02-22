@@ -1,10 +1,15 @@
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view 
+from rest_framework import status
 from django.contrib.auth import logout
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
+from django.core.files.base import ContentFile
+import os
+from PIL import Image
+from io import BytesIO
 from django.http import JsonResponse
 import json
 from rest_framework.response import Response
@@ -319,3 +324,50 @@ def remove_friend(request):
             
     except Exception as e:
         return Response({"success": False, "error": str(e)}, status=500)
+
+
+@api_view(["POST"])
+@login_required
+def upload_profile_picture(request):
+    if 'profile_picture' not in request.FILES:
+        return Response({'error': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+    image = request.FILESi['profile_picture']
+    if not image.content_type.startswith('image/'):
+        return Response({'error': 'File must be an image'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        img = Image.open(image)
+        max_size = (500, 500)
+        img.thumbnail(max_size, Image.Resampling.LANCZOS)
+
+
+        output =BytesIO()
+        img.save(output, format='PNG', quality=85)
+        output.seek(0)
+
+        request.user.profile.profile_picture.save(
+            f'profile_pic.png',
+            ContentFile(output.read()),
+            save=True
+        )
+
+        return Response({
+            'message': 'Profile picture updated successfully',
+            'url': request.user.profile.get_profile_picture_url()
+        })
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+api_view(["POST"])
+@login_required
+def delete_profile_picture(request):
+    profile = request.user.profile
+    if profile.profile_picture:
+        if os.path.isfile(profile.profile_picture.path):
+            os.remove(profile.profile_picture.path)
+        profile.profile_picture = None
+        profile.save()
+    
+    return Response({'message': 'Profile picture deleted successfully'})            

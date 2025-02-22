@@ -82,7 +82,7 @@ export class Setting {
     this.botsSide = this.parseMultipleSides(setting_json.botsSide);
     this.host = setting_json.host == "true";
     this.isSpectator = setting_json.isSpectator == "true";
-
+    this.justMePaddle = null;
     this.paddleSize = {};
     this.paddleLoc = {};
     this.playerSide.forEach(side => {

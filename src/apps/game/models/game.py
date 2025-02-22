@@ -174,140 +174,257 @@ class GameRoom(BaseGameRoom):
         'auth.User',
         related_name='game_rooms'
     )
-    def get_players(self):
-        return self.player_states.filter(is_active=True)
 
-    def get_player_count(self):
-        return self.get_players().count()
+    def get_room_status(self):
+        with transaction.atomic():
+            return{
+                'config': self.config,
+                'status': self.status,
+                'players': list(self.player_states.select_related('player')
+                            .filter(is_active=True)
+                            .values('player_id', 'player_number', 'side', 'is_ready'))
+            }
 
-    def is_full(self):
-         return self.get_player_count() >= self.config.player_count
-
-    def get_available_sides(self):
-        taken_sides = set(
-            self.player_states.filter(is_active=True).values_list('side', flat=True)
-        )
-        return [side for side in self.config.player_sides if side not in taken_sides]
-
-    def get_available_rooms(self):
-        return GameRoom.objects.filter(
-            status='WAITING',
-            is_active = True
-        )
-
-    @database_sync_to_async
-    def set_player_ready(self, player):
-        """Set a player's ready status"""
-        player_state = self.player_states.filter(player=player, is_active=True).first()
-        if not player_state:
-            raise ValidationError("Player not in this game")
-        
-        player_state.is_ready = True
-        player_state.save()
-        return player_state.is_ready
-
-    @database_sync_to_async
-    def all_players_ready(self):
-        """Check if all active players are ready"""
-        active_players = self.get_players()
-        return active_players.count() >= self.config.player_count and all(ps.is_ready for ps in active_players)
-
-    def join_game(self, player): # Player is User object
+    def join_game(self, player):
         if self.status != 'WAITING':
             raise ValidationError("Game is not open for joining")
 
-        if self.is_full():
-            return ValidationError("Game room is full")
-
         with transaction.atomic():
-            # if self.player_states.filter(player=player, is_active=True).exists():
-            #     raise ValidationError("Player already in game")
-            available_side = self.get_available_sides()
-            if not available_side:
+            current_players = list(self.player_states.select_for_update().filter(is_active=True))
+
+            if len(current_players) >= self.config.player_count:
+                raise ValidationError("Game Room is full")
+
+            taken_sides = {p.side for p in current_players}
+            available_sides = [s for s in self.config.player_sides if s not in taken_sides]
+
+            if not available_sides:
                 raise ValidationError("No available sides")
 
-            player_number = self.get_player_count() + 1
-            PlayerState.objects.create(
+            player_state = PlayerState.objects.create(
                 game = self,
                 player = player,
-                player_number = player_number,
-                side = available_side[0],
-                score = 0
+                player_number = len(current_players) + 1,
+                side = available_sides[0],
+                is_active = True,
+                score = 0,
             )
 
-            if self.is_full():
-                self.status = 'IN_PROGRESS'
-                self.save()
-            return True
+            return {
+                'side': player_state.side,
+                'player_number': player_state.player_number,
+                'is_host': player_state.player_number == 1
+            }
 
-    def leave_game(self, player):
-        if self.status == 'COMPLETED':
-            raise ValidationError("Cannot leave a completed game")
-
+    def set_player_ready(self, player):
         with transaction.atomic():
-            player_state = self.player_states.filter(player=player, is_active=True).first()
-            if not player_state:
-                raise ValidationError("Player not in this game")
+            player_state = (self.player_states.select_for_update()
+            .filter(player=player, is_active=True)
+            .first())
 
-            player_state.is_active = False
+            if not player_state:
+                raise ValidationError("Player not in game")
+
+            player_state.is_ready = True
             player_state.save()
 
-            if self.get_player_count() == 0:
-                self.is_active = False,
-                self.save()
-            elif self.status == 'IN_PROGRESS':
-                self.status = 'WAITING'
-                self.save()
+            active_player = self.player_states.filter(is_active=True)
+            all_ready = (active_player.count() >= self.config.player_count and all(p.is_ready for p in active_player))
+            return all_ready
 
-    def update_score(self, player, score):
-        if self.status != 'IN_PROGRESS':
-            raise ValidationError("Can only update scores for game in progress")
-
-        player_state = self.player_states.filter(player=player, is_active=True).first()
-        if not player_state:
-            raise ValidationError("Player not in this game")
-
-        player_state.score = score
-        player_state.save()
-
-    def complete_game(self, winner_id, scores):
-        if self.status != 'IN_PROGRESS':
-            raise ValidationError("Game is not in progress")
-
+    def leave_game(self, player):
         with transaction.atomic():
+            player_state = (self.player_states.select_for_update()
+                .filter(player=player, is_active=True)
+                .first())
+            if player_state:
+                player_state.is_active = False
+                player_state.save()
+
+                remaining_players = self.player_states.filter(is_active=True).count()
+                if remaining_players == 0:
+                    self.is_active = False
+                    self.save()
+                elif self.status == 'IN_PROGRESS':
+                    self.status='WAITING'
+                    self.save()
+
+    def save_game_result(self, winner_id, scores):
+        with transaction.atomic():
+            if self.status != 'IN_PROGRESS':
+                raise ValidationError("Game not in progress")
+
             self.status = 'COMPLETED'
-            self.is_active = False
             self.save()
 
-            # if needed, get winner as User
-            winner = User.objects.get(id=int(winner_id))
-            for player_state in self.get_players():
-                user_id = str(player_state.player.id)
-                final_score = scores.get(user_id, 0)
+            for player_state in self.player_states.filter(is_active=True):
+                final_score = scores.get(str(player_state.player.id), 0)
                 player_state.final_score = final_score
                 player_state.save()
 
                 ScoreHistory.objects.create(
-                    profile=player_state.player.profile,
+                    profile = player_state.player.profile,
                     score=final_score
                 )
 
-    def get_game_status(self):
-        players = self.get_players()
-        return {
-            'room_name': self.room_name,
-            'status': self.status,
-            'game_mode': self.config.mode,
-            'map_style': self.config.map_style,
-            'current_players': self.get_player_count(),
-            # 'max_players': self.config.player_count,
-            'players': [{
-                'number': ps.player_number,
-                'username': ps.player.username,
-                'side': ps.side,
-                'score': ps.score
-            } for ps in players],
-            'is_active': self.is_active,
-            'powerups_enabled': self.config.powerups_enabled,
-            'bots_enabled': self.config.bots_enabled
-        }
+    @classmethod
+    def get_available_rooms(cls):
+        with transaction.atomic():
+            return (cls.objects
+                .select_related('config')
+                .filter(
+                    is_active=True,
+                    status='WAITING'
+                ))    
+        
+
+
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    # def get_players_sync(self):
+    #     return self.player_states.filter(is_active=True)
+
+
+    # def get_player_count_sync(self):
+    #     return self.get_players_sync().count()
+    
+
+    # def is_full_sync(self):
+    #     return self.get_player_count_sync() >= self.config.player_count
+    
+
+    # def get_available_sides_sync(self):
+    #     taken_sides = set(
+    #         self.player_states.filter(is_active=True).values_list('side', flat=True)
+    #     )
+    #     return [side for side in self.config.player_sides if side not in taken_sides]
+
+    
+    # def set_player_ready_sync(self, player):
+    #     player_state = self.player_states.filter(player=player, is_active=True).first()
+    #     if not player_state:
+    #         raise ValidationError("Player not in this game")
+        
+    #     player_state.is_ready = True
+    #     player_state.save()
+    #     return player_state.is_ready
+
+
+
+    # def all_players_ready_sync(self):
+    #     active_players = self.get_players_sync()
+    #     return active_players.count() >= self.config.player_count and all(ps.is_ready for ps in active_players)
+    
+
+    # def join_game_sync(self, player):
+    #     if self.status != 'WAITING':
+    #         raise ValidationError("Game is not open for joining")
+
+    #     # if self.is_full_sync():
+    #     #     raise ValidationError("Game room is full")
+
+    #     with transaction.atomic():
+    #         available_sides = self.get_available_sides_sync()
+    #         if not available_sides:
+    #             raise ValidationError("No available sides")
+
+    #         player_number = self.get_player_count_sync() + 1
+    #         PlayerState.objects.create(
+    #             game=self,
+    #             player=player,
+    #             player_number=player_number,
+    #             side=available_sides[0],
+    #             score=0
+    #         )
+
+    #         if self.is_full_sync():
+    #             self.status = 'IN_PROGRESS'
+    #             self.save()
+    #         return True
+    
+
+    # def leave_game_sync(self, player):
+    #     if self.status == 'COMPLETED':
+    #         raise ValidationError("Cannot leave a completed game")
+
+    #     with transaction.atomic():
+    #         player_state = self.player_states.filter(player=player, is_active=True).first()
+    #         if not player_state:
+    #             # raise ValidationError("Player not in this game")
+    #             return
+
+    #         player_state.is_active = False
+    #         player_state.save()
+
+    #         if self.get_player_count_sync() == 0:
+    #             self.is_active = False
+    #             self.save()
+    #         elif self.status == 'IN_PROGRESS':
+    #             self.status = 'WAITING'
+    #             self.save()
+    
+
+    # @database_sync_to_async
+    # def update_score(self, player, score):
+    #     if self.status != 'IN_PROGRESS':
+    #         raise ValidationError("Can only update scores for game in progress")
+
+    #     player_state = self.player_states.filter(player=player, is_active=True).first()
+    #     if not player_state:
+    #         raise ValidationError("Player not in this game")
+
+    #     player_state.score = score
+    #     player_state.save()
+
+    # @database_sync_to_async
+    # def complete_game(self, winner_id, scores):
+    #     if self.status != 'IN_PROGRESS':
+    #         raise ValidationError("Game is not in progress")
+
+    #     with transaction.atomic():
+    #         self.status = 'COMPLETED'
+    #         self.is_active = False
+    #         self.save()
+
+    #         # if needed, get winner as User
+    #         winner = User.objects.get(id=int(winner_id))
+    #         for player_state in self.get_players():
+    #             user_id = str(player_state.player.id)
+    #             final_score = scores.get(user_id, 0)
+    #             player_state.final_score = final_score
+    #             player_state.save()
+
+    #             ScoreHistory.objects.create(
+    #                 profile=player_state.player.profile,
+    #                 score=final_score
+    #             )
+
+    # @database_sync_to_async
+    # def get_game_status(self):
+    #     players = self.get_players()
+    #     return {
+    #         'room_name': self.room_name,
+    #         'status': self.status,
+    #         'game_mode': self.config.mode,
+    #         'map_style': self.config.map_style,
+    #         'current_players': self.get_player_count(),
+    #         # 'max_players': self.config.player_count,
+    #         'players': [{
+    #             'number': ps.player_number,
+    #             'username': ps.player.username,
+    #             'side': ps.side,
+    #             'score': ps.score
+    #         } for ps in players],
+    #         'is_active': self.is_active,
+    #         'powerups_enabled': self.config.powerups_enabled,
+    #         'bots_enabled': self.config.bots_enabled
+    #     }
