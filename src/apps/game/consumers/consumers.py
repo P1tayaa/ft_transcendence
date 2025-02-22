@@ -88,9 +88,9 @@ class GameConsumer(BaseConsumer):
                 GameConsumer.active_games[self.room_name] = self.create_initial_gamestate()
 
             self.game_state = GameConsumer.active_games[self.room_name]
-            if self.game_room.config.powerups_enabled:
-                for powerup in self.game_room.config.powerup_list:
-                    self.game_state['powerUps'][powerup] = False
+            # if self.game_room.config.powerups_enabled:
+            #     for powerup in self.game_room.config.powerup_list:
+            #         self.game_state['powerUps'][powerup] = False
 
             join_result = await database_sync_to_async(self.game_room.join_game)(self.scope['user'])
 
@@ -225,9 +225,11 @@ class GameConsumer(BaseConsumer):
             position = self.game_state['players'][player_id]['position']
             is_vertical = position in ['left', 'right']
 
+            paddle_position = float(data['position'])
+            paddle_rotation = float(data['rotation'])
             self.game_state['settings']['paddleLoc'][player_id] = {
-                'y' if is_vertical else 'x': data['position'],
-                'rotation': data['rotation']
+                'y' if is_vertical else 'x': paddle_position,
+                'rotation': paddle_rotation
             }
             await self.broadcast_game_state()
 
