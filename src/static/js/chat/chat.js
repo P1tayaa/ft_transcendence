@@ -11,6 +11,9 @@ const SEND_CHAT_URL = '../api/add_message/';
 
 const GET_ME_URL = '../api/me';
 
+const LOGOUT_URL = '../api/logout/';
+const LOGOUT_REDIRECT_URL = '../login';
+
 
 class Social {
 	constructor() {
@@ -77,33 +80,45 @@ class Social {
 		div.appendChild(img);
 		div.appendChild(h2);
 
-		const divBtn = document.getElementById("profile-buttons");
-		divBtn.innerHTML = "";
+		const buttons = document.getElementById("profile-buttons");
+		buttons.innerHTML = "";
 
+		console.log(this.currentProfile);
+
+		// If the current profile is the user, show edit and logout buttons
 		if (this.currentProfile === this.me) {
 			const edit = document.createElement("button");
 			edit.textContent = "Edit Profile";
-			divBtn.appendChild(edit);
+			buttons.appendChild(edit);
 
 			const logout = document.createElement("button");
 			logout.textContent = "Logout";
-			logout.addEventListener("click", () => {
-				window.location.href = "/logout";
+			logout.addEventListener("click", async () => {
+				await postRequest(LOGOUT_URL);
+				window.location.href = LOGOUT_REDIRECT_URL;
 			});
-			divBtn.appendChild(logout);
+			buttons.appendChild(logout);
+
 			return;
 		}
 
-		const addFriend = document.createElement("button");
-		addFriend.textContent = "Add Friend";
-		addFriend.addEventListener("click", () => {
-			this.addFriend(this.currentProfile.id);
-		});
-		divBtn.appendChild(addFriend);
+		const friendButton = document.createElement("button");
+		if (this.currentProfile.is_friend) {
+			friendButton.textContent = "Remove Friend";
+			friendButton.addEventListener("click", () => {
+				this.removeFriend(this.currentProfile.id);
+			});
+		} else {
+			friendButton.textContent = "Add Friend";
+			friendButton.addEventListener("click", () => {
+				this.addFriend(this.currentProfile.id);
+			});
+		}
+		buttons.appendChild(friendButton);
 
 		const block = document.createElement("button");
 		block.textContent = "Block";
-		divBtn.appendChild(block);
+		buttons.appendChild(block);
 
 
 	}
@@ -112,7 +127,8 @@ class Social {
 		try {
 			const friendData = await getRequest(FRIENDS_URL);
 			return friendData.friends;
-		} catch (error) {
+		}
+		catch (error) {
 			console.error('Error getting friends:', error);
 			return ;
 		}
@@ -121,8 +137,20 @@ class Social {
 	async addFriend(friend_id) {
 		try {
 			await postRequest(ADD_FRIEND_URL, { friend_id: friend_id });
-		} catch (error) {
+		}
+		catch (error) {
 			console.error('Error adding friend:', error);
+			return false;
+		}
+		return true;
+	}
+
+	async removeFriend(friend_id) {
+		try {
+			await postRequest(REMOVE_FRIEND_URL, { friend_id: friend_id });
+		}
+		catch (error) {
+			console.error('Error removing friend:', error);
 			return false;
 		}
 		return true;
@@ -130,6 +158,7 @@ class Social {
 
 	async loadFriendList() {
 		const friends = await this.getFriends();
+		const friendListDiv = document.getElementById("friends");
 
 		console.log(friends);
 	
@@ -161,7 +190,6 @@ class Social {
 			li.appendChild(msgButton);
 	
 			// Append list item to friend list
-			const friendListDiv = document.getElementById("friends");
 			friendListDiv.appendChild(li);
 
 			li.addEventListener("click", () => {
@@ -198,7 +226,7 @@ class Social {
 
 		try {
 			await postRequest(SEND_CHAT_URL, {
-				recipient_id: this.currentProfile,
+				recipient_id: this.currentProfile.id,
 				content: message
 			});
 		} catch (error) {

@@ -5,13 +5,23 @@
     font-family: 'Outfit', sans-serif;
 }
 
+html {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
 
 body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
     display: flex;
-    padding: 25px;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+
 
     /* background: var(--Background); */
 }

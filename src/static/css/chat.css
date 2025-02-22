@@ -52,6 +52,8 @@ input {
 	flex: 1 0 0;
 	align-self: stretch;
 
+	overflow-y: auto;
+
 	padding-inline-start: 0;
 	margin-block-start: 0;
 	margin-block-end: 0;
@@ -103,6 +105,11 @@ input {
 	align-self: stretch;
 }
 
+#profile-buttons button {
+	padding: 10px;
+	border-radius: 10px;
+}
+
 #tab-select {
 	display: flex;
 	padding: 10px;
@@ -112,6 +119,12 @@ input {
 	align-self: stretch;
 
 	background: #1e1e1e15;
+	border-radius: 10px;
+}
+
+#tab-select button {
+	flex: 1;
+	padding: 10px;
 	border-radius: 10px;
 }
 
@@ -140,34 +153,31 @@ input {
 	align-self: stretch;
 
 	min-height: 200px;
+	overflow-y: auto;
 
 	padding-inline-start: 0;
 	margin-block-start: 0;
 	margin-block-end: 0;
 }
 
-.message-other {
+#chat ol li {
 	display: flex;
-	padding: 15px;
 	justify-content: flex-start;
 	align-items: center;
-	gap: 10px;
 
-	background: var(--Background);
-	color: var(--Text);
+	padding: 15px;
 	border-radius: 10px;
 }
 
+.message-other {
+	background: var(--Background);
+	color: var(--Text);
+}
+
 .message-self {
-	display: flex;
-	padding: 15px;
-	justify-content: flex-start;
-	align-items: center;
 	align-self: flex-end;
-	gap: 10px;
 
 	background: var(--Text);
-	border-radius: 10px;
 }
 
 #chat-input {
