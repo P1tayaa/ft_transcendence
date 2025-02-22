@@ -162,8 +162,30 @@ class GameConsumer(BaseConsumer):
             await self.handle_player_ready()
         elif message_type == 'start_game':
             await self.handle_start_game()
+        elif message_type == 'set_ball_velocity':
+            await self.handle_ball_velocity()
+        elif message_type == 'set_paddle_size':
+            await self.handle_paddle_size()
         elif message_type == 'game_over':
             await self.handle_game_over(data)
+
+    async def handle_ball_velocity(self, data):
+        player_id = str(self.scope['user'].id)
+        if player_id in self.game_state['players']:
+            self.game_state['pongLogic']['ballSpeed'] = {
+                'x': data['x'],
+                'y': data['y']
+            }
+            await self.broadcast_game_state()
+
+    async def handle_paddle_size(self, data):
+        player_id = str(self.scope['user'].id)
+        if player_id in self.game_state['players']:
+            self.game_state['pongLogic']['paddleSize'][player_id] = {
+                'x': data['x'],
+                'y': data['y'],
+            }
+            await self.broadcast_game_state()
 
     async def handle_paddle_move(self, data):
         player_id = str(self.scope['user'].id)
