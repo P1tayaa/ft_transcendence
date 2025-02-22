@@ -28,7 +28,7 @@ input {
 	align-self: stretch;
 }
 
-#profile-link {
+#profile-sidebar {
 	display: flex;
 	align-items: center;
 	gap: 10px;
@@ -133,6 +133,8 @@ input {
 	gap: 10px;
 	flex: 1 0 0;
 	align-self: stretch;
+
+	min-height: 200px;
 
 	padding-inline-start: 0;
 	margin-block-start: 0;

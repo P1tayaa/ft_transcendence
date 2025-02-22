@@ -9,21 +9,71 @@ const REMOVE_FRIEND_URL = '../api/remove_friend/';
 const CHAT_URL = '../api/chats/';
 const SEND_CHAT_URL = '../api/add_message/';
 
+const GET_ME_URL = '../api/me';
+
 
 class Social {
 	constructor() {
 		this.currentProfile = null;
-		this.friendListDiv = document.getElementById("friends");
+		this.me = null;
 		this.friends = [];
-		this.friendRequests = [];
-		this.me = "";
 	}
 
 	async init() {
-		this.me = await getUserName();
+		this.me = await getRequest(GET_ME_URL);
+
+		await this.loadProfileSide();
 		await this.loadFriendList();
-		await this.loadChat(2); // Debug
-		
+
+		await this.loadProfile(this.me);
+	}
+
+	async loadProfile(user) {
+		this.currentProfile = user;
+		this.loadProfileTop();
+		this.loadChat();
+	}
+
+	async loadProfileSide() {
+		// Load user
+		const user = await getRequest(GET_ME_URL);
+
+		const img = document.createElement("img");
+		img.src = user.avatar;
+		img.alt = user.username + "'s avatar";
+		img.width = 64;
+		img.height = 64;
+
+		const h3 = document.createElement("h3");
+		h3.textContent = user.username;
+
+		const div = document.getElementById("profile-sidebar");
+		div.appendChild(img);
+		div.appendChild(h3);
+
+		div.addEventListener("click", () => {
+			this.loadProfile(user);
+		});
+	}
+
+	async loadProfileTop() {
+		console.log("Loading profile top");
+		console.log(this.currentProfile);
+
+		const div = document.getElementById("profile");
+		div.innerHTML = "";
+
+		const img = document.createElement("img");
+		img.src = this.currentProfile.avatar;
+		img.alt = this.currentProfile.username + "'s avatar";
+		img.width = 128;
+		img.height = 128;
+
+		const h2 = document.createElement("h2");
+		h2.textContent = this.currentProfile.username;
+
+		div.appendChild(img);
+		div.appendChild(h2);
 	}
 
 	async getFriends() {
@@ -81,27 +131,31 @@ class Social {
 			const msgButton = document.createElement("button");
 			msgButton.textContent = "Message";
 			msgButton.addEventListener("click", () => {
-				this.loadChat(friend.user_id);
+				this.loadProfile(friend);
 			});
 			li.appendChild(msgButton);
 	
 			// Append list item to friend list
-			this.friendListDiv.appendChild(li);
+			const friendListDiv = document.getElementById("friends");
+			friendListDiv.appendChild(li);
+
+			li.addEventListener("click", () => {
+				this.loadProfile(friend);
+			});
 		});
 	}
 
-	async loadChat(friend_id) {
-		this.currentProfile = friend_id;
-		const chats = await getRequest(CHAT_URL, friend_id);
+	async loadChat() {
+		const chats = await getRequest(CHAT_URL, this.currentProfile);
 		const chatDiv = document.getElementById("chat-messages");
-		// chatDiv.innerHTML = "";
+		chatDiv.innerHTML = "";
 
 		console.log(chats);
 	
 		chats.chats.forEach(message => {
 			const content = message.latest_message.content;
 			const messageDiv = document.createElement("li");
-			if (message.latest_message.sender === this.me) {
+			if (message.latest_message.sender === this.me.username) {
 				messageDiv.classList.add("message-self");
 			} else {
 				messageDiv.classList.add("message-other");
@@ -158,9 +212,13 @@ class Social {
 
 		// Loop through and create list items
 		users.forEach(user => {
+			if (user.username === this.me.username) {
+				return ;
+			}
+
 			const li = document.createElement("li");
 			li.classList.add("friendBox");
-	
+
 			// Create avatar image
 			const img = document.createElement("img");
 			img.src = user.avatar;
@@ -176,7 +234,12 @@ class Social {
 			li.appendChild(nameText);
 
 			// Append list item to friend list
-			this.friendListDiv.appendChild(li);
+			const friendListDiv = document.getElementById("friends");
+			friendListDiv.appendChild(li);
+
+			li.addEventListener("click", () => {
+				this.loadProfile(user);
+			});
 		});
 	}
 }
@@ -207,7 +270,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 		if (message) {
 			social.sendChat(message);
 		}
-
 	});
 
 });
