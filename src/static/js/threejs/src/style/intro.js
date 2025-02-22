@@ -19,12 +19,13 @@ export function updateStateLoading(init, socket) {
 }
 
 
-function playerSideToString(sides) {
+function playerSideToControlInfo(sides) {
+  console.log(sides);
   const SINGLE_SIDE_MESSAGE = (side) =>
-    `You are ${PlayerSide[side]} and use: [${inputKeys[side].up}] and[${inputKeys[side].down}]`;
+    `You are ${side} and use: [${inputKeys[side]}] and[${inputKeys[side]}]`;
 
   const MULTIPLE_SIDE_MESSAGE = (side) =>
-    `This is player ${PlayerSide[side]} and use: [${inputKeys[side].up}] and[${inputKeys[side].down}]`;
+    `This is player ${side} and use: [${inputKeys[side]}] and[${inputKeys[side]}]`;
 
   if (sides.length === 1) {
     return SINGLE_SIDE_MESSAGE(sides[0]);
@@ -70,7 +71,7 @@ export function showLoadingScreen(
 export function updateControlInfo(sides) {
   const controlInfoElem = document.getElementById('control-info');
   if (controlInfoElem) {
-    const controlInfo = playerSideToString(sides);
+    const controlInfo = playerSideToControlInfo(sides);
     controlInfoElem.innerText = controlInfo;
   }
 }
@@ -89,13 +90,10 @@ export function hideLoadingScreen() {
   }
 }
 
-export async function updateLoadingScreen(init, sides, shouldContinue, socket) {
-  while (shouldContinue) {
-    updateLoadingMessage(updateStateLoading(init, socket));
-    if (sides != null) {
-      updateControlInfo(sides);
-    }
-    await new Promise(resolve => setTimeout(resolve, 100));
+export function updateLoadingScreen(init, sides, socket) {
+  updateLoadingMessage(updateStateLoading(init, socket));
+  if (sides != null) {
+    updateControlInfo(sides);
   }
 }
 

@@ -1,50 +1,5 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
-/******/ 	// The require scope
-/******/ 	var __webpack_require__ = {};
-/******/ 	
-/************************************************************************/
-/******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__webpack_require__.d = (exports, definition) => {
-/******/ 			for(var key in definition) {
-/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
-/******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
-/******/ 		// define __esModule on exports
-/******/ 		__webpack_require__.r = (exports) => {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/************************************************************************/
-
-// NAMESPACE OBJECT: ./src/pongLogic/setting.js
-var setting_namespaceObject = {};
-__webpack_require__.r(setting_namespaceObject);
-__webpack_require__.d(setting_namespaceObject, {
-  Gj: () => (MapStyle),
-  Kt: () => (Mode),
-  ry: () => (setting_PlayerSide),
-  B5: () => (Setting),
-  fD: () => (intToPlayerSide),
-  fm: () => (strToPlayerSide)
-});
 
 ;// ./node_modules/three/build/three.core.js
 /**
@@ -61458,10 +61413,6 @@ class MyWebSocket {
         if (this.myPos !== null) {
           clearInterval(intervalId);
           resolve(this.myPos);
-        } else {
-          socket.socket.send(JSON.stringify({
-            type: "which_paddle"
-          }));
         }
       }, 100);
     });
@@ -61574,7 +61525,7 @@ class MyWebSocket {
       };
       this.socket.onmessage = event => {
         const data = JSON.parse(event.data);
-        // console.log("message receive :", event.data)
+        console.log("message receive :", event.data);
         // if (data.type === "gameState") {
         //   this.serverState = data; // Store the received game state
         // } else
@@ -61612,9 +61563,8 @@ class MyWebSocket {
         console.error('WebSocket Error:', error.message);
       };
     });
-    this.socket.send(JSON.stringify({
-      type: "which_paddle"
-    }));
+
+    // this.socket.send(JSON.stringify({ type: "which_paddle" }));
     console.log("finished with connecting to websocket ");
   }
 }
@@ -105943,9 +105893,10 @@ function updateStateLoading(init, socket) {
   }
   return LOCAL_MESSAGE(init);
 }
-function playerSideToString(sides) {
-  const SINGLE_SIDE_MESSAGE = side => `You are ${setting_namespaceObject["default"][side]} and use: [${ControlHandler[side].up}] and[${ControlHandler[side].down}]`;
-  const MULTIPLE_SIDE_MESSAGE = side => `This is player ${setting_namespaceObject["default"][side]} and use: [${ControlHandler[side].up}] and[${ControlHandler[side].down}]`;
+function playerSideToControlInfo(sides) {
+  console.log(sides);
+  const SINGLE_SIDE_MESSAGE = side => `You are ${side} and use: [${ControlHandler[side]}] and[${ControlHandler[side]}]`;
+  const MULTIPLE_SIDE_MESSAGE = side => `This is player ${side} and use: [${ControlHandler[side]}] and[${ControlHandler[side]}]`;
   if (sides.length === 1) {
     return SINGLE_SIDE_MESSAGE(sides[0]);
   }
@@ -105979,7 +105930,7 @@ function showLoadingScreen(loadingMessage = "Loading assets...") {
 function updateControlInfo(sides) {
   const controlInfoElem = document.getElementById('control-info');
   if (controlInfoElem) {
-    const controlInfo = playerSideToString(sides);
+    const controlInfo = playerSideToControlInfo(sides);
     controlInfoElem.innerText = controlInfo;
   }
 }
@@ -105995,13 +105946,10 @@ function hideLoadingScreen() {
     loadingDiv.remove();
   }
 }
-async function updateLoadingScreen(init, sides, shouldContinue, socket) {
-  while (shouldContinue) {
-    updateLoadingMessage(updateStateLoading(init, socket));
-    if (sides != null) {
-      updateControlInfo(sides);
-    }
-    await new Promise(resolve => setTimeout(resolve, 100));
+function updateLoadingScreen(init, sides, socket) {
+  updateLoadingMessage(updateStateLoading(init, socket));
+  if (sides != null) {
+    updateControlInfo(sides);
   }
 }
 ;// ./src/init.js
@@ -106084,15 +106032,30 @@ class Init {
     }
   }
   async waitForGameStart() {
-    while (this.pongLogic.socket.serverState === null) {
+    while (!this.pongLogic.socket.allPlayerReady) {
       await new Promise(resolve => setTimeout(resolve, 100));
-      if (this.pongLogic.socket.allPlayerReady) {
-        this.pongLogic.socket.tryStartGame();
-      } else {
-        this.pongLogic.socket.askAllReady();
-      }
     }
+    this.pongLogic.socket.tryStartGame();
     console.log("Game has started!");
+  }
+  async startUpdateLoadingLoop(intervalTime = 100) {
+    const intervalId = setInterval(() => {
+      if (this.doneLoadingAssets) {
+        clearInterval(intervalId);
+        hideLoadingScreen();
+        return;
+      }
+      if (this.settings.mode === Mode.NETWORKED) {
+        let sides = [];
+        if (this.pongLogic.socket.myPosStruc) {
+          sides[0] = this.pongLogic.socket.myPosStruc;
+        }
+        updateLoadingScreen(this, sides);
+      } else {
+        updateLoadingScreen(this, this.settings.playerSide, this.pongLogic.socket);
+      }
+    }, intervalTime);
+    return intervalId;
   }
   async initialize(settings, roomName) {
     showLoadingScreen();
@@ -106100,25 +106063,26 @@ class Init {
     if (this.settings.powerup) this.allPower = new AllPowerUp();
     this.countAssetToLoad();
     await this.pongLogic.initialize(this.settings, roomName);
+    this.startUpdateLoadingLoop();
     this.controlHandler = new ControlHandler(this.settings);
-    if (this.settings.mode === Mode.NETWORKED) {
-      let sides = null;
-      if (this.pongLogic.socket.myPosStruc) {
-        sides[0] = this.pongLogic.socket.myPosStruc;
-      }
-      updateLoadingScreen(this, sides, this.doneLoadingAssets);
-    } else updateLoadingScreen(this, this.settings.playerSide, this.doneLoadingAssets);
+    this.startUpdateLoadingLoop();
     await this.controlHandler.Init(this.pongLogic.socket);
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new score(this.gameScene.getScene(), this.settings.playerSide);
     this.loadAssets(() => {
       console.log("assets finsihed loading ?");
       this.doneLoadingAssets = true;
-      hideLoadingScreen();
-      if (this.settings.mode === Mode.NETWORKED) this.pongLogic.socket.player_ready();
+      if (this.settings.mode === Mode.NETWORKED) {
+        this.pongLogic.socket.player_ready();
+      } else {
+        hideLoadingScreen();
+      }
       this.lightManager.setupLights();
     });
-    if (this.settings.mode === Mode.NETWORKED) await this.waitForGameStart();
+    if (this.settings.mode === Mode.NETWORKED) {
+      await this.waitForGameStart();
+      hideLoadingScreen();
+    }
   }
 }
 ;// ./src/bot.js

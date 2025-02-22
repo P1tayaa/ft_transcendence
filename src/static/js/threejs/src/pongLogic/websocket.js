@@ -43,9 +43,6 @@ class MyWebSocket {
         if (this.myPos !== null) {
           clearInterval(intervalId);
           resolve(this.myPos);
-        } else {
-          socket.socket.send(JSON.stringify({ type: "which_paddle" }));
-
         }
       }, 100);
     });
@@ -182,7 +179,7 @@ class MyWebSocket {
 
       this.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        // console.log("message receive :", event.data)
+        console.log("message receive :", event.data)
         // if (data.type === "gameState") {
         //   this.serverState = data; // Store the received game state
         // } else
@@ -227,7 +224,7 @@ class MyWebSocket {
 
     });
 
-    this.socket.send(JSON.stringify({ type: "which_paddle" }));
+    // this.socket.send(JSON.stringify({ type: "which_paddle" }));
     console.log("finished with connecting to websocket ");
   }
 

@@ -85,16 +85,35 @@ export default class Init {
   }
 
   async waitForGameStart() {
-    while (this.pongLogic.socket.serverState === null) {
+    while (!this.pongLogic.socket.allPlayerReady) {
       await new Promise(resolve => setTimeout(resolve, 100));
-      if (this.pongLogic.socket.allPlayerReady) {
-        this.pongLogic.socket.tryStartGame()
-      } else {
-        this.pongLogic.socket.askAllReady();
-      }
     }
+    this.pongLogic.socket.tryStartGame()
     console.log("Game has started!");
   };
+
+  async startUpdateLoadingLoop(intervalTime = 100) {
+    const intervalId = setInterval(() => {
+      if (this.doneLoadingAssets) {
+        clearInterval(intervalId);
+        hideLoadingScreen();
+        return;
+      }
+
+      if (this.settings.mode === Mode.NETWORKED) {
+        let sides = [];
+        if (this.pongLogic.socket.myPosStruc) {
+          sides[0] = this.pongLogic.socket.myPosStruc;
+        }
+        updateLoadingScreen(this, sides);
+      }
+      else {
+        updateLoadingScreen(this, this.settings.playerSide, this.pongLogic.socket);
+      }
+    }, intervalTime);
+
+    return intervalId;
+  }
 
 
 
@@ -105,30 +124,27 @@ export default class Init {
       this.allPower = new AllPowerUp();
     this.countAssetToLoad();
     await this.pongLogic.initialize(this.settings, roomName);
+    this.startUpdateLoadingLoop();
     this.controlHandler = new ControlHandler(this.settings);
-    if (this.settings.mode === Mode.NETWORKED) {
-      let sides = null;
-      if (this.pongLogic.socket.myPosStruc) {
-        sides[0] = this.pongLogic.socket.myPosStruc;
-      }
-      updateLoadingScreen(this, sides, this.doneLoadingAssets);
-    }
-    else
-      updateLoadingScreen(this, this.settings.playerSide, this.doneLoadingAssets);
+    this.startUpdateLoadingLoop();
     await this.controlHandler.Init(this.pongLogic.socket);
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new Score(this.gameScene.getScene(), this.settings.playerSide);
     this.loadAssets(() => {
       console.log("assets finsihed loading ?")
       this.doneLoadingAssets = true;
-      hideLoadingScreen();
-      if (this.settings.mode === Mode.NETWORKED)
+      if (this.settings.mode === Mode.NETWORKED) {
         this.pongLogic.socket.player_ready();
+      } else {
+        hideLoadingScreen();
+      }
       this.lightManager.setupLights();
     });
 
-    if (this.settings.mode === Mode.NETWORKED)
+    if (this.settings.mode === Mode.NETWORKED) {
       await this.waitForGameStart();
+      hideLoadingScreen();
+    }
 
   }
 }
