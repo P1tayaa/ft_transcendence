@@ -1,5 +1,50 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
+/******/ 	// The require scope
+/******/ 	var __webpack_require__ = {};
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+
+// NAMESPACE OBJECT: ./src/pongLogic/setting.js
+var setting_namespaceObject = {};
+__webpack_require__.r(setting_namespaceObject);
+__webpack_require__.d(setting_namespaceObject, {
+  Gj: () => (MapStyle),
+  Kt: () => (Mode),
+  ry: () => (setting_PlayerSide),
+  B5: () => (Setting),
+  fD: () => (intToPlayerSide),
+  fm: () => (strToPlayerSide)
+});
 
 ;// ./node_modules/three/build/three.core.js
 /**
@@ -60852,6 +60897,20 @@ const setting_PlayerSide = {
   BOTTOM: "bottom",
   TOP: "top"
 };
+function strToPlayerSide(str) {
+  if (str === "left") {
+    return setting_PlayerSide.LEFT;
+  } else if (this.myPos === "right") {
+    return setting_PlayerSide.RIGHT;
+  } else if (this.myPos === "bottom") {
+    return setting_PlayerSide.BOTTOM;
+  } else if (this.myPos === "top") {
+    return setting_PlayerSide.TOP;
+  } else {
+    console.error("Invalid position value:", this.myPos);
+  }
+  console.log(str);
+}
 function intToPlayerSide(last_winner) {
   const winnerSide = last_winner === 1 ? setting_PlayerSide.LEFT : last_winner === 2 ? setting_PlayerSide.RIGHT : last_winner === 3 ? setting_PlayerSide.BOTTOM : last_winner === 4 ? setting_PlayerSide.TOP : null;
   return winnerSide;
@@ -61371,6 +61430,7 @@ class MyWebSocket {
     this.socket = null;
     this.host;
     this.isSpectator;
+    this.Connected = false;
     this.serverState = null;
     this.winner = "";
     this.game_over = false;
@@ -61405,19 +61465,7 @@ class MyWebSocket {
         }
       }, 100);
     });
-    console.log(this.myPos);
-    if (this.myPos === "left") {
-      this.myPosStruc = setting_PlayerSide.LEFT;
-    } else if (this.myPos === "right") {
-      this.myPosStruc = setting_PlayerSide.RIGHT;
-    } else if (this.myPos === "bottom") {
-      this.myPosStruc = setting_PlayerSide.BOTTOM;
-    } else if (this.myPos === "top") {
-      this.myPosStruc = setting_PlayerSide.TOP;
-    } else {
-      console.error("Invalid position value:", this.myPos);
-    }
-    console.log(this.myPosStruc);
+    this.myPosStruc = strToPlayerSide(this.myPos);
     return this.myPosStruc;
   }
   async init(settings, roomName) {
@@ -61520,6 +61568,7 @@ class MyWebSocket {
     await new Promise((resolve, reject) => {
       this.socket = new WebSocket(`${wsScheme}//${window.location.host}/ws/${wsPath}/${roomName}/`);
       this.socket.onopen = () => {
+        this.Connected = true;
         console.log('Connected to WebSocket');
         resolve();
       };
@@ -105883,11 +105932,26 @@ function loadRectangleMap(assetsPath, callback, init) {
 }
 ;
 ;// ./src/style/intro.js
-function showLoadingScreen({
-  loadingMessage = "Loading assets...",
-  playerInfo = "You are Player 1",
-  controlInfo = "Use arrow keys to move"
-} = {}) {
+
+
+
+function updateStateLoading(init, socket) {
+  const NETWORK_MESSAGE = (init, socket) => `Loading: ${init.assetsLoaded} / ${init.totalAssets}, socket connected == ${socket.Connected}, all Player ready == ${socket.allPlayerReady}`;
+  const LOCAL_MESSAGE = init => `Loading: ${init.assetsLoaded} / ${init.totalAssets}`;
+  if (socket) {
+    return NETWORK_MESSAGE(init, socket);
+  }
+  return LOCAL_MESSAGE(init);
+}
+function playerSideToString(sides) {
+  const SINGLE_SIDE_MESSAGE = side => `You are ${setting_namespaceObject["default"][side]} and use: [${ControlHandler[side].up}] and[${ControlHandler[side].down}]`;
+  const MULTIPLE_SIDE_MESSAGE = side => `This is player ${setting_namespaceObject["default"][side]} and use: [${ControlHandler[side].up}] and[${ControlHandler[side].down}]`;
+  if (sides.length === 1) {
+    return SINGLE_SIDE_MESSAGE(sides[0]);
+  }
+  return sides.map(side => MULTIPLE_SIDE_MESSAGE(side)).join("\n");
+}
+function showLoadingScreen(loadingMessage = "Loading assets...") {
   const loadingDiv = document.createElement('div');
   loadingDiv.id = 'loading-screen';
   loadingDiv.style.position = 'fixed';
@@ -105902,25 +105966,42 @@ function showLoadingScreen({
   loadingDiv.style.backgroundColor = '#000';
   loadingDiv.style.color = '#fff';
   loadingDiv.style.fontSize = '2em';
-
-  // Create elements for each piece of information
   const loadingMessageElem = document.createElement('p');
+  loadingMessageElem.id = 'loading-message';
   loadingMessageElem.innerText = loadingMessage;
-  const playerInfoElem = document.createElement('p');
-  playerInfoElem.innerText = playerInfo;
   const controlInfoElem = document.createElement('p');
-  controlInfoElem.innerText = controlInfo;
-
-  // Append each element to the loading screen
+  controlInfoElem.id = 'control-info';
+  controlInfoElem.innerText = "";
   loadingDiv.appendChild(loadingMessageElem);
-  loadingDiv.appendChild(playerInfoElem);
   loadingDiv.appendChild(controlInfoElem);
   document.body.appendChild(loadingDiv);
+}
+function updateControlInfo(sides) {
+  const controlInfoElem = document.getElementById('control-info');
+  if (controlInfoElem) {
+    const controlInfo = playerSideToString(sides);
+    controlInfoElem.innerText = controlInfo;
+  }
+}
+function updateLoadingMessage(newMessage) {
+  const loadingMessageElem = document.getElementById('loading-message');
+  if (loadingMessageElem) {
+    loadingMessageElem.innerText = newMessage;
+  }
 }
 function hideLoadingScreen() {
   const loadingDiv = document.getElementById('loading-screen');
   if (loadingDiv) {
     loadingDiv.remove();
+  }
+}
+async function updateLoadingScreen(init, sides, shouldContinue, socket) {
+  while (shouldContinue) {
+    updateLoadingMessage(updateStateLoading(init, socket));
+    if (sides != null) {
+      updateControlInfo(sides);
+    }
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
 }
 ;// ./src/init.js
@@ -106020,6 +106101,13 @@ class Init {
     this.countAssetToLoad();
     await this.pongLogic.initialize(this.settings, roomName);
     this.controlHandler = new ControlHandler(this.settings);
+    if (this.settings.mode === Mode.NETWORKED) {
+      let sides = null;
+      if (this.pongLogic.socket.myPosStruc) {
+        sides[0] = this.pongLogic.socket.myPosStruc;
+      }
+      updateLoadingScreen(this, sides, this.doneLoadingAssets);
+    } else updateLoadingScreen(this, this.settings.playerSide, this.doneLoadingAssets);
     await this.controlHandler.Init(this.pongLogic.socket);
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new score(this.gameScene.getScene(), this.settings.playerSide);

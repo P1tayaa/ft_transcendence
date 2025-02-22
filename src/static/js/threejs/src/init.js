@@ -12,7 +12,7 @@ const assetsPath = "http://localhost:8000/static/glfw/";
 
 import { loadClassicMap, loadBathMap, loadCircleMap, loadRectangleMap } from "./init/loadMap.js";
 import { spawnPadles } from './init/loadPadle.js';
-import { showLoadingScreen, hideLoadingScreen } from "./style/intro.js"
+import { showLoadingScreen, hideLoadingScreen, updateLoadingScreen } from "./style/intro.js"
 
 
 export default class Init {
@@ -107,11 +107,11 @@ export default class Init {
     await this.pongLogic.initialize(this.settings, roomName);
     this.controlHandler = new ControlHandler(this.settings);
     if (this.settings.mode === Mode.NETWORKED) {
-      sides = null;
-      if (this.pongLogic.socket.myPos) {
-
+      let sides = null;
+      if (this.pongLogic.socket.myPosStruc) {
+        sides[0] = this.pongLogic.socket.myPosStruc;
       }
-      updateLoadingScreen(this, , this.doneLoadingAssets);
+      updateLoadingScreen(this, sides, this.doneLoadingAssets);
     }
     else
       updateLoadingScreen(this, this.settings.playerSide, this.doneLoadingAssets);

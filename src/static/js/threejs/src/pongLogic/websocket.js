@@ -4,7 +4,7 @@
 // update_game
 // consumers.py is where you can find all
 
-import { intToPlayerSide, PlayerSide } from './setting.js'
+import { strToPlayerSide, PlayerSide } from './setting.js'
 
 
 class MyWebSocket {
@@ -51,21 +51,7 @@ class MyWebSocket {
     });
 
 
-
-    console.log(this.myPos);
-    if (this.myPos === "left") {
-      this.myPosStruc = PlayerSide.LEFT;
-    } else if (this.myPos === "right") {
-      this.myPosStruc = PlayerSide.RIGHT;
-    } else if (this.myPos === "bottom") {
-      this.myPosStruc = PlayerSide.BOTTOM;
-    } else if (this.myPos === "top") {
-      this.myPosStruc = PlayerSide.TOP;
-    } else {
-      console.error("Invalid position value:", this.myPos);
-    }
-    console.log(this.myPosStruc);
-
+    this.myPosStruc = strToPlayerSide(this.myPos);
     return this.myPosStruc;
   }
 

@@ -62,7 +62,6 @@ export function showLoadingScreen(
   controlInfoElem.innerText = "";
 
   loadingDiv.appendChild(loadingMessageElem);
-  loadingDiv.appendChild(playerInfoElem);
   loadingDiv.appendChild(controlInfoElem);
   document.body.appendChild(loadingDiv);
 }

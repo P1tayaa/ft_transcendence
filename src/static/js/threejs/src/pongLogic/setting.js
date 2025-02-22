@@ -27,6 +27,22 @@ export const PlayerSide = {
   TOP: "top",
 };
 
+
+export function strToPlayerSide(str) {
+  if (str === "left") {
+    return PlayerSide.LEFT;
+  } else if (this.myPos === "right") {
+    return PlayerSide.RIGHT;
+  } else if (this.myPos === "bottom") {
+    return PlayerSide.BOTTOM;
+  } else if (this.myPos === "top") {
+    return PlayerSide.TOP;
+  } else {
+    console.error("Invalid position value:", this.myPos);
+  }
+  console.log(str);
+}
+
 export function intToPlayerSide(last_winner) {
   const winnerSide =
     last_winner === 1 ? PlayerSide.LEFT :
