@@ -61445,6 +61445,9 @@ class MyWebSocket {
       position: paddleInput[this.myPosStruc] + settings.paddleLoc[this.myPosStruc],
       rotation: rotation
     };
+    console.log(settings.paddleLoc, this.myPosStruc);
+    console.log(paddleInfo);
+    console.log(paddleInput);
     this.socket.send(JSON.stringify(paddleInfo));
   }
   update(pongLogic, scores, settings, powerUps) {
@@ -61499,7 +61502,7 @@ class MyWebSocket {
         scores.scores = this.serverState.scores;
       }
       if (settings.powerup) powerUps = this.serverState.powerUps;
-      console.log(settings.paddleSize, settings.paddleLoc, scores.scores);
+      // console.log(settings.paddleSize, settings.paddleLoc, scores.scores)
     }
     // }
   }

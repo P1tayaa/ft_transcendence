@@ -77,12 +77,14 @@ class MyWebSocket {
     if (!rotation) {
       rotation = 0;
     }
-
     let paddleInfo = {
       type: 'paddle_move',
       position: paddleInput[this.myPosStruc] + settings.paddleLoc[this.myPosStruc],
       rotation: rotation,
     }
+    console.log(settings.paddleLoc, this.myPosStruc)
+    console.log(paddleInfo);
+    console.log(paddleInput);
     this.socket.send(JSON.stringify(paddleInfo))
   }
 
@@ -141,7 +143,7 @@ class MyWebSocket {
       }
       if (settings.powerup)
         powerUps = this.serverState.powerUps;
-      console.log(settings.paddleSize, settings.paddleLoc, scores.scores)
+      // console.log(settings.paddleSize, settings.paddleLoc, scores.scores)
     }
     // }
   }
