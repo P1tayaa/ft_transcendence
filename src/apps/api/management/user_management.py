@@ -178,6 +178,7 @@ def get_current_user(request):
             # user fields
             "username": user.username,
             "date_joined": user.date_joined.isoformat(),
+            "profile_picture_url": profile.get_profile_picture_url(),
             # profile fields
             "highscore": profile.highscore,
             # 'blabla' : usr.blabla
