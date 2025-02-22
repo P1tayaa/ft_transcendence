@@ -103,6 +103,10 @@ class GameConsumer(BaseConsumer):
                     'state': self.game_state
                 }
             )
+            await self.send(text_data=json.dumps({
+                    'type': 'which_paddle',
+                    'position': join_result['side']
+             }))
             await self.send(json.dumps({
                    'type': 'connection successful',
                    'message': 'Connected to room'
@@ -147,7 +151,7 @@ class GameConsumer(BaseConsumer):
         message_type = data.get('type')
 
         if message_type == 'paddle_move':
-            await self.handle_handle_move(data)
+            await self.handle_paddle_move(data)
         elif message_type == 'player_ready':
             await self.handle_player_ready()
         elif message_type == 'start_game':
