@@ -22,10 +22,10 @@ export function updateStateLoading(init, socket) {
 function playerSideToControlInfo(sides) {
   console.log(sides);
   const SINGLE_SIDE_MESSAGE = (side) =>
-    `You are ${side} and use: [${inputKeys[side]}] and[${inputKeys[side]}]`;
+    `You are ${side} and use: [${inputKeys[side]}] and [${inputKeys[side]}]`;
 
   const MULTIPLE_SIDE_MESSAGE = (side) =>
-    `This is player ${side} and use: [${inputKeys[side]}] and[${inputKeys[side]}]`;
+    `This is player ${side} and use: [${inputKeys[side]}] and [${inputKeys[side]}]`;
 
   if (sides.length === 1) {
     return SINGLE_SIDE_MESSAGE(sides[0]);

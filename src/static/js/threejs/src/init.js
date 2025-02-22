@@ -94,21 +94,21 @@ export default class Init {
 
   async startUpdateLoadingLoop(intervalTime = 100) {
     const intervalId = setInterval(() => {
-      if (this.doneLoadingAssets) {
-        clearInterval(intervalId);
-        hideLoadingScreen();
-        return;
-      }
+
 
       if (this.settings.mode === Mode.NETWORKED) {
         let sides = [];
         if (this.pongLogic.socket.myPosStruc) {
           sides[0] = this.pongLogic.socket.myPosStruc;
         }
-        updateLoadingScreen(this, sides);
+        updateLoadingScreen(this, sides, this.pongLogic.socket);
       }
       else {
-        updateLoadingScreen(this, this.settings.playerSide, this.pongLogic.socket);
+        updateLoadingScreen(this, this.settings.playerSide);
+      }
+      if (this.doneLoadingAssets) {
+        clearInterval(intervalId);
+        return;
       }
     }, intervalTime);
 
