@@ -178,12 +178,12 @@ class GameConsumer(BaseConsumer):
             if player_id in self.game_state['players']:
                 self.game_state['players'][player_id]['is_ready'] = True
                 await self.broadcast_game_state()
+            if all_ready:
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {
                         'type': 'all_players_ready',
-                         'value': all_ready
-
+                        'value': all_ready
                     }
                 )
         except Exception as e:
