@@ -1,7 +1,7 @@
 
 import { PlayerSide, MapStyle, Setting } from "../pongLogic/setting.js";
 
-function posSpawn(map, position) {
+export function posSpawn(map, position) {
   let distanceToCenter;
   let positionSpawn;
   let ration_map;
@@ -160,9 +160,9 @@ export function SpawnPadle(init, name, assetsPath, map, callback) {
 
 export function spawnPadles(settings, init, assetsPath, callback) {
   if (settings.bots) {
-    for (let i = 0; i < settings.botsSide.length; i++) {
-      SpawnPadle(init, settings.botsSide[i], assetsPath, settings.mapStyle, callback)
-    }
+    settings.botsSide.forEach(bot => {
+      SpawnPadle(init, bot, assetsPath, settings.mapStyle, callback)
+    });
   }
   settings.playerSide.forEach(Padle => {
     // console.log(Padle);

@@ -3,7 +3,7 @@
 
 
 import { PlayerSide, Mode, MapStyle, get_settings, Setting } from "./setting.js";
-import { getRightSpeed } from "../init/loadPadle.js"
+import { getRightSpeed, posSpawn } from "../init/loadPadle.js"
 import MyWebSocket from "./websocket.js"
 
 
@@ -88,11 +88,18 @@ class Pong {
     this.ballPos = { x: ballPosition3D.x, y: ballPosition3D.y };
 
     // Get active paddles from game settings
-    const activePaddles = this.settings.playerSide.map(side => ({
-      side,
-      position: gameScene.getAssetPossition(side),
-      size: this.settings.paddleSize[side],
-    }));
+    const activePaddles = [
+      ...this.settings.playerSide.map(side => ({
+        side,
+        position: gameScene.getAssetPossition(side),
+        size: this.settings.paddleSize[side],
+      })),
+      ...this.settings.botsSide.map(side => ({
+        side,
+        position: gameScene.getAssetPossition(side),
+        size: this.settings.paddleSize[side],
+      }))
+    ];
 
     const ballBox = this.createBoundingBox(this.ballPos, this.ballSize);
     this.paddle_collided = false;
@@ -217,6 +224,13 @@ class Pong {
         if (input[Padle] !== 0) {
           gameScene.moveAssetBy(Padle, getRightSpeed(Padle, input[Padle], this.settings, this));
         }
+      });
+      this.settings.botsSide.forEach(bot => {
+        if (bot === PlayerSide.RIGHT || bot === PlayerSide.LEFT)
+          gameScene.moveAsset(bot, { x: posSpawn(this.settings.mapStyle, bot).x, y: this.settings.paddleLoc[bot] });
+        else
+          gameScene.moveAsset(bot, { x: this.settings.paddleLoc[bot], y: posSpawn(this.settings.mapStyle, bot).y });
+
       });
     }
     const BallPos = gameScene.getAssetPossition('Ball');

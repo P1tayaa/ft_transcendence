@@ -60883,22 +60883,42 @@ async function get_settings(game_id) {
 }
 class Setting {
   constructor(setting_json) {
+    console.log(setting_json);
     // Parse the JSON and fill in the settings
     this.mode = this.parseMode(setting_json.mode);
+    console.log(this.mode);
     this.serverurl = setting_json.serverurl || "http://localhost:8000/api/";
-    this.powerup = setting_json.powerup == "true"; // Convert to boolean
+    this.powerup = setting_json.powerup; // Convert to boolean
     this.powerupList = this.parsePoweruplist(setting_json.poweruplist);
-    this.playercount = parseInt(setting_json.playercount) || 2; // Default to 2 players
+    this.playercount = parseInt(setting_json.playerCount); // Default to 2 players
     this.mapStyle = this.parseMapStyle(setting_json["map_style"]);
     this.playerSide = this.parseMultipleSides(setting_json.playerside);
-    this.bots = setting_json.bots == "true"; // Convert to boolean
+    this.bots = setting_json.bots; // Convert to boolean
+    console.log(this.bots);
     this.botsSide = this.parseMultipleSides(setting_json.botsSide);
-    this.host = setting_json.host == "true";
-    this.isSpectator = setting_json.isSpectator == "true";
+    console.log(this.botsSide);
+    this.host = setting_json.host;
+    console.log(this.host);
+    this.isSpectator = setting_json.isSpectator;
+    console.log(this.isSpectator);
     this.justMePaddle = null;
     this.paddleSize = {};
     this.paddleLoc = {};
     this.playerSide.forEach(side => {
+      if (side === setting_PlayerSide.RIGHT || side === setting_PlayerSide.LEFT) {
+        this.paddleSize[side] = {
+          x: 1,
+          y: 8
+        };
+      } else {
+        this.paddleSize[side] = {
+          x: 8,
+          y: 1
+        };
+      }
+      this.paddleLoc[side] = 0;
+    });
+    this.botsSide.forEach(side => {
       if (side === setting_PlayerSide.RIGHT || side === setting_PlayerSide.LEFT) {
         this.paddleSize[side] = {
           x: 1,
@@ -61083,12 +61103,13 @@ class ControlHandler {
     this.debug = false;
   }
   async Init(socket) {
+    console.log(this.settings.mode);
     // Initialize paddle speeds for active players
-    if (this.settings.justMePaddle == Mode.LOCAL) {
+    if (this.settings.mode === Mode.LOCAL) {
       this.settings.playerSide.forEach(side => {
         this.paddleSpeeds[side] = 0;
       });
-    } else if (this.settings.Mode == Mode.LOCALS_SOLO) {
+    } else if (this.settings.mode === Mode.LOCALS_SOLO) {
       // find the not bots and make it the justMePaddle
       this.settings.playerSide.forEach(side => {
         this.paddleSpeeds[side] = 0;
@@ -61328,9 +61349,9 @@ function SpawnPadle(init, name, assetsPath, map, callback) {
 }
 function spawnPadles(settings, init, assetsPath, callback) {
   if (settings.bots) {
-    for (let i = 0; i < settings.botsSide.length; i++) {
-      SpawnPadle(init, settings.botsSide[i], assetsPath, settings.mapStyle, callback);
-    }
+    settings.botsSide.forEach(bot => {
+      SpawnPadle(init, bot, assetsPath, settings.mapStyle, callback);
+    });
   }
   settings.playerSide.forEach(Padle => {
     // console.log(Padle);
@@ -61504,7 +61525,7 @@ class MyWebSocket {
       };
       this.socket.onmessage = event => {
         const data = JSON.parse(event.data);
-        console.log("message receive :", event.data);
+        // console.log("message receive :", event.data)
         // if (data.type === "gameState") {
         //   this.serverState = data; // Store the received game state
         // } else
@@ -61529,6 +61550,10 @@ class MyWebSocket {
         } else if (data.type === 'is_all_players_ready') {
           console.log('is_all_players_ready:', data.value);
           this.allPlayerReady = data.value;
+        } else if (data.type === "error") {
+          console.error(event.data);
+        } else if (data.type === "errors") {
+          console.error(event.data);
         }
       };
       this.socket.onclose = event => {
@@ -61642,11 +61667,15 @@ class Pong {
     };
 
     // Get active paddles from game settings
-    const activePaddles = this.settings.playerSide.map(side => ({
+    const activePaddles = [...this.settings.playerSide.map(side => ({
       side,
       position: gameScene.getAssetPossition(side),
       size: this.settings.paddleSize[side]
-    }));
+    })), ...this.settings.botsSide.map(side => ({
+      side,
+      position: gameScene.getAssetPossition(side),
+      size: this.settings.paddleSize[side]
+    }))];
     const ballBox = this.createBoundingBox(this.ballPos, this.ballSize);
     this.paddle_collided = false;
     this.reset_ball = false;
@@ -61757,6 +61786,15 @@ class Pong {
         if (input[Padle] !== 0) {
           gameScene.moveAssetBy(Padle, getRightSpeed(Padle, input[Padle], this.settings, this));
         }
+      });
+      this.settings.botsSide.forEach(bot => {
+        if (bot === setting_PlayerSide.RIGHT || bot === setting_PlayerSide.LEFT) gameScene.moveAsset(bot, {
+          x: posSpawn(this.settings.mapStyle, bot).x,
+          y: this.settings.paddleLoc[bot]
+        });else gameScene.moveAsset(bot, {
+          x: this.settings.paddleLoc[bot],
+          y: posSpawn(this.settings.mapStyle, bot).y
+        });
       });
     }
     const BallPos = gameScene.getAssetPossition('Ball');
@@ -105928,6 +105966,7 @@ class Init {
     });
   }
   countAssetToLoad() {
+    console.log(this.settings.playercount);
     if (this.settings.playercount == 2) {
       this.totalAssets = 2 + 2;
     } else if (this.settings.playercount == 4) {
@@ -105970,15 +106009,39 @@ class Init {
     this.loadAssets(() => {
       console.log("assets finsihed loading ?");
       this.doneLoadingAssets = true;
-      this.pongLogic.socket.player_ready();
+      hideLoadingScreen();
+      if (this.settings.mode === Mode.NETWORKED) this.pongLogic.socket.player_ready();
       this.lightManager.setupLights();
     });
     if (this.settings.mode === Mode.NETWORKED) await this.waitForGameStart();
-    hideLoadingScreen();
   }
+}
+;// ./src/bot.js
+
+const BOTSPEED = {
+  x: 0.2,
+  y: 0.2
+};
+function botControl(settings, ballPos) {
+  settings.botsSide.forEach(side => {
+    if (side === setting_PlayerSide.RIGHT || side === setting_PlayerSide.LEFT) {
+      if (settings.paddleLoc[side] < ballPos.y) {
+        settings.paddleLoc[side] += BOTSPEED.y;
+      } else {
+        settings.paddleLoc[side] -= BOTSPEED.y;
+      }
+    } else {
+      if (settings.paddleLoc[side] < ballPos.x) {
+        settings.paddleLoc[side] += BOTSPEED.x;
+      } else {
+        settings.paddleLoc[side] -= BOTSPEED.x;
+      }
+    }
+  });
 }
 ;// ./src/main.js
 // src/main.js
+
 
 
 
@@ -106023,6 +106086,9 @@ class main {
     }
     if (this.init.controlHandler.debug) {
       doneLoadingAssets = true;
+    }
+    if (this.init.settings.bots) {
+      botControl(this.init.settings, this.gameScene.getAssetPossition('Ball'));
     }
     const input = this.init.controlHandler.getPaddleSpeeds();
     this.pongLogic.update(input, this.gameScene);
@@ -106076,7 +106142,6 @@ document.addEventListener("startGame", event => {
 document.addEventListener('DOMContentLoaded', () => {
   const mainClass = new main();
   let wait_please = false;
-
   // Create a promise that resolves when initialization is complete
   const waitForInit = new Promise((resolve, reject) => {
     const interval = setInterval(async () => {

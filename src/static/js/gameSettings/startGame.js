@@ -47,6 +47,9 @@ export async function initializeGame(config) {
     Spectator: false
   }
 
+  // have to Change
+  gameConfig.map = "classic";
+
 
   switch (gameConfig.playerCount) {
     case "2":
@@ -87,25 +90,27 @@ export async function initializeGame(config) {
     // Move all other sides to botsSide
   }
 
+  if (gameConfig.mode === "networked") {
+    try {
 
-  try {
+      const datainfo = await make_room(gameConfig);
 
-    const datainfo = await make_room(gameConfig);
+      console.log("the responce of the ", (datainfo));
 
-    console.log("the responce of the ", (datainfo));
+      setTimeout(() => {
+        document.dispatchEvent(new CustomEvent("startGame", { detail: { gameConfig: gameConfig, room_name: datainfo.room_name } }));
+      }, 3000);
+      console.log('Initializing game with configuration:', config);
+    } catch (error) {
+      console.error('Error fetching matches:', error);
+      alert('An error occurred while searching for friends.');
+    }
 
+  } else {
     setTimeout(() => {
-      document.dispatchEvent(new CustomEvent("startGame", { detail: { gameConfig: gameConfig, room_name: datainfo.room_name } }));
+      document.dispatchEvent(new CustomEvent("startGame", { detail: { gameConfig: gameConfig } }));
     }, 3000);
-    console.log('Initializing game with configuration:', config);
-  } catch (error) {
-    console.error('Error fetching matches:', error);
-    alert('An error occurred while searching for friends.');
   }
-
-
-
-
 
 }
 

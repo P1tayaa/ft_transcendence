@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import Init from './init.js';
 import { intToPlayerSide, Mode } from "./pongLogic/setting.js";
 import { updateLightsForActivePlayers } from "./modelLoading/light_manage.js";
-
+import { botControl } from './bot.js';
 
 class main {
   constructor() {
@@ -54,6 +54,10 @@ class main {
 
     if (this.init.controlHandler.debug) {
       doneLoadingAssets = true;
+    }
+
+    if (this.init.settings.bots) {
+      botControl(this.init.settings, this.gameScene.getAssetPossition('Ball'));
     }
 
 
@@ -122,7 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const mainClass = new main();
 
   let wait_please = false;
-
   // Create a promise that resolves when initialization is complete
   const waitForInit = new Promise((resolve, reject) => {
     const interval = setInterval(async () => {

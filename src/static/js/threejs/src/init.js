@@ -90,6 +90,7 @@ export default class Init {
   }
 
   countAssetToLoad() {
+    console.log(this.settings.playercount);
     if (this.settings.playercount == 2) {
       this.totalAssets = 2 + 2;
     } else if (this.settings.playercount == 4) {
@@ -138,15 +139,15 @@ export default class Init {
     this.loadAssets(() => {
       console.log("assets finsihed loading ?")
       this.doneLoadingAssets = true;
-
-      this.pongLogic.socket.player_ready();
+      hideLoadingScreen();
+      if (this.settings.mode === Mode.NETWORKED)
+        this.pongLogic.socket.player_ready();
       this.lightManager.setupLights();
     });
 
     if (this.settings.mode === Mode.NETWORKED)
       await this.waitForGameStart();
 
-    hideLoadingScreen();
   }
 }
 

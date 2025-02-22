@@ -194,7 +194,7 @@ class MyWebSocket {
 
       this.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        console.log("message receive :", event.data)
+        // console.log("message receive :", event.data)
         // if (data.type === "gameState") {
         //   this.serverState = data; // Store the received game state
         // } else
@@ -221,6 +221,10 @@ class MyWebSocket {
 
           console.log('is_all_players_ready:', data.value);
           this.allPlayerReady = data.value;
+        } else if (data.type === "error") {
+          console.error(event.data);
+        } else if (data.type === "errors") {
+          console.error(event.data);
         }
 
       };
