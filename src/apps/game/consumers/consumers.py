@@ -61,7 +61,9 @@ class BaseConsumer(AsyncWebsocketConsumer):
         )
 
 class GameConsumer(BaseConsumer):
+    active_games = {}
     game_room = None
+
 
     def get_player_count(self):
         return len(self.game_state['players'])
@@ -82,7 +84,11 @@ class GameConsumer(BaseConsumer):
 
             # room_status = await database_sync_to_async(self.get_room_status)()
 
-            self.game_state = self.create_initial_gamestate()
+            if self.room_name not in GameConsumer.active_games:
+                GameConsumer.active_games[self.room_name] = self.create_initial_gamestate()
+
+            self.game_state = GameConsumer.active_games[self.room_name]
+            # self.game_state = self.create_initial_gamestate()
 
             join_result = await database_sync_to_async(self.game_room.join_game)(self.scope['user'])
 
@@ -247,6 +253,9 @@ class GameConsumer(BaseConsumer):
                     del self.game_state['settings']['paddleSize'][player_id]
                 if player_id in self.game_state['settings']['paddleLoc']:
                     del self.game_state['settings']['paddleLoc'][player_id]
+
+            if not self.game_state['players']:
+                del GameConsumer.active_games[self.room_name]
 
             await database_sync_to_async(self.game_room.leave_game)(self.scope['user'])
             await self.broadcast_game_state()
@@ -494,7 +503,7 @@ class GameConsumer(BaseConsumer):
 
     async def player_ready(self, event):
         await self.send(text_data = json.dumps(event))
-    async def is_all_players_ready(self, event):
+    async def all_players_ready(self, event):
         await self.send(text_data = json.dumps(event))
         
 
