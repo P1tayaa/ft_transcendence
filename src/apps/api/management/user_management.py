@@ -15,6 +15,24 @@ import json
 from rest_framework.response import Response
 
 
+def serialize_user(current_user, user=None):
+    data = {
+        "id": current_user.id,
+        "username": current_user.username,
+        "stats": {
+            "highscore": current_user.profile.highscore,
+            "most_recent_game_score": current_user.profile.most_recent_game_score,
+        },
+        "avatar": current_user.profile.get_profile_picture_url(),
+    }
+
+    if user and user != current_user:
+        data["is_friend"]: current_user.profile.is_friend(user.profile)
+
+    return data
+        
+
+
 # User.objects.create_user should add to database itself
 def create_user(user_data):
     try:
@@ -172,16 +190,10 @@ def check_auth_status(request):
 @login_required
 def get_current_user(request):
     user = request.user
-    profile = user.profile
     return JsonResponse(
         {
-            # user fields
-            "username": user.username,
-            "date_joined": user.date_joined.isoformat(),
-            "profile_picture_url": profile.get_profile_picture_url(),
-            # profile fields
-            "highscore": profile.highscore,
-            # 'blabla' : usr.blabla
+            "success": True,
+            "user": serialize_user(user)
         }
     )
 
@@ -191,28 +203,22 @@ def fetch_matching_usernames(request):
     try:
         search = request.GET.get("username", "")
         if not search:
-            return Response(
-                {"success": False, "error": "Username search term is required"},
-                status=400,
-            )
+            return Response({"success": False, "error": "Username search term is required"}, status=400)
 
-        matching_users = User.objects.filter(username__icontains=search).values(
-            "id", "username"
-        )
+        matching_users = User.objects.filter(username__icontains=search).select_related('profile')
+        results = [serialize_user(request.user,matching_user) for matching_user in matching_users]
 
-        results = [
-            {"user_id": user["id"], "username": user["username"]}
-            for user in matching_users
-        ]
+        return Response({
+            "success": True,
+            "results": results,
+            "count": len(results)
+        })
 
-        return Response({"success": True, "results": results, "count": len(results)})
     except Exception as e:
-        return Response(
-            {
+        return Response({
                 "success": False,
                 "error": str(e),
-            },
-            status=500,
+            }, status=500,
         )
 
 
@@ -278,11 +284,8 @@ def get_friends(request):
 
         for friendship in friendships:
             friend_list.append({
-                            "user_id": friendship.friend.user.id,
-                            "username": friendship.friend.user.username,
-                            "friendship_id": friendship.id,
-                            "created_at": friendship.created_at.isoformat()
-                       })
+                   "user": serialize_user(request.user, friendship.friend.user)
+               })
         return Response({"success": True, "friends": friend_list})
     except Exception as e:
         return Response({"success": False, "error": str(e)}, status=500)
