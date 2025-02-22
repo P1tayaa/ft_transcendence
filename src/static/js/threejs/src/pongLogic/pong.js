@@ -78,14 +78,14 @@ class Pong {
       this.localCollisionDetection(ballPosition3D, gameScene);
     } else if (this.mode === Mode.NETWORKED) {
       if (this.socket.host) {
-        this.settings.paddleLoc = this.socket.getPaddlePosition();
         this.localCollisionDetection(ballPosition3D, gameScene);
       }
     }
   }
 
   localCollisionDetection(ballPosition3D, gameScene) {
-    this.ballPos = { x: ballPosition3D.x, y: ballPosition3D.y };
+    if (this.mode !== Mode.NETWORKED)
+      this.ballPos = { x: ballPosition3D.x, y: ballPosition3D.y };
 
     // Get active paddles from game settings
     const activePaddles = [

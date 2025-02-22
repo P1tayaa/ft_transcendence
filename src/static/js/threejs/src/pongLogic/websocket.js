@@ -64,6 +64,13 @@ class MyWebSocket {
     }
     return null; // Return null if no data is available yet
   }
+  getBallPosition() {
+    if (this.serverState && this.serverState.settings) {
+      return this.serverState.settings.ballSize;
+    }
+    return null; // Return null if no data is available yet
+  }
+
 
 
   sendPaddlePosition(paddleInput, paddleKey, rotation) {
@@ -116,6 +123,7 @@ class MyWebSocket {
     // } else {
     // If this client is not the host, overwrite local values with server values
     if (this.serverState) {
+      pongLogic.ballPos = this.serverState.pongLogic.ballPos;
       pongLogic.ballSpeed = this.serverState.pongLogic.ballSpeed;
       pongLogic.ballSize = this.serverState.pongLogic.ballSize;
       pongLogic.lastWinner = this.serverState.pongLogic.lastWinner;

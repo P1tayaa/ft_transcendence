@@ -61430,6 +61430,12 @@ class MyWebSocket {
     }
     return null; // Return null if no data is available yet
   }
+  getBallPosition() {
+    if (this.serverState && this.serverState.settings) {
+      return this.serverState.settings.ballSize;
+    }
+    return null; // Return null if no data is available yet
+  }
   sendPaddlePosition(paddleInput, paddleKey, rotation) {
     if (!rotation) {
       rotation = 0;
@@ -61478,6 +61484,7 @@ class MyWebSocket {
     // } else {
     // If this client is not the host, overwrite local values with server values
     if (this.serverState) {
+      pongLogic.ballPos = this.serverState.pongLogic.ballPos;
       pongLogic.ballSpeed = this.serverState.pongLogic.ballSpeed;
       pongLogic.ballSize = this.serverState.pongLogic.ballSize;
       pongLogic.lastWinner = this.serverState.pongLogic.lastWinner;
@@ -61654,13 +61661,12 @@ class Pong {
       this.localCollisionDetection(ballPosition3D, gameScene);
     } else if (this.mode === Mode.NETWORKED) {
       if (this.socket.host) {
-        this.settings.paddleLoc = this.socket.getPaddlePosition();
         this.localCollisionDetection(ballPosition3D, gameScene);
       }
     }
   }
   localCollisionDetection(ballPosition3D, gameScene) {
-    this.ballPos = {
+    if (this.mode !== Mode.NETWORKED) this.ballPos = {
       x: ballPosition3D.x,
       y: ballPosition3D.y
     };
