@@ -147,10 +147,10 @@ class GameConsumer(BaseConsumer):
     def setup_player_paddle(self, player, side):
         if side in ['left', 'right']:
             self.game_state['settings']['paddleSize'][player] = {'x': 1, 'y': 8}
-            self.game_state['settings']['paddleLoc'][player] = {'y': 0, 'rotation': 0}
+            self.game_state['settings']['paddleLoc'][player] = {'position': 0, 'rotation': 0}
         else:
             self.game_state['settings']['paddleSize'][player] = {'x': 8, 'y': 1}
-            self.game_state['settings']['paddleLoc'][player] = {'x': 0, 'rotation': 0}
+            self.game_state['settings']['paddleLoc'][player] = {'position': 0, 'rotation': 0}
         self.game_state['score'][player] = 0
 
     async def receive(self, text_data):
@@ -530,11 +530,9 @@ class GameConsumer(BaseConsumer):
         if 'state' in event:
             game_state = event['state']
             for player_id, paddle_loc in game_state['settings']['paddleLoc'].items():
-                if 'x' in paddle_loc:
-                    paddle_loc['x'] = float(paddle_loc['x'])
-                if 'y' in paddle_loc:
-                    paddle_loc['y'] = float(paddle_loc['y'])
-            paddle_loc['rotation'] = float(paddle_loc.get('rotation', 0))
+                if 'position' in paddle_loc:
+                    paddle_loc['position'] = float(paddle_loc['position'])
+                paddle_loc['rotation'] = float(paddle_loc.get('rotation', 0))
 
             position_mapped_state = remap_player_data_by_position(game_state)
             await self.send(text_data=json.dumps({
