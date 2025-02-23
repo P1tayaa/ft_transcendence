@@ -104,7 +104,7 @@ def get_chats(request):
         else:
             # Get all chats with latest messages
             chats = request.user.profile.get_all_chats()
-            return Response({"chats": chats})
+            return Response({**chats})
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 

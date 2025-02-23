@@ -30,7 +30,8 @@ class Profile(models.Model):
         return self.friendships.filter(friend=friend_profile).delete()
 
     def is_friend(self, friend_profile):
-        return self.friendships.filter(friend=friend_profile).exists()
+        return (self.friendships.filter(friend=friend_profile).exists()
+            or friend_profile.friendships.filter(friend=self).exists())
 
     def get_friends(self):
         return self.friendships.all()
