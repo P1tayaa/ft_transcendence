@@ -1,108 +1,27 @@
-
-/* Define CSS variables for the color palette */
 :root {
-    --jalapeno-red: #b71540;
-    --tomato-red: #eb2f06;
-    --mandarin-red: #e55039;
-    --carrot-orange: #e58e26;
-    --iceland-poppy: #fa983a;
-    --squash-blossom: #f6b93b;
-    
-    --flat-flesh: #fad390;
-    --melon-melody: #f8c291;
-    
-    --aurora-green: #78e08f;
-    --paradise-green: #b8e994;
-    --reef-encounter: #079992;
-    --waterfall: #38ada9;
-    
-    --dark-sapphire: #0c2461;
-    --forest-blues: #0a3d62;
-    --yue-guang-lan-blue: #1e3799;
-    --azraq-blue: #4a69bd;
-    --livid: #6a89cc;
-    
-    --dupain: #60a3bc;
-    --spray: #82ccdd;
-    --good-samaritan: #3c6382;
-    
+    --Background: #1E1E1E;
+    --Text: #FFF9F9;
 
-
-    --primary-color: var(--tomato-red); /* Main blue color */
-    --secondary-color: var(--mandarin-red); /* Main green color */
-    --background-color: var(--spray); /* Light grey background */
-    --text-color: var(--forest-blues); /* Dark text color */
-    --header-background: var(--livid); /* Header background color */
-    --footer-background: var(--iceland-poppy); /* Footer background color */
+    font-family: 'Outfit', sans-serif;
 }
 
-/* Apply the color palette */
-body {
-    background-color: var(--background-color);
-    color: var(--text-color);
-    font-family: Arial, sans-serif;
+html {
+    height: 100%;
+    width: 100%;
     margin: 0;
     padding: 0;
 }
 
-header {
-    background-color: var(--header-background);
-    color: #ffffff;
-    padding: 1rem 0;
-    text-align: center;
-}
-
-header h1 {
-    margin: 0;
-}
-
-nav ul {
-    list-style-type: none;
+body {
+    height: 100%;
+    width: 100%;
     margin: 0;
     padding: 0;
     display: flex;
+    flex-direction: column;
     justify-content: center;
-    gap: 1rem;
-}
+    align-items: center;
 
-nav ul li a {
-    text-decoration: none;
-    color: #ffffff;
-    font-weight: bold;
-}
 
-main {
-    padding: 2rem;
-}
-
-button {
-    background-color: var(--primary-color);
-    color: #ffffff;
-    border: none;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 1rem;
-}
-
-button:hover {
-    background-color: var(--secondary-color);
-}
-
-footer {
-    background: linear-gradient(to bottom, var(--background-color), var(--footer-background) 50%, transparent 100%);
-    color: #ffffff;
-    text-align: center;
-    padding: 1rem 0;
-    position:relative;
-    bottom: 0;
-    width: 100%;
-}
-
-/* Responsive design for smaller screens */
-@media (max-width: 768px) {
-    nav ul {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
+    /* background: var(--Background); */
 }

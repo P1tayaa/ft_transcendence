@@ -1,16 +1,36 @@
 <!-- Chat Page -->
+<!DOCTYPE html>
 
-<main>
-  <section id="chat">
-    <h2>Connect with Players</h2>
-    <script src="../simpleJavaScripts/displayMessages.js"></script>
-    <div id="chat-box">
-      <p><strong>Player1:</strong> Hi! Ready for a game?</p>
-      <p><strong>Player2:</strong> Absolutely!</p>
-    </div>
+<link rel="stylesheet" href="../static/css/chat.css">
 
-    <script src="../simpleJavaScripts/sendMessage.js"></script>
-    <input type="text" placeholder="Type your message here...">
-    <button>Send</button>
-  </section>
-</main>
+<div id="social">
+	<div id="sidebar">
+		<div id="profile-sidebar"></div>
+		<form id="search">
+			<input id="search-box" type="search" placeholder="Enter a username..."></input>
+		</form>
+		<ol id="friends"></ol>
+	</div>
+
+	<div id="content">
+		<div id="profile">
+			<div id="profile-info"></div>
+			<div id="profile-buttons"></div>
+		</div>
+		<div id="tab-select">
+			<button id="history-button">History</button>
+			<button id="stats-button">Stats</button>
+			<button id="chat-button">Chat</button>
+		</div>
+		<div id="chat">
+			<ol id="chat-messages">
+			</ol>
+			<form id="chat-input">
+				<input id="chat-box" type="text" placeholder="Type a message..."></input>
+				<button>Invite to game</button>
+			</form>
+		</div>
+	</div>
+</div>
+
+<script type="module" src="../static/js/chat/chat.js"></script>
