@@ -1,10 +1,10 @@
 import { getCSRFToken, getRequest, postRequest, getUserName } from '../utils.js';
 
-const SEARCH_USERS_URL = '../api/fetch_matching_usernames/';
+const SEARCH_URL = '../api/fetch_matching_usernames/';
 
-const FRIENDS_URL = '../api/get_friends/';
-const ADD_FRIEND_URL = '../api/add_friend/';
-const REMOVE_FRIEND_URL = '../api/remove_friend/';
+const FRIENDS_URL = '../api/follow/following';
+const FOLLOW_URL = '../api/follow/';
+const UNFOLLOW_URL = '../api/follow/unfollow';
 
 const CHAT_URL = '../api/chats/';
 const SEND_CHAT_URL = '../api/add_message/';
@@ -138,7 +138,7 @@ class Social {
 		}
 
 		const friendButton = document.createElement("button");
-		if (this.currentProfile.is_friend) {
+		if (this.currentProfile.is_following) {
 			friendButton.textContent = "Remove Friend";
 			friendButton.addEventListener("click", () => {
 				this.removeFriend(this.currentProfile.id);
@@ -161,7 +161,7 @@ class Social {
 	async getFriends() {
 		try {
 			const friendData = await getRequest(FRIENDS_URL);
-			return friendData.friends;
+			return friendData.following;
 		}
 		catch (error) {
 			console.error('Error getting friends:', error);
@@ -169,9 +169,11 @@ class Social {
 		}
 	}
 
-	async addFriend(friend_id) {
+	async addFriend(user_id) {
 		try {
-			await postRequest(ADD_FRIEND_URL, { friend_id: friend_id });
+			console.log("Adding friend...");
+			console.log(user_id);
+			await postRequest(FOLLOW_URL, { user_id: user_id });
 		}
 		catch (error) {
 			console.error('Error adding friend:', error);
@@ -180,9 +182,9 @@ class Social {
 		return true;
 	}
 
-	async removeFriend(friend_id) {
+	async removeFriend(user_id) {
 		try {
-			await postRequest(REMOVE_FRIEND_URL, { friend_id: friend_id });
+			await postRequest(UNFOLLOW_URL, { user_id: user_id });
 		}
 		catch (error) {
 			console.error('Error removing friend:', error);
@@ -194,6 +196,7 @@ class Social {
 	async loadFriendList() {
 		const friends = await this.getFriends();
 		const friendListDiv = document.getElementById("friends");
+
 
 		// Loop through and create list items
 		friends.forEach(friend => {
@@ -234,7 +237,7 @@ class Social {
 
 	async getSearchResults(searchTerm) {
 		try {
-			const url = `${SEARCH_USERS_URL}?username=${encodeURIComponent(searchTerm)}`;
+			const url = `${SEARCH_URL}?username=${encodeURIComponent(searchTerm)}`;
 			const searchResults = await getRequest(url);
 			return searchResults.results;
 		} catch (error) {
@@ -245,6 +248,8 @@ class Social {
 
 	async loadSearchResults(searchTerm) {
 		const users = await this.getSearchResults(searchTerm);
+
+		console.log(users);
 
 		if (!users || users.length === 0) {
 			console.log("No users found.");
@@ -431,7 +436,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 		const searchTerm = document.getElementById("search-box").value.trim();
 
 		if (searchTerm) {
-			social.clearChat();
+			// social.clearChat();
 			social.loadSearchResults(searchTerm);
 		}
 
