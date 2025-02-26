@@ -5,6 +5,7 @@ from django.http import JsonResponse
 import json
 from apps.game.models.game import GameConfig, GameRoom, PlayerState,BaseGameRoom
 from django.db import transaction
+from apps.users.models import Chat
 
 
 # added by sam
