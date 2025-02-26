@@ -12,23 +12,34 @@
 		<ol id="friends"></ol>
 	</div>
 
-	<div id="content">
-		<div id="profile">
+	<div id="profile">
+		<div id="top">
 			<div id="profile-info"></div>
 			<div id="profile-buttons"></div>
 		</div>
 		<div id="tab-select">
-			<button id="history-button">History</button>
-			<button id="stats-button">Stats</button>
-			<button id="chat-button">Chat</button>
+			<button id="history-select">History</button>
+			<button id="stats-select">Stats</button>
+			<button id="chat-select">Chat</button>
 		</div>
-		<div id="chat">
-			<ol id="chat-messages">
-			</ol>
-			<form id="chat-input">
-				<input id="chat-box" type="text" placeholder="Type a message..."></input>
-				<button>Invite to game</button>
-			</form>
+		<div id="tab-content">
+
+			<div id="history">
+				<ol id="history-list"></ol>
+			</div>
+
+			<div id="stats">
+				<ol id="stats-list"></ol>
+			</div>
+
+			<div id="chat">
+				<ol id="chat-list"></ol>
+				<form id="chat-input">
+					<input id="chat-box" type="text" placeholder="Type a message..."></input>
+					<button>Invite to game</button>
+				</form>
+			</div>
+
 		</div>
 	</div>
 </div>

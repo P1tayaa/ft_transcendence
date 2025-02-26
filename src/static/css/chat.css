@@ -18,6 +18,10 @@ input {
 	align-items: flex-start;
 }
 
+img {
+	border-radius: 50%;
+}
+
 #sidebar {
 	display: flex;
 	width: 20%;
@@ -63,7 +67,7 @@ input {
 	display: flex;
 	min-width: 180px;
 	padding-right: 15px;
-	justify-content: center;
+	justify-content: left;
 	align-items: center;
 	gap: 10px;
 	align-self: stretch;
@@ -72,7 +76,7 @@ input {
 	border-radius: 100px;
 }
 
-#content {
+#profile {
 	display: flex;
 	padding: 25px;
 	flex-direction: column;
@@ -84,7 +88,7 @@ input {
 	border-radius: 10px;
 }
 
-#profile {
+#top {
 	display: flex;
 	align-self: stretch;
 }
@@ -128,7 +132,7 @@ input {
 	border-radius: 10px;
 }
 
-#chat {
+#tab-content {
 	display: flex;
 	padding: 10px;
 	flex-direction: column;
@@ -143,7 +147,20 @@ input {
 	border-radius: 10px;
 }
 
-#chat-messages {
+#chat {
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	align-items: flex-start;
+	gap: 10px;
+	flex: 1 0 0;
+	align-self: stretch;
+
+	background: #1e1e1e15;
+	border-radius: 10px;
+}
+
+#chat-list {
 	display: flex;
 	flex-direction: column;
 	justify-content: flex-end;
