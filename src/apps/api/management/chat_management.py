@@ -35,7 +35,7 @@ def add_message(request):
             except User.DoesNotExist:
                 return Response({"success": False, "error": "Recipient not found"}, status=404)
 
-           message = chat.messages.create(
+            message = chat.messages.create(
                 sender = request.user,
                 content = content,
                 is_read = False,
