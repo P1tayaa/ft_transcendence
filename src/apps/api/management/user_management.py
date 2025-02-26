@@ -304,7 +304,7 @@ def unfollow_user(request):
             return Response({"success": False, "error": "Invalid user id format"}, status=400)
 
         try:
-            user_to_unfollow = User.objects.get(user_id)
+            user_to_unfollow = User.objects.get(id=user_id)
         except User.DoesNotExist:
             return Response({"error": f"User not found"}, status=404)
 
