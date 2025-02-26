@@ -128,8 +128,8 @@ def get_chat_history(request):
                 return Response(chat_data)
             except User.DoesNotExist:
                 return Response({"error": "User not found"}, status=404)
-  except Exception as e:
-    return Response({"error": str(e)}, status=500)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
     
 
 api_view(["POST"])
