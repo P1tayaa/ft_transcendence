@@ -15,40 +15,29 @@ def add_message(request):
     try:
         content = request.data.get("content")
         recipient_id = request.data.get("recipient_id")
-        chat_id = request.data.get("chat_id") # OPTIONAL, WILL CREATE CHAT IF NOT GIVEN
 
         if not content:
             return Response({"success": False, "error": "Message content is required"}, status=400)
-
-        if not chat_id and not recipient_id:
-            return Response(
-                {
-                    "success": False,
-                    "error": "Either chat id or recipient id is required",
-                },
-                status=400,
-            )
+        if not recipient_id:
+            return Response({"success": False, "error": "recipient_id is required"}, status=400)
 
         with transaction.atomic():
-            if chat_id:
-                try:
-                    chat = Chat.objects.get(id=chat_id, participants=request.user)
-                except Chat.DoesNotExist:
-                    return Response({"success": False, "error": "Chat not found"}, status=404)
-            else:
-                # create
                 try:
                     recipient = User.objects.get(id=recipient_id)
-                    chat = request.user.profile.get_chat_with(recipient)
+                    chat = Chat.objects.filter(participant=request.user).filter(participant=recipient).first()
+
+                    if not chat:
+                        chat = Chat.objects.create()
+                        chat.participants.add(request.user, recipient)
+                        chat.save()
                 except User.DoesNotExist:
                     return Response({"success": False, "error": "Recipient not found"}, status=404)
 
-            message = chat.messages.create(
-                sender=request.user,
-                content=content,
-                is_read=False,
+           message = chat.messages.create(
+                sender = request.user,
+                content = content,
+                is_read = False,
             )
-
             chat.save()
 
             message_data = {

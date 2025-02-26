@@ -30,8 +30,8 @@ class Profile(models.Model):
         return self.friendships.filter(friend=friend_profile).delete()
 
     def is_friend(self, friend_profile):
-        return (self.friendships.filter(friend=friend_profile).exists()
-            or friend_profile.friendships.filter(friend=self).exists())
+        return (self.friendships.filter(friend=friend_profile).exists()) # don't think that's what we want but should check
+            # or friend_profile.friendships.filter(friend=self).exists())
 
     def get_friends(self):
         return self.friendships.all()
@@ -76,14 +76,13 @@ class Profile(models.Model):
                 }
             )
             # return chat_data
-        return chat_data
+        return chat_data        
 
     def get_chat_history(self, chat_id, limit=50, offset=0):
         try:
             chat = Chat.objects.get(id=chat_id, participants=self.user)
-            messages = chat.messages.all().order_by("-timestamp")[
-                offset : offset + limit
-            ]
+            total_messages = chat.messages.count()
+            messages = chat.messages.all().order_by("timestamp")[offset : offset + limit]
 
             return {
                 "chat_id": chat.id,
@@ -95,12 +94,14 @@ class Profile(models.Model):
                         "id": msg.id,
                         "content": msg.content,
                         "sender": msg.sender.username,
+                        "sender_id": msg.sender.id,
                         "timestamp": msg.timestamp,
                         "is_read": msg.is_read,
                     }
                     for msg in messages
                 ],
-                "has_more": chat.messages.count() > (offset + limit),
+                "has_more": total_messages > (offset + limit),
+                "total_messages": total_messages,
             }
         except Chat.DoesNotExist:
             return None
