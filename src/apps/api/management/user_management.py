@@ -27,7 +27,7 @@ def serialize_user(user_to_serialize, viewing_user=None):
     }
 
     if viewing_user and viewing_user != user_to_serialize:
-        data["is_following"] = viewing_user.profile.is_following(user_to_serialize)
+        data["is_following"] = viewing_user.profile.is_following(user_to_serialize.profile)
 
     return data
 
