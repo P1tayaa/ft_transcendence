@@ -8,6 +8,7 @@ import math
 import random
 from apps.users.models import PlayerScore, Game
 
+
 class PlayerState(models.Model):
     game = models.ForeignKey('GameRoom', related_name='player_states', on_delete=models.CASCADE)
     player = models.ForeignKey(User, related_name='game_states', on_delete=models.CASCADE)
@@ -281,155 +282,122 @@ class GameRoom(BaseGameRoom):
                     is_active=True,
                     status='WAITING'
                 ))    
-        
 
 
+class Lobby(models.Model):
+    LOBBY_STATUS = {
+        ('OPEN', 'Open'),
+        ('CLOSED', 'Closed')
+    }
 
+    name = models.CharField(max_length=100, unique=True)
+    status = models.CharField(max_length=20, choices=LOBBY_STATUS, default='OPEN')
+    max_players = models.IntegerField(default=8)
+    created_at = models.DateTimeField(auto_now_add=True)
+    creator = models.ForeignKey(User, related_name='created_lobbies', on_delete=models.SET_NULL, null=True)
+    description = models.TextField(blank=True)
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+    active_game = models.ForeignKey(GameRoom, related_name='connected_lobby', on_delete=models.SET_NULL, null=True, blank=True)
 
-    # def get_players_sync(self):
-    #     return self.player_states.filter(is_active=True)
+    class Meta:
+        verbose_name_plural = "Lobbies"
 
+    def __str__(self):
+        return f"{self.name} ({self.get_status_display()})"
 
-    # def get_player_count_sync(self):
-    #     return self.get_players_sync().count()
+    def is_full(self):
+        return self.lobby_players.filter(is_active=True).count() >= self.max_players
+
+    def add_player(self, player):
+        if self.status != 'OPEN':
+            raise ValidationError("Lobby is closed")
+
+        if self.is_full():
+            raise ValidationError("Lobby is full")
+
+        with transaction.atomic():
+            lobby_player, created = LobbyPlayer.objects.create(
+                lobby = self,
+                player = player,
+                defaults = {'is_active': True, 'is_ready': False}
+            )
+
+            if not created:
+                # rejoin ?
+                lobby_player.is_active = True
+                lobby_player.is_ready = False
+                lobby_player.save()
+            return lobby_player
+
+    def remove_player(self, player):
+        with transaction.atomic():
+            lobby_player = self.lobby_players.filter(player=player, is_active=True).first()
+            if lobby_player:
+                lobby_player.is_active = False
+                lobby_player.is_ready = False
+                lobby_player.save()
+
+    def set_player_ready(self, player):
+        lobby_player = self.lobby_players.filter(player=player, is_active=True).first()
+        if not lobby_player:
+            raise ValidationError("Player not in lobby")
+
+        lobby_player.is_ready = True
+        lobby_player.save()
+
+        active_players = self.lobby_players.filter(is_active=True)
+        all_ready = (active_players.count() > 1 and all(p.is_ready for p in active_players))
+
+        return all_ready
+
+    def get_active_players(self):
+        return self.lobby_players.filter(is_active=True).select_related('player')
+
+    def connect_to_game(self, game_room):
+        self.active_game = game_room
+        self.save()
+
+    def disconnect_from_game(self):
+        self.active_game = None
+        self.save()
+
+    @classmethod
+    def get_available_lobbies(cls):
+        return cls.objects.filter(status='OPEN')
+
+    def get_lobby_state(self):
+        active_players = self.get_active_players()
+
+        return {
+            'id': self.id,
+            'name': self.name,
+            'status': self.status,
+            'max_players': self.max_players,
+            'creator': self.creator.username if self.creator else None,
+            'description': self.description,
+            'player_count': active_players.count(),
+            'active_game': self.active_game.id if self.active_game else None,
+            'created_at': self.created_at,
+            'players': [
+                {
+                    'id': p.player.id,
+                    'username': p.player.username,
+                    'is_ready': p.is_ready,
+                    'joined_at': p.joined_at,
+                    'is_host': p.player == self.creator
+                } for p in active_players
+            ]
+        }
     
+class LobbyPlayer(models.Model):
+    lobby = models.ForeignKey(Lobby, related_name='lobby_players', on_delete=models.CASCADE)
+    player = models.ForeignKey(User, related_name='lobby_memberships', on_delete=models.CASCADE)
+    is_active = models.BooleanField(default=True)
+    is_ready = models.BooleanField(default=False)
+    joined_at = models.DateTimeField(auto_now_add=True)
 
-    # def is_full_sync(self):
-    #     return self.get_player_count_sync() >= self.config.player_count
-    
+    class Meta:
+        unique_together = ['lobby', 'player']
 
-    # def get_available_sides_sync(self):
-    #     taken_sides = set(
-    #         self.player_states.filter(is_active=True).values_list('side', flat=True)
-    #     )
-    #     return [side for side in self.config.player_sides if side not in taken_sides]
-
-    
-    # def set_player_ready_sync(self, player):
-    #     player_state = self.player_states.filter(player=player, is_active=True).first()
-    #     if not player_state:
-    #         raise ValidationError("Player not in this game")
-        
-    #     player_state.is_ready = True
-    #     player_state.save()
-    #     return player_state.is_ready
-
-
-
-    # def all_players_ready_sync(self):
-    #     active_players = self.get_players_sync()
-    #     return active_players.count() >= self.config.player_count and all(ps.is_ready for ps in active_players)
-    
-
-    # def join_game_sync(self, player):
-    #     if self.status != 'WAITING':
-    #         raise ValidationError("Game is not open for joining")
-
-    #     # if self.is_full_sync():
-    #     #     raise ValidationError("Game room is full")
-
-    #     with transaction.atomic():
-    #         available_sides = self.get_available_sides_sync()
-    #         if not available_sides:
-    #             raise ValidationError("No available sides")
-
-    #         player_number = self.get_player_count_sync() + 1
-    #         PlayerState.objects.create(
-    #             game=self,
-    #             player=player,
-    #             player_number=player_number,
-    #             side=available_sides[0],
-    #             score=0
-    #         )
-
-    #         if self.is_full_sync():
-    #             self.status = 'IN_PROGRESS'
-    #             self.save()
-    #         return True
-    
-
-    # def leave_game_sync(self, player):
-    #     if self.status == 'COMPLETED':
-    #         raise ValidationError("Cannot leave a completed game")
-
-    #     with transaction.atomic():
-    #         player_state = self.player_states.filter(player=player, is_active=True).first()
-    #         if not player_state:
-    #             # raise ValidationError("Player not in this game")
-    #             return
-
-    #         player_state.is_active = False
-    #         player_state.save()
-
-    #         if self.get_player_count_sync() == 0:
-    #             self.is_active = False
-    #             self.save()
-    #         elif self.status == 'IN_PROGRESS':
-    #             self.status = 'WAITING'
-    #             self.save()
-    
-
-    # @database_sync_to_async
-    # def update_score(self, player, score):
-    #     if self.status != 'IN_PROGRESS':
-    #         raise ValidationError("Can only update scores for game in progress")
-
-    #     player_state = self.player_states.filter(player=player, is_active=True).first()
-    #     if not player_state:
-    #         raise ValidationError("Player not in this game")
-
-    #     player_state.score = score
-    #     player_state.save()
-
-    # @database_sync_to_async
-    # def complete_game(self, winner_id, scores):
-    #     if self.status != 'IN_PROGRESS':
-    #         raise ValidationError("Game is not in progress")
-
-    #     with transaction.atomic():
-    #         self.status = 'COMPLETED'
-    #         self.is_active = False
-    #         self.save()
-
-    #         # if needed, get winner as User
-    #         winner = User.objects.get(id=int(winner_id))
-    #         for player_state in self.get_players():
-    #             user_id = str(player_state.player.id)
-    #             final_score = scores.get(user_id, 0)
-    #             player_state.final_score = final_score
-    #             player_state.save()
-
-    #             ScoreHistory.objects.create(
-    #                 profile=player_state.player.profile,
-    #                 score=final_score
-    #             )
-
-    # @database_sync_to_async
-    # def get_game_status(self):
-    #     players = self.get_players()
-    #     return {
-    #         'room_name': self.room_name,
-    #         'status': self.status,
-    #         'game_mode': self.config.mode,
-    #         'map_style': self.config.map_style,
-    #         'current_players': self.get_player_count(),
-    #         # 'max_players': self.config.player_count,
-    #         'players': [{
-    #             'number': ps.player_number,
-    #             'username': ps.player.username,
-    #             'side': ps.side,
-    #             'score': ps.score
-    #         } for ps in players],
-    #         'is_active': self.is_active,
-    #         'powerups_enabled': self.config.powerups_enabled,
-    #         'bots_enabled': self.config.bots_enabled
-    #     }
+    def __str__(self):
+        return f"{self.player.username} in {self.lobby.name}"
