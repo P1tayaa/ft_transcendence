@@ -22,16 +22,18 @@ def add_message(request):
             return Response({"success": False, "error": "recipient_id is required"}, status=400)
 
         with transaction.atomic():
-                try:
-                    recipient = User.objects.get(id=recipient_id)
-                    chat = Chat.objects.filter(participant=request.user).filter(participant=recipient).first()
+            try:
+                recipient = User.objects.get(id=recipient_id)
+                chat_with_current_user = Chat.objects.filter(participants=request.user)
+                chats_with_both = chat_with_current_user.filter(participants=recipient)
+                chat = chat_with_both.first()
 
-                    if not chat:
-                        chat = Chat.objects.create()
-                        chat.participants.add(request.user, recipient)
-                        chat.save()
-                except User.DoesNotExist:
-                    return Response({"success": False, "error": "Recipient not found"}, status=404)
+                if not chat:
+                    chat = Chat.objects.create()
+                    chat.participants.add(request.user, recipient)
+                    chat.save()
+            except User.DoesNotExist:
+                return Response({"success": False, "error": "Recipient not found"}, status=404)
 
            message = chat.messages.create(
                 sender = request.user,
