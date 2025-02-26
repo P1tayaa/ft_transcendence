@@ -1,7 +1,7 @@
 from django.urls import re_path
 from .consumers.consumers import GameConsumer, SpectatorConsumer
 from .consumers.chat_consumer import ChatConsumer
-from .consumers.status_consumer import PresenceConsumer
+from .consumers.presence_consumer import PresenceConsumer
 from .models.matchmaking import MatchmakingConsumer
 
 websocket_urlpatterns = [
