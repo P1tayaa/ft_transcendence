@@ -234,7 +234,7 @@ def follow_user(request):
             return Response({"success": False, "error": "Invalid user id format"}, status=400)
 
         try:
-            user_to_follow = User.objects.get(user_id)
+            user_to_follow = User.objects.get(id=user_id)
         except User.DoesNotExist:
             return Response({"error": f"User not found"}, status=404)
 
@@ -245,7 +245,7 @@ def follow_user(request):
         followed_profile = user_to_follow.profile
         if follower_profile.is_following(followed_profile):
             return Response({"success": False, "error": f"Already following {user_to_follow.username}"}, status=400)
-        follow = follower_profile.follow(followed_profile)
+        follow = follower_profile.follow_user(followed_profile)
         return Response({
             "success": True,
             "message": f"Successfully followed {user_to_follow.username}",
