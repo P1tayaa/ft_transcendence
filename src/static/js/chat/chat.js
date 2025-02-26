@@ -1,10 +1,10 @@
 import { getCSRFToken, getRequest, postRequest, getUserName } from '../utils.js';
 
-const SEARCH_USERS_URL = '../api/fetch_matching_usernames/';
+const SEARCH_URL = '../api/fetch_matching_usernames/';
 
-const FRIENDS_URL = '../api/get_friends/';
-const ADD_FRIEND_URL = '../api/add_friend/';
-const REMOVE_FRIEND_URL = '../api/remove_friend/';
+const FRIENDS_URL = '../api/follow/following';
+const FOLLOW_URL = '../api/follow/';
+const UNFOLLOW_URL = '../api/follow/unfollow';
 
 const CHAT_URL = '../api/chats/';
 const SEND_CHAT_URL = '../api/add_message/';
@@ -14,17 +14,21 @@ const GET_ME_URL = '../api/me';
 const LOGOUT_URL = '../api/logout/';
 const LOGOUT_REDIRECT_URL = '../login';
 
+const CLEAR_CHAT_URL = '../api/chat/clear';
+
 
 class Social {
 	constructor() {
 		this.currentProfile = null;
 		this.me = null;
+		this.currentScreen = null;
+		this.MatchHistory = null;
+		this.Stats = null;
+		this.Chat = null;
 	}
 
 	async init() {
 		this.me = await getRequest(GET_ME_URL);
-
-		console.log(this.me);
 
 		this.loadProfileSide();
 		this.loadFriendList();
@@ -33,20 +37,52 @@ class Social {
 	}
 
 	loadProfile(user) {
+		if (this.currentProfile === user) {
+			return;
+		}
+
 		this.currentProfile = user;
 		this.loadProfileTop();
-		this.loadChat();
 
-		if (this.currentProfile === this.me) {
-			document.getElementById("chat-button").style.display = "none";
+		if (!this.currentScreen) {
+			this.MatchHistory = new MatchHistory(this.currentProfile);
+			this.Stats = new Stats(this.currentProfile);
+			this.Chat = new Chat(this.me, this.currentProfile);
 		}
+
+		this.currentScreen = this.MatchHistory;
+		this.currentScreen.load(this.currentProfile);
+
+		document.getElementById("chat-select").style.display = this.currentProfile === this.me ? "none" : "block";
+
+		this.setupTabEvents();
+	}
+
+	setupTabEvents() {
+		const tabs = [
+			{ id: "history-select", screen: this.MatchHistory },
+			{ id: "stats-select", screen: this.Stats },
+			{ id: "chat-select", screen: this.Chat }
+		];
+
+		tabs.forEach(tab => {
+			document.getElementById(tab.id).addEventListener("click", (event) => {
+				event.preventDefault();
+
+				if (this.currentScreen === tab.screen) {
+					return;
+				}
+
+				tab.screen.load(this.currentProfile);
+				this.currentScreen = tab.screen;
+			});
+		});
 	}
 
 	async loadProfileSide() {
 		// Load user
-		console.log(this.me);
-
 		const img = document.createElement("img");
+		img.classList.add("avatar");
 		img.src = this.me.avatar;
 		img.alt = this.me.username + "'s avatar";
 		img.width = 64;
@@ -69,6 +105,7 @@ class Social {
 		div.innerHTML = "";
 
 		const img = document.createElement("img");
+		img.classList.add("avatar");
 		img.src = this.currentProfile.avatar;
 		img.alt = this.currentProfile.username + "'s avatar";
 		img.width = 128;
@@ -82,8 +119,6 @@ class Social {
 
 		const buttons = document.getElementById("profile-buttons");
 		buttons.innerHTML = "";
-
-		console.log(this.currentProfile);
 
 		// If the current profile is the user, show edit and logout buttons
 		if (this.currentProfile === this.me) {
@@ -103,7 +138,7 @@ class Social {
 		}
 
 		const friendButton = document.createElement("button");
-		if (this.currentProfile.is_friend) {
+		if (this.currentProfile.is_following) {
 			friendButton.textContent = "Remove Friend";
 			friendButton.addEventListener("click", () => {
 				this.removeFriend(this.currentProfile.id);
@@ -126,7 +161,7 @@ class Social {
 	async getFriends() {
 		try {
 			const friendData = await getRequest(FRIENDS_URL);
-			return friendData.friends;
+			return friendData.following;
 		}
 		catch (error) {
 			console.error('Error getting friends:', error);
@@ -134,9 +169,11 @@ class Social {
 		}
 	}
 
-	async addFriend(friend_id) {
+	async addFriend(user_id) {
 		try {
-			await postRequest(ADD_FRIEND_URL, { friend_id: friend_id });
+			console.log("Adding friend...");
+			console.log(user_id);
+			await postRequest(FOLLOW_URL, { user_id: user_id });
 		}
 		catch (error) {
 			console.error('Error adding friend:', error);
@@ -145,9 +182,9 @@ class Social {
 		return true;
 	}
 
-	async removeFriend(friend_id) {
+	async removeFriend(user_id) {
 		try {
-			await postRequest(REMOVE_FRIEND_URL, { friend_id: friend_id });
+			await postRequest(UNFOLLOW_URL, { user_id: user_id });
 		}
 		catch (error) {
 			console.error('Error removing friend:', error);
@@ -160,8 +197,7 @@ class Social {
 		const friends = await this.getFriends();
 		const friendListDiv = document.getElementById("friends");
 
-		console.log(friends);
-	
+
 		// Loop through and create list items
 		friends.forEach(friend => {
 			const li = document.createElement("li");
@@ -169,6 +205,7 @@ class Social {
 	
 			// Create avatar image
 			const img = document.createElement("img");
+			img.classList.add("avatar");
 			img.src = friend.avatar;
 			img.alt = `${friend.username}'s Avatar`;
 			img.width = 64;
@@ -198,46 +235,9 @@ class Social {
 		});
 	}
 
-	async loadChat() {
-		const chats = await getRequest(CHAT_URL, this.currentProfile);
-		const chatDiv = document.getElementById("chat-messages");
-		chatDiv.innerHTML = "";
-
-		chats.chats.forEach(message => {
-			const content = message.latest_message.content;
-			const messageDiv = document.createElement("li");
-			if (message.latest_message.sender === this.me.username) {
-				messageDiv.classList.add("message-self");
-			} else {
-				messageDiv.classList.add("message-other");
-			}
-	
-			messageDiv.textContent = content;
-	
-			chatDiv.appendChild(messageDiv);
-		});
-	}
-
-	async sendChat(message) {
-		if (!this.currentProfile) {
-			alert("Please select a friend to chat with.");
-			return;
-		}
-
-		try {
-			await postRequest(SEND_CHAT_URL, {
-				recipient_id: this.currentProfile.id,
-				content: message
-			});
-		} catch (error) {
-			console.error('Error sending message:', error);
-			alert('An error occurred while sending the message.');
-		}
-	}
-
 	async getSearchResults(searchTerm) {
 		try {
-			const url = `${SEARCH_USERS_URL}?username=${encodeURIComponent(searchTerm)}`;
+			const url = `${SEARCH_URL}?username=${encodeURIComponent(searchTerm)}`;
 			const searchResults = await getRequest(url);
 			return searchResults.results;
 		} catch (error) {
@@ -249,7 +249,7 @@ class Social {
 	async loadSearchResults(searchTerm) {
 		const users = await this.getSearchResults(searchTerm);
 
-		console.log (users);
+		console.log(users);
 
 		if (!users || users.length === 0) {
 			console.log("No users found.");
@@ -292,8 +292,138 @@ class Social {
 			});
 		});
 	}
+
+	async clearChat() {
+		try {
+			console.log("Clearing chat...");
+			await postRequest(CLEAR_CHAT_URL);
+		} catch (error) {
+			console.error('Error clearing chat:', error);
+			return false;
+		}
+		return true;
+	}
 }
 
+class MatchHistory {
+	constructor (user) {
+		this.load(user);
+	}
+
+	async getMatchHistory() {
+		const url = `../api/score/?user_id=${this.user.id}`;
+		const matchHistory = await getRequest(url);
+		return matchHistory;
+	}
+
+	async loadMatchHistory() {
+		const matchHistory = await this.getMatchHistory();
+	}
+
+	load(user) {
+		this.user = user;
+
+		document.getElementById("chat").style.display = "none";
+		document.getElementById("stats").style.display = "none";
+		document.getElementById("history").style.display = "flex";
+
+		this.loadMatchHistory();
+	}
+}
+
+class Stats {
+	constructor(user) {
+		this.load(user);
+	}
+
+	async getStats() {
+		const url = `../api/stats/?user_id=${this.user.id}`;
+		const stats = await getRequest(url);
+		return stats;
+	}
+
+	async loadStats() {
+		const stats = await this.getStats();
+	}
+
+	load(user) {
+		this.user = user;
+
+		document.getElementById("history").style.display = "none";
+		document.getElementById("stats").style.display = "flex";
+		document.getElementById("chat").style.display = "none";
+
+		// this.loadStats();
+	}
+}
+
+class Chat {
+	constructor(me, user) {
+		this.me = me;
+		this.user = user;
+	}
+
+	async getChats() {
+		try {
+			const chatData = await getRequest(`${CHAT_URL}?user_id=${this.user.id}`);
+			const chats = chatData.messages;
+			return chats;
+		}
+		catch (error) {
+			console.error('Error getting chats:', error);
+			return [];
+		}
+	}
+
+	async loadChats() {
+		const chats = await this.getChats();
+		const chatDiv = document.getElementById("chat-list");
+		chatDiv.innerHTML = "";
+
+		chats.forEach(message => {
+			const content = message.content;
+			const messageDiv = document.createElement("li");
+			if (message.sender === this.me.username) {
+				messageDiv.classList.add("message-self");
+			} else {
+				messageDiv.classList.add("message-other");
+			}
+
+			messageDiv.textContent = content;
+	
+			chatDiv.appendChild(messageDiv);
+		});
+	}
+
+	async sendChat(message) {
+		if (!this.user) {
+			alert("Please select a friend to chat with.");
+			return;
+		}
+
+		try {
+			const data = await postRequest(SEND_CHAT_URL, {
+				recipient_id: this.user.id,
+				content: message
+			});
+		} catch (error) {
+			console.error('Error sending message:', error);
+			alert('An error occurred while sending the message.');
+		}
+	}
+
+	load(user) {
+		this.user = user;
+
+		//Hide stats and history
+		document.getElementById("history").style.display = "none";
+		document.getElementById("stats").style.display = "none";
+		document.getElementById("chat").style.display = "flex";
+
+		//Load chat
+		this.loadChats();
+	}
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
 	const social = new Social();
@@ -306,6 +436,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 		const searchTerm = document.getElementById("search-box").value.trim();
 
 		if (searchTerm) {
+			// social.clearChat();
 			social.loadSearchResults(searchTerm);
 		}
 
@@ -318,7 +449,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 		const message = document.getElementById("chat-box").value.trim();
 
 		if (message) {
-			social.sendChat(message);
+			social.Chat.sendChat(message);
 		}
 	});
 
