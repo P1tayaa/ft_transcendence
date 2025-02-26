@@ -108,6 +108,30 @@ def get_chats(request):
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 
+@api_view(["GET"])
+@login_required
+def get_chat_history(request):
+    try:
+        user_id = request.GET.get("user_id")
+        if user_id:
+            try:
+                other_participant = User.objects.get(id = user_id)
+                chat = Chat.objects.filter(participants=request.user).filter(participants=other_participant).first()
+                if not chat:
+                    return Response({"error": "No chat history found with this user"}, status=404)
+
+                chat_data = request.user.profile.get_chat_history(
+                    chat.id,
+                    limit=int(request.GET.get("limit", 50)),
+                    offset=int(request.GET.get("offset", 0))
+                )
+                return Response(chat_data)
+            except User.DoesNotExist:
+                return Response({"error": "User not found"}, status=404)
+  except Exception as e:
+    return Response({"error": str(e)}, status=500)
+    
+
 api_view(["POST"])
 @login_required
 def mark_messages_read(request):
