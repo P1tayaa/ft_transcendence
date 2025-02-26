@@ -44,10 +44,10 @@ class Profile(models.Model):
         common_chats = self.user.chats.filter(participants=other_user)
         if common_chats.exists():
             return common_chats.first()
-        else:
-            new_chat = Chat.objects.create()
-            new_chat.participants.add(self.user, other_user)
-            return new_chat
+        # else:
+        #     new_chat = Chat.objects.create()
+        #     new_chat.participants.add(self.user, other_user)
+        #     return new_chat
 
     def get_all_chats(self):
         # get all chats with latest message

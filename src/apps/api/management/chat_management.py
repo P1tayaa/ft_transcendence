@@ -14,6 +14,7 @@ from django.db import transaction
 def add_message(request):
     try:
         content = request.data.get("content")
+        profile = request.user.profile
         recipient_id = request.data.get("recipient_id")
 
         if not content:
@@ -24,9 +25,11 @@ def add_message(request):
         with transaction.atomic():
             try:
                 recipient = User.objects.get(id=recipient_id)
-                chat_with_current_user = Chat.objects.filter(participants=request.user)
-                chats_with_both = chat_with_current_user.filter(participants=recipient)
-                chat = chat_with_both.first()
+                # recipient_profile = recipient.profile
+                chat = profile.get_chat_with(recipient_id)
+                # chat_with_current_user = Chat.objects.filter(participants=request.user)
+                # chats_with_both = chat_with_current_user.filter(participants=recipient)
+                # chat = chat_with_both.first()
 
                 if not chat:
                     chat = Chat.objects.create()
