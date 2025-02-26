@@ -29,6 +29,11 @@ class TournamentRoom(models.Model):
     def get_standings(self):
         return self.participant_scores.all().order_by('-wins', '-points')
 
+    @classmethod
+    def get_available_tournaments(cls):
+        with transaction.atomic():
+            return {cls.objects.select_related('config').filter(is_active=True, status='WAITING')}
+
     def join_tournament(self, player):
         # allow to join if not started and not full
         if self.status != 'WAITING':

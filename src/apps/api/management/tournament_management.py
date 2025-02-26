@@ -51,8 +51,8 @@ def get_tournament_data(request, tournament_id):
             'creator': tournament.creator.username,
             'max_participants': tournament.max_participants,
         },
-        'standings': tournament.get_standings(),
-        'status': tournament.get_tournament_status(),
+        **tournament.get_standings(),
+        **tournament.get_tournament_status(),
     })
 
 @login_required
@@ -76,3 +76,26 @@ def update_match_score(request, match_id):
         return JsonResponse({'status': 'success'})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+
+@login_required
+@api_view(["GET"])
+def list_tournaments(request):
+    available_tournaments =TournamentRoom.get_available_tournaments()
+
+    tournament_list = [{
+        'id': t.id,
+        'name': t.tournament_name,
+        'creator': t.creator.username,
+        'participants': t.participants.count(),
+        'max_participants': t.max_participants,
+        'created_at': t.created_at,
+        'config': {
+            'mode': t.config.mode,
+            'map_style': t.config.map_style,
+            'powerups_enabled': t.config.powerups_enabled
+        }
+    } for t in available_tournaments]
+
+    return JsonResponse({
+        'tournaments': tournament_list
+    })
