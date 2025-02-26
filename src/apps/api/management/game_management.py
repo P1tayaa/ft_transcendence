@@ -101,6 +101,27 @@ def create_game_room(request):
          }, status=500)
 
 
+@login_required
+@require_http_methods(["POST"])
+def clear_chat_data(request):
+    try:
+        with transaction.atomic():
+            chat_count = Chat.objects.count()
+
+            Chat.objects.all().delete()
+            return JsonResponse({
+                'status': 'success',
+                'message': 'All chats cleared successfully',
+                'deleted': {
+                    'chats': chat_count
+                }
+            })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Failed to clear game rooms: {str(e)}'
+        }, status=500)
+
 
 # @user_passes_test(lambda u: u.is_staff)  # Only allow staff users to clear rooms
 @login_required

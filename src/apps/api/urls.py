@@ -41,7 +41,8 @@ from .management.tournament_management import (
 from .management.game_management import (
     create_game_room,
     clear_game_rooms,
-    get_config_game_room
+    get_config_game_room,
+    clear_chat_data,
 )
 
 # here for API endpoints, pages are routed through templates
@@ -78,4 +79,5 @@ urlpatterns = [
     path('tournament/<int:tournament_id>/join', join_tournament, name="join_tournament"),
     path('tournament/<int:tournament_id>/get_data', get_tournament_data, name="get_tournament_data"),
     path('tournament/<int:match_id>/update_scores', update_match_score, name="update_match_scores"),
+    path('chat/clear', clear_chat_data, name="clear_chat_data"),
 ]
