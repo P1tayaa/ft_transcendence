@@ -15,21 +15,19 @@ import json
 from rest_framework.response import Response
 
 
-def serialize_user(current_user, user=None):
+def serialize_user(user_to_serialize, viewing_user=None):
     data = {
-        "id": current_user.id,
-        "username": current_user.username,
+        "id": user_to_serialize.id,
+        "username": user_to_serialize.username,
         "stats": {
-            "highscore": current_user.profile.highscore,
-            "most_recent_game_score": current_user.profile.most_recent_game_score,
+            "highscore": user_to_serialize.profile.highscore,
+            "most_recent_game_score": user_to_serialize.profile.most_recent_game_score,
         },
-        "avatar": current_user.profile.get_profile_picture_url(),
+        "avatar": user_to_serialize.profile.get_profile_picture_url(),
     }
 
-    if user and user != current_user:
-        data["is_friend"] = current_user.profile.is_friend(user.profile)
-    else:
-        data["is_friend"] = False
+    if viewing_user and viewing_user != user_to_serialize:
+        data["is_following"] = viewing_user.profile.is_following(user_to_serialize)
 
     return data
 
@@ -223,112 +221,110 @@ def fetch_matching_usernames(request):
         )
 
 
+
 @api_view(["POST"])
-def add_friend(request):
+def follow_user(request):
     try:
-        friend_id = request.data.get("friend_id")
-        print("Received friend_id:", friend_id, "type:", type(friend_id))  # Debug print
-
-        if not friend_id:
-            return Response({"error": "friend username is required"}, status=400)
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return Response({"error": "user_id is required"}, status=400)
         try:
-            friend_id = int(friend_id)
+            user_id = int(user_id)
         except ValueError:
-            return Response({"success": False, "error": "Invalid friend id format"}, status=400)
+            return Response({"success": False, "error": "Invalid user id format"}, status=400)
 
         try:
-            friend_user = User.objects.get(id=friend_id)
+            user_to_follow = User.objects.get(user_id)
         except User.DoesNotExist:
-            return Response({"error": f"User '{friend_id}' not found"}, status=404)
+            return Response({"error": f"User not found"}, status=404)
 
-        if friend_id == request.user.id:
-            return Response(
-                {"success": False, "error": "Cannot add yourself as friend"}, status=400
-            )
+        if user_id == request.user.id:
+            return Response({"error": "Cannot follow yourself"}, status=400)
 
-        friend_profile = friend_user.profile
-        profile = request.user.profile
-
-        if profile.is_friend(friend_profile):
-            return Response(
-                {
-                    "success": False,
-                    "error": f"Already friends with {friend_user.username}",
-                },
-                status=400,
-            )
-
-        friendship = profile.add_friend(friend_profile)
-
-        return Response(
-            {
-                "message": f"Successfully added {friend_user.username} as friend",
-                "friendship_id": friendship.id,
-            },
-            status=201,
-        )
-
-    except User.DoesNotExist:
-        return Response({"error": "User not found"}, status=404)
+        follower_profile = request.user.profile
+        followed_profile = user_to_follow.profile
+        if follower_profile.is_following(followed_profile):
+            return Response({"success": False, "error": f"Already following {user_to_follow.username}"}, status=400)
+        follow = follower_profile.follow(followed_profile)
+        return Response({
+            "success": True,
+            "message": f"Successfully followed {user_to_follow.username}",
+            "follow_id": follow.id
+        }, status = 201)
     except Exception as e:
         return Response({"error": str(e)}, status=400)
 
-
 @api_view(["GET"])
 @login_required
-def get_friends(request):
+def get_following(request):
     try:
         profile = request.user.profile
-        friendships = profile.get_friends()
+        following = profile.get_following()
+        following_list = []
 
-        friend_list = []
+        for follow in following:
+            following_list.append({**serialize_user(follow.followed.user)})
 
-        for friendship in friendships:
-            friend_list.append({
-                    **serialize_user(friendship.friend.user, request.user)
-               })
-        return Response({"success": True, "friends": friend_list})
+        return Response({
+            "success": True,
+            "following": following_list
+        })
     except Exception as e:
         return Response({"success": False, "error": str(e)}, status=500)
 
+@api_view(["GET"])
+@login_required
+def get_followers(request):
+    try:
+        profile = request.user.profile
+        followers = profile.get_followers()
+        followers_list = []
+
+        for follow in followers:
+            followers_list.append({**serialize_user(follow.followed.user)})
+
+        return Response({
+            "success": True,
+            "followers": followers_list
+        })
+    except Exception as e:
+        return Response({"success": False, "error": str(e)}, status=500)
 
 @api_view(["POST"])
 @login_required
-def remove_friend(request):
+def unfollow_user(request):
     try:
-        friend_id = request.data.get("friend_id")
-        if not friend_id:
-            return Response({"success": False, "error": "friend id is required"}, status=400)
-        
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return Response({"success": False, "error": "user_id is required"}, status=400)
+
         try:
-            friend_id = int(friend_id)
+            user_id = int(user_id)
         except ValueError:
-            return Response({"success": False, "error": "Invalid friend id format"}, status=400)
-            
+            return Response({"success": False, "error": "Invalid user id format"}, status=400)
+
         try:
-            friend_user = User.objects.get(id=friend_id)
+            user_to_unfollow = User.objects.get(user_id)
         except User.DoesNotExist:
-            return Response({"success": False, "error": f"User not found"}, status=404)
-            
-        friend_profile = friend_user.profile
-        profile = request.user.profile
-        
-        # delete() returns (number_deleted, dictionary_with_deletions)
-        deleted_count, _ = profile.remove_friend(friend_profile)  # Unpack the tuple
-        
+            return Response({"error": f"User not found"}, status=404)
+
+        follower_profile = request.user.profile
+        followed_profile = user_to_unfollow.profile
+
+        deleted_count, _ = follower_profile.unfollow_user(followed_profile)
         if deleted_count > 0:
             return Response({
                 "success": True,
-                "message": f"Successfully removed {friend_user.username} from friends"
+                "message": f"Successfully unfollowed {user_to_unfollow.username}"
             })
         else:
             return Response({
                 "success": False,
-                "error": f"No friendship found with {friend_user.username}"
+                "error": f"You are not following {user_to_follow.username}"
             }, status=404)
-            
     except Exception as e:
         return Response({"success": False, "error": str(e)}, status=500)
+
 
 
 @api_view(["POST"])

@@ -26,7 +26,7 @@ def add_message(request):
             try:
                 recipient = User.objects.get(id=recipient_id)
                 # recipient_profile = recipient.profile
-                chat = profile.get_chat_with(recipient_id)
+                chat = profile.get_chat_with(recipient)
                 # chat_with_current_user = Chat.objects.filter(participants=request.user)
                 # chats_with_both = chat_with_current_user.filter(participants=recipient)
                 # chat = chat_with_both.first()

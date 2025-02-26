@@ -23,31 +23,29 @@ class Profile(models.Model):
             return self.profile_picture.url
         return f"{settings.MEDIA_URL}default_profile.png"
 
-    def add_friend(self, friend_profile):
-        return Friendship.objects.create(profile=self, friend=friend_profile)
+    def follow_user(self, profile):
+        return Follow.objects.create(follower=self, followed=profile)
 
-    def remove_friend(self, friend_profile):
-        return self.friendships.filter(friend=friend_profile).delete()
+    def unfollow_user(self, profile):
+        return self.following.filter(followed=profile).delete()
 
-    def is_friend(self, friend_profile):
-        return (self.friendships.filter(friend=friend_profile).exists()) # don't think that's what we want but should check
-            # or friend_profile.friendships.filter(friend=self).exists())
+    def is_following(self, profile):
+        return self.following.filter(followed=profile).exists()
 
-    def get_friends(self):
-        return self.friendships.all()
+    def get_following(self):
+        return self.following.all()
+
+    def get_followers(self):
+        return self.followers.all()
 
     def get_scores(self):
         return self.scores.all()
 
     def get_chat_with(self, other_user):
-        # get or create chat with other_user
         common_chats = self.user.chats.filter(participants=other_user)
         if common_chats.exists():
             return common_chats.first()
-        # else:
-        #     new_chat = Chat.objects.create()
-        #     new_chat.participants.add(self.user, other_user)
-        #     return new_chat
+        return None
 
     def get_all_chats(self):
         # get all chats with latest message
@@ -150,18 +148,12 @@ class PlayerScore(models.Model):
         unique_together = ['game', 'profile']
 
 
-class Friendship(models.Model):
-    # friend invite initiator
-    profile = models.ForeignKey(
-        Profile, on_delete=models.CASCADE, related_name="friendships"
-    )
-    # the friend
-    friend = models.ForeignKey(Profile, on_delete=models.CASCADE)
+class Follow(models.Model):
+    follower = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="following")
+    followed = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="followers")
     created_at = models.DateTimeField(auto_now_add=True)
-
     class Meta:
-        # can't be friends with same person twice
-        unique_together = ["profile", "friend"]
+        unique_together = ["follower", "followed"]
 
 
 class Chat(models.Model):
