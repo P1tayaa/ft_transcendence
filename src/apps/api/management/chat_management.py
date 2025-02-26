@@ -26,7 +26,7 @@ def add_message(request):
             try:
                 recipient = User.objects.get(id=recipient_id)
                 # recipient_profile = recipient.profile
-                chat = profile.get_chat_with(recipient_id)
+                chat = profile.get_chat_with(recipient)
                 # chat_with_current_user = Chat.objects.filter(participants=request.user)
                 # chats_with_both = chat_with_current_user.filter(participants=recipient)
                 # chat = chat_with_both.first()
@@ -38,7 +38,7 @@ def add_message(request):
             except User.DoesNotExist:
                 return Response({"success": False, "error": "Recipient not found"}, status=404)
 
-           message = chat.messages.create(
+            message = chat.messages.create(
                 sender = request.user,
                 content = content,
                 is_read = False,
@@ -122,8 +122,8 @@ def get_chat_history(request):
                 return Response(chat_data)
             except User.DoesNotExist:
                 return Response({"error": "User not found"}, status=404)
-  except Exception as e:
-    return Response({"error": str(e)}, status=500)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
     
 
 api_view(["POST"])
