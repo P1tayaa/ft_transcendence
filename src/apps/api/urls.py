@@ -19,6 +19,7 @@ from .management.user_management import (
 from .management.chat_management import (
     add_message,
     get_chats,
+    get_chat_history,
     mark_messages_read,
     update_typing_status,
 )
@@ -65,7 +66,7 @@ urlpatterns = [
     path("add_message/", add_message, name="add_message"),
     path("profile/picture/", upload_profile_picture, name="upload_profile_picture"),
     path("profile/picture/delete", delete_profile_picture, name="delete_profile_picture"),
-    path("chats/", get_chats, name="get_chats"),
+    path("chats/", get_chat_history, name="get_chats"),
     path("chats/message/", add_message, name="add_message"),
     path("chats/message/typing", update_typing_status, name="update_typing"),
     path("chats/message/read", mark_messages_read, name="mark_messages_read"),
