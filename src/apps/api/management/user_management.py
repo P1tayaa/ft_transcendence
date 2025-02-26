@@ -15,21 +15,19 @@ import json
 from rest_framework.response import Response
 
 
-def serialize_user(current_user, user=None):
+def serialize_user(user_to_serialize, viewing_user=None):
     data = {
-        "id": current_user.id,
-        "username": current_user.username,
+        "id": user_to_serialize.id,
+        "username": user_to_serialize.username,
         "stats": {
-            "highscore": current_user.profile.highscore,
-            "most_recent_game_score": current_user.profile.most_recent_game_score,
+            "highscore": user_to_serialize.profile.highscore,
+            "most_recent_game_score": user_to_serialize.profile.most_recent_game_score,
         },
-        "avatar": current_user.profile.get_profile_picture_url(),
+        "avatar": user_to_serialize.profile.get_profile_picture_url(),
     }
 
-    # if user and user != current_user:
-    #     data["is_friend"] = current_user.profile.is_friend(user.profile)
-    # else:
-    #     data["is_friend"] = False
+    if viewing_user and viewing_user != user_to_serialize:
+        data["is_following"] = viewing_user.profile.is_following(user_to_serialize)
 
     return data
 
