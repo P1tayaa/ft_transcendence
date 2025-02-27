@@ -297,8 +297,6 @@ class Lobby(models.Model):
     creator = models.ForeignKey(User, related_name='created_lobbies', on_delete=models.SET_NULL, null=True)
     description = models.TextField(blank=True)
 
-    active_game = models.ForeignKey(GameRoom, related_name='connected_lobby', on_delete=models.SET_NULL, null=True, blank=True)
-
     class Meta:
         verbose_name_plural = "Lobbies"
 
@@ -353,14 +351,6 @@ class Lobby(models.Model):
     def get_active_players(self):
         return self.lobby_players.filter(is_active=True).select_related('player')
 
-    def connect_to_game(self, game_room):
-        self.active_game = game_room
-        self.save()
-
-    def disconnect_from_game(self):
-        self.active_game = None
-        self.save()
-
     @classmethod
     def get_available_lobbies(cls):
         return cls.objects.filter(status='OPEN')
@@ -376,7 +366,6 @@ class Lobby(models.Model):
             'creator': self.creator.username if self.creator else None,
             'description': self.description,
             'player_count': active_players.count(),
-            'active_game': self.active_game.id if self.active_game else None,
             'created_at': self.created_at,
             'players': [
                 {

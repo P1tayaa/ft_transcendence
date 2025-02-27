@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
+from channels.layers import get_channel_layer
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -8,6 +9,7 @@ import json
 from rest_framework.decorators import api_view
 from apps.game.models.lobby import Lobby, LobbyPlayer, LobbyChat
 from apps.game.models.game import GameRoom, GameConfig
+from asgiref.sync import async_to_sync
 
 @login_required
 @api_view(["POST"])
@@ -21,6 +23,7 @@ def create_lobby(request):
             description=data.get('description', '')
         )
         
+        # creator automatically joins
         lobby.add_player(request.user)
         
         return JsonResponse({
@@ -41,6 +44,19 @@ def join_lobby(request, lobby_id):
 
     try:
         lobby_player = lobby.add_player(request.user)
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f'lobby_{lobby_id}',
+            {
+                'type': 'player_joined',
+                'player': {
+                    'id': request.user.id,
+                    'username': request.user.username,
+                    'is_ready': False,
+                    'is_host': request.user == lobby.creator
+                }
+            }
+        )
         return JsonResponse({
             'status': 'success',
             'lobby': lobby.get_lobby_state()
@@ -58,6 +74,17 @@ def leave_lobby(request, lobby_id):
     
     try:
         lobby.remove_player(request.user)
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f'lobby_{lobby_id}',
+            {
+                'type': 'player_left',
+                'player': {
+                    'id': request.user.id,
+                    'username': request.user.username
+                }
+            }
+        )
         return JsonResponse({'status': 'success'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
@@ -70,6 +97,19 @@ def set_player_ready(request, lobby_id):
     try:
         all_ready = lobby.set_player_ready(request.user)
         
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f'lobby_{lobby_id}',
+            {
+                'type': 'player_ready_change',
+                'player': {
+                    'id': request.user.id,
+                    'username': request.user.username,
+                    'is_ready': True
+                },
+                'all_ready': all_ready
+            }
+        )
         response_data = {
             'status': 'success',
             'all_ready': all_ready,
@@ -116,16 +156,27 @@ def list_lobbies(request):
 
 @login_required
 @api_view(["POST"])
-def start_game_from_lobby(request, lobby_id):
+def notify_game_created(request, lobby_id):
     lobby = get_object_or_404(Lobby, id=lobby_id)
 
     if request.user != lobby.creator:
-        return JsonResponse({'status': 'error', 'message': 'Only the lobby creator can start a game'}, status=403)
+        return JsonResponse({'status': 'error', 'message': 'Only the lobby creator can create games'}, status=403)
 
     try:
         data = json.loads(request.body)
-        config_data = data.get('config')
+        game_data = data.get('game')
 
-        if not config_data:
-            return JsonResponse({'status': 'error', 'message': 'No game configuration provided'}, status=400)
-    
+        if not game_data or 'room_name' not in game_data:
+            return JsonResponse({'status': 'error', 'message': 'Invalid game data'}, status=400)
+
+        channel_layer =get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f'lobby_{lobby_id}',
+            {
+                'type': 'game_created',
+                'game': game_data
+            }
+        )
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
