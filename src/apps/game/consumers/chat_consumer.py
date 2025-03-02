@@ -14,23 +14,24 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_add(self.user_group, self.channel_name)
         await self.accept()
 
-        async def disconnect(self):
-            if hasattr(self, "user_group"):
-                await self.channel_layer.group_discard(self.user_group, self.channel_name)
+
+    async def disconnect(self):
+        if hasattr(self, "user_group"):
+            await self.channel_layer.group_discard(self.user_group, self.channel_name)
 
 
-        async def new_message(self, event):
-            await self.send_json({
-                 "type": "new_message",
-                 "message": event["message"],
-                 "chat": event["chat"]
+    async def new_message(self, event):
+        await self.send_json({
+             "type": "new_message",
+             "message": event["message"],
+             "chat": event["chat"]
+         })
+
+    async def typing_status(self, event):
+        await self.send_json({
+                 "type": "typing_status",
+                 "user": event["user"],
+                 "chat_id": event["chat_id"],
+                 "is_typing": event["is_typing"]
              })
-
-        async def typing_status(self, event):
-            await self.send_json({
-                     "type": "typing status",
-                     "user": event["user"],
-                     "chat_id": event["chat_id"],
-                     "is_typing": event["is_typing"]
-                 })
             

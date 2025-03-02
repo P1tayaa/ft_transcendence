@@ -25,11 +25,7 @@ def add_message(request):
         with transaction.atomic():
             try:
                 recipient = User.objects.get(id=recipient_id)
-                # recipient_profile = recipient.profile
                 chat = profile.get_chat_with(recipient)
-                # chat_with_current_user = Chat.objects.filter(participants=request.user)
-                # chats_with_both = chat_with_current_user.filter(participants=recipient)
-                # chat = chat_with_both.first()
 
                 if not chat:
                     chat = Chat.objects.create()
@@ -126,7 +122,7 @@ def get_chat_history(request):
         return Response({"error": str(e)}, status=500)
     
 
-api_view(["POST"])
+@api_view(["POST"])
 @login_required
 def mark_messages_read(request):
     try:
@@ -152,7 +148,7 @@ def update_typing_status(request):
         if not chat_id:
             return Response({"success": False, "error": "Chat ID required"}, status=400)
 
-        chat = Chat.objects.get(id=chat_id, participant=request.user)
+        chat = Chat.objects.get(id=chat_id, participants=request.user)
 
         #notify participants
         channel_layer = get_channel_layer()
