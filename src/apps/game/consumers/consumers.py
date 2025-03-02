@@ -168,7 +168,7 @@ class GameConsumer(BaseConsumer):
         elif message_type == 'set_paddle_size':
             await self.handle_paddle_size(data)
         elif message_type == 'toggle_powerup':
-            await self.handle_toggle_powerup(data)
+            await self.handle_toggle_powerup()
         elif message_type == 'update_score':
             await self.handle_update_score(data)
         elif message_type == 'reset_round':
@@ -189,6 +189,12 @@ class GameConsumer(BaseConsumer):
             self.game_state['pongLogic']['ballSpeed'] = {'x': 0, 'y': 0}
             self.game_state['pongLogic']['lastWinner'] = data['lastWinner']
             self.game_state['pongLogic']['lastLoser'] = data['lastLoser']
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'reset_round'
+                }
+            )
             await self.broadcast_game_state()
         
 
@@ -365,6 +371,8 @@ class GameConsumer(BaseConsumer):
     async def started_game(self, event):
         await self.send(text_data = json.dumps(event))
     async def failed_to_start_game(self, event):
+        await self.send(text_data = json.dumps(event))
+    async def reset_round(self, event):
         await self.send(text_data = json.dumps(event))
 
     async def player_ready(self, event):
