@@ -193,7 +193,7 @@ class GameRoom(BaseGameRoom):
         with transaction.atomic():
             current_players = list(self.player_states.select_for_update().filter(is_active=True))
 
-            if len(current_players) > self.config.player_count:
+            if len(current_players) >= self.config.player_count:
                 raise ValidationError("Game Room is full")
 
             taken_sides = {p.side for p in current_players}
