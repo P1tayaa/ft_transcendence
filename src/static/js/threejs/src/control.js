@@ -2,7 +2,7 @@
 
 import { Mode, PlayerSide } from "./pongLogic/setting.js";
 
-const inputKeys = {
+export const inputKeys = {
   [PlayerSide.LEFT]: { up: 'w', down: 's' },
   [PlayerSide.RIGHT]: { up: 'k', down: 'i' },
   [PlayerSide.TOP]: { up: 'x', down: 'c' },
@@ -19,12 +19,13 @@ export default class ControlHandler {
   }
 
   async Init(socket) {
+    console.log(this.settings.mode);
     // Initialize paddle speeds for active players
-    if (this.settings.justMePaddle == Mode.LOCAL) {
+    if (this.settings.mode === Mode.LOCAL) {
       this.settings.playerSide.forEach(side => {
         this.paddleSpeeds[side] = 0;
       });
-    } else if (this.settings.Mode == Mode.LOCALS_SOLO) {
+    } else if (this.settings.mode === Mode.LOCALS_SOLO) {
       // find the not bots and make it the justMePaddle
       this.settings.playerSide.forEach(side => {
         this.paddleSpeeds[side] = 0;

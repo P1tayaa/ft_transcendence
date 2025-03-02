@@ -168,7 +168,7 @@ class GameConsumer(BaseConsumer):
         elif message_type == 'set_paddle_size':
             await self.handle_paddle_size(data)
         elif message_type == 'toggle_powerup':
-            await self.handle_toggle_powerup()
+            await self.handle_toggle_powerup(data)
         elif message_type == 'update_score':
             await self.handle_update_score(data)
         elif message_type == 'reset_round':

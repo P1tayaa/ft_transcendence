@@ -27,6 +27,22 @@ export const PlayerSide = {
   TOP: "top",
 };
 
+
+export function strToPlayerSide(str) {
+  if (str === "left") {
+    return PlayerSide.LEFT;
+  } else if (str === "right") {
+    return PlayerSide.RIGHT;
+  } else if (str === "bottom") {
+    return PlayerSide.BOTTOM;
+  } else if (str === "top") {
+    return PlayerSide.TOP;
+  } else {
+    console.error("Invalid position value:", this.myPos);
+  }
+  console.log(str);
+}
+
 export function intToPlayerSide(last_winner) {
   const winnerSide =
     last_winner === 1 ? PlayerSide.LEFT :
@@ -70,18 +86,25 @@ export async function get_settings(game_id) {
 
 export class Setting {
   constructor(setting_json) {
+    console.log(setting_json);
     // Parse the JSON and fill in the settings
     this.mode = this.parseMode(setting_json.mode);
+    console.log("this.mode", this.mode);
     this.serverurl = setting_json.serverurl || "http://localhost:8000/api/";
-    this.powerup = setting_json.powerup == "true"; // Convert to boolean
+    this.powerup = setting_json.powerup; // Convert to boolean
+    console.log("this.powerup", this.powerup);
     this.powerupList = this.parsePoweruplist(setting_json.poweruplist);
-    this.playercount = parseInt(setting_json.playercount) || 2; // Default to 2 players
+    this.playercount = parseInt(setting_json.playerCount); // Default to 2 players
     this.mapStyle = this.parseMapStyle(setting_json["map_style"]);
     this.playerSide = this.parseMultipleSides(setting_json.playerside);
-    this.bots = setting_json.bots == "true"; // Convert to boolean
+    this.bots = setting_json.bots; // Convert to boolean
+    console.log("this.bots", this.bots);
     this.botsSide = this.parseMultipleSides(setting_json.botsSide);
-    this.host = setting_json.host == "true";
-    this.isSpectator = setting_json.isSpectator == "true";
+    console.log("this.botsSide", this.botsSide);
+    this.host = setting_json.host;
+    console.log("this.host", this.host);
+    this.isSpectator = setting_json.isSpectator;
+    console.log("this.isSpectator", this.isSpectator);
     this.justMePaddle = null;
     this.paddleSize = {};
     this.paddleLoc = {};
@@ -93,6 +116,15 @@ export class Setting {
       }
       this.paddleLoc[side] = 0;
     });
+    this.botsSide.forEach(side => {
+      if (side === PlayerSide.RIGHT || side === PlayerSide.LEFT) {
+        this.paddleSize[side] = { x: 1, y: 8 };
+      } else {
+        this.paddleSize[side] = { x: 8, y: 1 };
+      }
+      this.paddleLoc[side] = 0;
+    });
+
 
   }
 

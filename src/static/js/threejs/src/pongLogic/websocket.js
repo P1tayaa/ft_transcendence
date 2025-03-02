@@ -4,7 +4,7 @@
 // update_game
 // consumers.py is where you can find all
 
-import { intToPlayerSide, PlayerSide } from './setting.js'
+import { intToPlayerSide, strToPlayerSide, PlayerSide } from './setting.js'
 
 
 class MyWebSocket {
@@ -12,6 +12,7 @@ class MyWebSocket {
     this.socket = null;
     this.host;
     this.isSpectator;
+    this.Connected = false;
 
     this.serverState = null;
     this.winner = "";
@@ -42,29 +43,12 @@ class MyWebSocket {
         if (this.myPos !== null) {
           clearInterval(intervalId);
           resolve(this.myPos);
-        } else {
-          socket.socket.send(JSON.stringify({ type: "which_paddle" }));
-
         }
       }, 100);
     });
 
 
-
-    console.log(this.myPos);
-    if (this.myPos === "left") {
-      this.myPosStruc = PlayerSide.LEFT;
-    } else if (this.myPos === "right") {
-      this.myPosStruc = PlayerSide.RIGHT;
-    } else if (this.myPos === "bottom") {
-      this.myPosStruc = PlayerSide.BOTTOM;
-    } else if (this.myPos === "top") {
-      this.myPosStruc = PlayerSide.TOP;
-    } else {
-      console.error("Invalid position value:", this.myPos);
-    }
-    console.log(this.myPosStruc);
-
+    this.myPosStruc = strToPlayerSide(this.myPos);
     return this.myPosStruc;
   }
 
@@ -81,20 +65,54 @@ class MyWebSocket {
     return null; // Return null if no data is available yet
   }
 
-
-  sendPaddlePosition(paddleInput, paddleKey, rotation) {
+  sendPaddlePosition(paddleInput, settings, rotation) {
     if (!rotation) {
       rotation = 0;
     }
-
     let paddleInfo = {
       type: 'paddle_move',
-      position: 4,
+      position: paddleInput[this.myPosStruc] + settings.paddleLoc[this.myPosStruc].position,
       rotation: rotation,
     }
-    // console.log(paddleInput)
+    // console.log(paddleInfo.position);
+
     this.socket.send(JSON.stringify(paddleInfo))
   }
+
+  getBallPosition() {
+    if (this.serverState && this.serverState.settings) {
+      return this.serverState.settings.ballSize;
+    }
+    return null; // Return null if no data is available yet
+  }
+  sendBallVelocity(ballPos) {
+    const ballVelocityRequest = {
+      type: "set_ball_velocity",
+      x: ballPos.x,
+      y: ballPos.y
+    }
+    console.log(ballVelocityRequest);
+    this.socket.send(JSON.stringify(ballVelocityRequest));
+  }
+
+  resetRound(pongLogic) {
+
+    let request = {
+      type: "reset_round",
+      lastWinner: intToPlayerSide(pongLogic.lastWinner),
+      lastLoser: "",
+    }
+    if (!pongLogic.lastLoser) {
+      request.lastLoser = intToPlayerSide(3 - pongLogic.lastWinner);
+    } else {
+      request.lastLoser = intToPlayerSide(pongLogic.lastWinner);
+
+    }
+    console.log(request)
+    this.socket.send(JSON.stringify(request));
+  }
+
+
 
   update(pongLogic, scores, settings, powerUps) {
     // if (this.host) {
@@ -132,6 +150,7 @@ class MyWebSocket {
     // } else {
     // If this client is not the host, overwrite local values with server values
     if (this.serverState) {
+      pongLogic.ballPos = this.serverState.pongLogic.ballPos;
       pongLogic.ballSpeed = this.serverState.pongLogic.ballSpeed;
       pongLogic.ballSize = this.serverState.pongLogic.ballSize;
       pongLogic.lastWinner = this.serverState.pongLogic.lastWinner;
@@ -144,13 +163,14 @@ class MyWebSocket {
       if (this.serverState.settings.paddleLoc)
         settings.paddleLoc = this.serverState.settings.paddleLoc;
       // settings.paddleLoc = new Map(Object.entries(this.serverState.settings.paddleLoc));
-      if (this.serverState.scores) {
-        console.log("-------- was send score")
-        scores.scores = this.serverState.scores;
+      if (this.serverState.score) {
+        // console.log("-------- was send score")
+        scores.scores = this.serverState.score;
+        // console.log(scores.scores)
       }
       if (settings.powerup)
         powerUps = this.serverState.powerUps;
-      console.log(settings.paddleSize, settings.paddleLoc, scores.scores)
+      // console.log(settings.paddleSize, settings.paddleLoc, scores.scores)
     }
     // }
   }
@@ -173,6 +193,15 @@ class MyWebSocket {
 
   }
 
+  async updateScore(pongLogic) {
+    const request = {
+      type: 'update_score',
+      scoring_position: intToPlayerSide(pongLogic.lastWinner)
+    }
+    this.socket.send(JSON.stringify(request))
+    console.log("send you this: ", request)
+  }
+
   async startWebSocket(roomName) {
     console.log("is this called yet");
     // const roomName = websocketData.room_name;
@@ -188,13 +217,14 @@ class MyWebSocket {
 
 
       this.socket.onopen = () => {
+        this.Connected = true;
         console.log('Connected to WebSocket');
         resolve();
       };
 
       this.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        console.log("message receive :", event.data)
+        // console.log("message receive :", event.data)
         // if (data.type === "gameState") {
         //   this.serverState = data; // Store the received game state
         // } else
@@ -217,10 +247,14 @@ class MyWebSocket {
           // console.log(data.state);
           console.log("failed_to_start_game", data.checks);
           // console.log(data.config_player_count);
-        } else if (data.type === 'is_all_players_ready') {
+        } else if (data.type === 'all_players_ready') {
 
-          console.log('is_all_players_ready:', data.value);
+          console.log('all_players_ready:', data.value);
           this.allPlayerReady = data.value;
+        } else if (data.type === "error") {
+          console.error(event.data);
+        } else if (data.type === "errors") {
+          console.error(event.data);
         }
 
       };
@@ -235,7 +269,7 @@ class MyWebSocket {
 
     });
 
-    this.socket.send(JSON.stringify({ type: "which_paddle" }));
+    // this.socket.send(JSON.stringify({ type: "which_paddle" }));
     console.log("finished with connecting to websocket ");
   }
 

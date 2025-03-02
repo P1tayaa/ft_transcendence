@@ -12,34 +12,7 @@ const assetsPath = "http://localhost:8000/static/glfw/";
 
 import { loadClassicMap, loadBathMap, loadCircleMap, loadRectangleMap } from "./init/loadMap.js";
 import { spawnPadles } from './init/loadPadle.js';
-
-
-
-// src/init/loadingScreen.js
-export function showLoadingScreen() {
-  const loadingDiv = document.createElement('div');
-  loadingDiv.id = 'loading-screen';
-  loadingDiv.style.position = 'fixed';
-  loadingDiv.style.top = '0';
-  loadingDiv.style.left = '0';
-  loadingDiv.style.width = '100%';
-  loadingDiv.style.height = '100%';
-  loadingDiv.style.display = 'flex';
-  loadingDiv.style.justifyContent = 'center';
-  loadingDiv.style.alignItems = 'center';
-  loadingDiv.style.backgroundColor = '#000';
-  loadingDiv.style.color = '#fff';
-  loadingDiv.style.fontSize = '2em';
-  loadingDiv.innerText = 'Loading...';
-  document.body.appendChild(loadingDiv);
-}
-
-export function hideLoadingScreen() {
-  const loadingDiv = document.getElementById('loading-screen');
-  if (loadingDiv) {
-    loadingDiv.remove();
-  }
-}
+import { showLoadingScreen, hideLoadingScreen, updateLoadingScreen } from "./style/intro.js"
 
 
 export default class Init {
@@ -90,6 +63,7 @@ export default class Init {
   }
 
   countAssetToLoad() {
+    console.log(this.settings.playercount);
     if (this.settings.playercount == 2) {
       this.totalAssets = 2 + 2;
     } else if (this.settings.playercount == 4) {
@@ -111,16 +85,35 @@ export default class Init {
   }
 
   async waitForGameStart() {
-    while (this.pongLogic.socket.serverState === null) {
+    while (!this.pongLogic.socket.allPlayerReady) {
       await new Promise(resolve => setTimeout(resolve, 100));
-      if (this.pongLogic.socket.allPlayerReady) {
-        this.pongLogic.socket.tryStartGame()
-      } else {
-        this.pongLogic.socket.askAllReady();
-      }
     }
+    this.pongLogic.socket.tryStartGame()
     console.log("Game has started!");
   };
+
+  async startUpdateLoadingLoop(intervalTime = 100) {
+    const intervalId = setInterval(() => {
+
+
+      if (this.settings.mode === Mode.NETWORKED) {
+        let sides = [];
+        if (this.pongLogic.socket.myPosStruc) {
+          sides[0] = this.pongLogic.socket.myPosStruc;
+        }
+        updateLoadingScreen(this, sides, this.pongLogic.socket);
+      }
+      else {
+        updateLoadingScreen(this, this.settings.playerSide);
+      }
+      if (this.doneLoadingAssets) {
+        clearInterval(intervalId);
+        return;
+      }
+    }, intervalTime);
+
+    return intervalId;
+  }
 
 
 
@@ -131,22 +124,28 @@ export default class Init {
       this.allPower = new AllPowerUp();
     this.countAssetToLoad();
     await this.pongLogic.initialize(this.settings, roomName);
+    this.startUpdateLoadingLoop();
     this.controlHandler = new ControlHandler(this.settings);
+    this.startUpdateLoadingLoop();
     await this.controlHandler.Init(this.pongLogic.socket);
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new Score(this.gameScene.getScene(), this.settings.playerSide);
     this.loadAssets(() => {
       console.log("assets finsihed loading ?")
       this.doneLoadingAssets = true;
-
-      this.pongLogic.socket.player_ready();
+      if (this.settings.mode === Mode.NETWORKED) {
+        this.pongLogic.socket.player_ready();
+      } else {
+        hideLoadingScreen();
+      }
       this.lightManager.setupLights();
     });
 
-    if (this.settings.mode === Mode.NETWORKED)
+    if (this.settings.mode === Mode.NETWORKED) {
       await this.waitForGameStart();
+      hideLoadingScreen();
+    }
 
-    hideLoadingScreen();
   }
 }
 
