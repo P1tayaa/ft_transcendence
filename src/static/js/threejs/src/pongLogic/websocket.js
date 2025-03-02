@@ -74,7 +74,7 @@ class MyWebSocket {
       position: paddleInput[this.myPosStruc] + settings.paddleLoc[this.myPosStruc].position,
       rotation: rotation,
     }
-    console.log(paddleInfo.position);
+    // console.log(paddleInfo.position);
 
     this.socket.send(JSON.stringify(paddleInfo))
   }
@@ -163,9 +163,10 @@ class MyWebSocket {
       if (this.serverState.settings.paddleLoc)
         settings.paddleLoc = this.serverState.settings.paddleLoc;
       // settings.paddleLoc = new Map(Object.entries(this.serverState.settings.paddleLoc));
-      if (this.serverState.scores) {
-        console.log("-------- was send score")
-        scores.scores = this.serverState.scores;
+      if (this.serverState.score) {
+        // console.log("-------- was send score")
+        scores.scores = this.serverState.score;
+        // console.log(scores.scores)
       }
       if (settings.powerup)
         powerUps = this.serverState.powerUps;
@@ -190,6 +191,15 @@ class MyWebSocket {
     }
     this.socket.send(JSON.stringify(playerRequest))
 
+  }
+
+  async updateScore(pongLogic) {
+    const request = {
+      type: 'update_score',
+      scoring_position: intToPlayerSide(pongLogic.lastWinner)
+    }
+    this.socket.send(JSON.stringify(request))
+    console.log("send you this: ", request)
   }
 
   async startWebSocket(roomName) {

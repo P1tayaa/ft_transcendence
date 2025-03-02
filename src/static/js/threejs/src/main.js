@@ -44,7 +44,6 @@ class main {
   }
   animate() {
     if (this.init.doneLoadingAssets === false) {
-      // Assets are still loading; skip rendering
       return;
     }
     if (this.init.settings.mode === Mode.NETWORKED) {
@@ -55,11 +54,17 @@ class main {
       }
     }
     if (this.init.settings.mode === Mode.NETWORKED) {
-      const newBallPos = { x: this.pongLogic.ballPos.x, y: this.pongLogic.ballPos.y, z: 0 };
-      this.gameScene.moveAsset('Ball', newBallPos);
+      if (!this.init.settings.host) {
+        const newBallPos = lerpVectors(this.gameScene.getAssetPossition('Ball'), { x: this.pongLogic.ballPos.x, y: this.pongLogic.ballPos.y, z: 0 }, 0);
+        this.gameScene.moveAsset('Ball', newBallPos);
+      } else {
+        const newBallPos = { x: this.pongLogic.ballPos.x, y: this.pongLogic.ballPos.y, z: 0 };
+        // console.log(newBallPos)
+        this.gameScene.moveAsset('Ball', newBallPos);
+      }
     } else { }
 
-    if (this.init.settings.powerup) {
+    if (this.init.settings.powerup && this.init.settings.mode !== Mode.NETWORKED) {
       this.allPowers.update(this.gameScene, this.pongLogic);
     }
 
@@ -71,19 +76,22 @@ class main {
     const input = this.init.controlHandler.getPaddleSpeeds();
 
     this.pongLogic.update(input, this.gameScene);
-    let Paddle2Win = 0;
-    let Paddle1Win = 0;
-    let Ball_Reset = false;
+    // let Paddle2Win = 0;
+    // let Paddle1Win = 0;
+    // let Ball_Reset = false;
 
-    if (this.pongLogic.paddleCollided) {
-      Paddle2Win = 0;
-      Paddle1Win = 0;
-      Ball_Reset = false;
-    }
+    // if (this.pongLogic.paddleCollided) {
+    //   Paddle2Win = 0;
+    //   Paddle1Win = 0;
+    //   Ball_Reset = false;
+    // }
 
-    if (this.pongLogic.resetBall && this.init.settings.host) {
+    if (this.pongLogic.resetBall === true && this.init.settings.host === true) {
       console.log("this.pongLogic.resetBall", this.pongLogic.resetBall);
       this.pongLogic.reset(this.init);
+      this.pongLogic.settings.playerSide.forEach(side => {
+        this.score.updateScoreDisplay(side)
+      })
     }
 
     updateLightsForActivePlayers(this.init.lightManager, this.gameScene, this.init.settings.playerSide, this.pongLogic.lastWinner)
