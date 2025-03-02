@@ -7,8 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 import json
 from rest_framework.decorators import api_view
-from apps.game.models.lobby import Lobby, LobbyPlayer, LobbyChat
-from apps.game.models.game import GameRoom, GameConfig
+from apps.game.models.game import GameRoom, GameConfig, Lobby
 from asgiref.sync import async_to_sync
 
 @login_required
