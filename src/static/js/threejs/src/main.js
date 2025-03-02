@@ -86,16 +86,16 @@ class main {
     //   Paddle1Win = 0;
     //   Ball_Reset = false;
     // }
-
+    this.pongLogic.settings.playerSide.forEach(side => {
+      this.score.updateScoreDisplay(side)
+    })
 
 
     if (this.pongLogic.resetBall === true && this.init.settings.host === true) {
       console.log("this.pongLogic.resetBall", this.pongLogic.resetBall);
       this.pongLogic.resetBall = false;
       this.pongLogic.reset(this.init);
-      this.pongLogic.settings.playerSide.forEach(side => {
-        this.score.updateScoreDisplay(side)
-      })
+
       this.pongLogic.socket.didReset = false;
     }
 

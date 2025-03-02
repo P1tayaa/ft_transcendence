@@ -303,6 +303,8 @@ class Pong {
     }
     // Ball_Reset = true;
     if (this.settings.mode === Mode.NETWORKED) {
+      this.settings.ballSpeed = this.initBallVelocity();
+      this.socket.sendBallVelocity(this.settings.ballSpeed);
       this.ballPos = { x: 0, y: 0 };
     }
     init.gameScene.moveAsset('Ball', { x: 0, y: 0, z: 0 });

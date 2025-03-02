@@ -61574,9 +61574,6 @@ class MyWebSocket {
     // If this client is not the host, overwrite local values with server values
     if (this.serverState) {
       pongLogic.ballPos = this.serverState.pongLogic.ballPos;
-      if (pongLogic.ballPos.x === 0 && pongLogic.ballPos.y === 0) {
-        this.didReset = true;
-      }
       pongLogic.ballSpeed = this.serverState.pongLogic.ballSpeed;
       pongLogic.ballSize = this.serverState.pongLogic.ballSize;
       pongLogic.lastWinner = this.serverState.pongLogic.lastWinner;
@@ -61662,6 +61659,9 @@ class MyWebSocket {
           console.error(event.data);
         } else if (data.type === "errors") {
           console.error(event.data);
+        } else if (data.type === "reset_round") {
+          console.log("reset_round");
+          this.didReset = true;
         }
       };
       this.socket.onclose = event => {
@@ -61976,6 +61976,8 @@ class Pong {
     }
     // Ball_Reset = true;
     if (this.settings.mode === Mode.NETWORKED) {
+      this.settings.ballSpeed = this.initBallVelocity();
+      this.socket.sendBallVelocity(this.settings.ballSpeed);
       this.ballPos = {
         x: 0,
         y: 0
@@ -106379,18 +106381,13 @@ class main {
     //   Paddle1Win = 0;
     //   Ball_Reset = false;
     // }
-
-    if (!this.pongLogic.socket.didReset) {
-      this.pongLogic.settings.ballSpeed = this.initBallVelocity();
-      this.pongLogic.socket.sendBallVelocity(this.settings.ballSpeed);
-    }
+    this.pongLogic.settings.playerSide.forEach(side => {
+      this.score.updateScoreDisplay(side);
+    });
     if (this.pongLogic.resetBall === true && this.init.settings.host === true) {
       console.log("this.pongLogic.resetBall", this.pongLogic.resetBall);
       this.pongLogic.resetBall = false;
       this.pongLogic.reset(this.init);
-      this.pongLogic.settings.playerSide.forEach(side => {
-        this.score.updateScoreDisplay(side);
-      });
       this.pongLogic.socket.didReset = false;
     }
     updateLightsForActivePlayers(this.init.lightManager, this.gameScene, this.init.settings.playerSide, this.pongLogic.lastWinner);
