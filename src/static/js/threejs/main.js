@@ -61450,6 +61450,7 @@ class MyWebSocket {
     this.host;
     this.isSpectator;
     this.Connected = false;
+    this.didReset = true;
     this.serverState = null;
     this.winner = "";
     this.game_over = false;
@@ -61573,6 +61574,9 @@ class MyWebSocket {
     // If this client is not the host, overwrite local values with server values
     if (this.serverState) {
       pongLogic.ballPos = this.serverState.pongLogic.ballPos;
+      if (pongLogic.ballPos.x === 0 && pongLogic.ballPos.y === 0) {
+        this.didReset = true;
+      }
       pongLogic.ballSpeed = this.serverState.pongLogic.ballSpeed;
       pongLogic.ballSize = this.serverState.pongLogic.ballSize;
       pongLogic.lastWinner = this.serverState.pongLogic.lastWinner;
@@ -61962,19 +61966,16 @@ class Pong {
     this.checkCollisions(BallPos, gameScene);
   }
   reset(init) {
-    this.resetBall = false;
     // console.log(this.ballPos)
     if (this.settings.mode === Mode.NETWORKED) {
       // init.score.incrementScore(intToPlayerSide(this.lastWinner));
       this.socket.resetRound(this);
-      // this.socket.updateScore(this)
+      this.socket.updateScore(this);
     } else {
       init.score.incrementScore((0,setting_namespaceObject["default"])(this.lastWinner));
     }
     // Ball_Reset = true;
     if (this.settings.mode === Mode.NETWORKED) {
-      this.settings.ballSpeed = this.initBallVelocity();
-      this.socket.sendBallVelocity(this.settings.ballSpeed);
       this.ballPos = {
         x: 0,
         y: 0
@@ -106366,7 +106367,9 @@ class main {
       botControl(this.init.settings, this.gameScene.getAssetPossition('Ball'));
     }
     const input = this.init.controlHandler.getPaddleSpeeds();
-    this.pongLogic.update(input, this.gameScene);
+    if (this.pongLogic.socket.didReset) {
+      this.pongLogic.update(input, this.gameScene);
+    }
     // let Paddle2Win = 0;
     // let Paddle1Win = 0;
     // let Ball_Reset = false;
@@ -106377,12 +106380,18 @@ class main {
     //   Ball_Reset = false;
     // }
 
+    if (!this.pongLogic.socket.didReset) {
+      this.pongLogic.settings.ballSpeed = this.initBallVelocity();
+      this.pongLogic.socket.sendBallVelocity(this.settings.ballSpeed);
+    }
     if (this.pongLogic.resetBall === true && this.init.settings.host === true) {
       console.log("this.pongLogic.resetBall", this.pongLogic.resetBall);
+      this.pongLogic.resetBall = false;
       this.pongLogic.reset(this.init);
       this.pongLogic.settings.playerSide.forEach(side => {
         this.score.updateScoreDisplay(side);
       });
+      this.pongLogic.socket.didReset = false;
     }
     updateLightsForActivePlayers(this.init.lightManager, this.gameScene, this.init.settings.playerSide, this.pongLogic.lastWinner);
     if (this.init.settings.mode === Mode.NETWORKED) {} else {

@@ -293,19 +293,16 @@ class Pong {
   }
 
   reset(init) {
-    this.resetBall = false;
     // console.log(this.ballPos)
     if (this.settings.mode === Mode.NETWORKED) {
       // init.score.incrementScore(intToPlayerSide(this.lastWinner));
       this.socket.resetRound(this);
-      // this.socket.updateScore(this)
+      this.socket.updateScore(this)
     } else {
       init.score.incrementScore(intToPlayerSide(this.lastWinner));
     }
     // Ball_Reset = true;
     if (this.settings.mode === Mode.NETWORKED) {
-      this.settings.ballSpeed = this.initBallVelocity();
-      this.socket.sendBallVelocity(this.settings.ballSpeed);
       this.ballPos = { x: 0, y: 0 };
     }
     init.gameScene.moveAsset('Ball', { x: 0, y: 0, z: 0 });

@@ -13,7 +13,7 @@ class MyWebSocket {
     this.host;
     this.isSpectator;
     this.Connected = false;
-
+    this.didReset = true;
     this.serverState = null;
     this.winner = "";
     this.game_over = false;
@@ -255,6 +255,9 @@ class MyWebSocket {
           console.error(event.data);
         } else if (data.type === "errors") {
           console.error(event.data);
+        } else if (data.type === "reset_round") {
+          console.log("reset_round")
+          this.didReset = true;
         }
 
       };

@@ -74,8 +74,9 @@ class main {
 
 
     const input = this.init.controlHandler.getPaddleSpeeds();
-
-    this.pongLogic.update(input, this.gameScene);
+    if (this.pongLogic.socket.didReset) {
+      this.pongLogic.update(input, this.gameScene);
+    }
     // let Paddle2Win = 0;
     // let Paddle1Win = 0;
     // let Ball_Reset = false;
@@ -86,13 +87,18 @@ class main {
     //   Ball_Reset = false;
     // }
 
+
+
     if (this.pongLogic.resetBall === true && this.init.settings.host === true) {
       console.log("this.pongLogic.resetBall", this.pongLogic.resetBall);
+      this.pongLogic.resetBall = false;
       this.pongLogic.reset(this.init);
       this.pongLogic.settings.playerSide.forEach(side => {
         this.score.updateScoreDisplay(side)
       })
+      this.pongLogic.socket.didReset = false;
     }
+
 
     updateLightsForActivePlayers(this.init.lightManager, this.gameScene, this.init.settings.playerSide, this.pongLogic.lastWinner)
     if (this.init.settings.mode === Mode.NETWORKED) {
