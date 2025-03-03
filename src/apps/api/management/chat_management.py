@@ -21,6 +21,9 @@ def add_message(request):
             return Response({"success": False, "error": "Message content is required"}, status=400)
         if not recipient_id:
             return Response({"success": False, "error": "recipient_id is required"}, status=400)
+        if recipient_id == request.user.id:
+            return Response({"success": False, "error": "Can't chat to yourself"}, status=400)
+            
 
         with transaction.atomic():
             try:
