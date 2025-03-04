@@ -7,7 +7,7 @@ const FOLLOW_URL = '../api/follow/';
 const UNFOLLOW_URL = '../api/follow/unfollow';
 
 const CHAT_URL = '../api/chats/';
-const SEND_CHAT_URL = '../api/add_message/';
+const SEND_CHAT_URL = '../api/chats/message/';
 
 const GET_ME_URL = '../api/me';
 
@@ -136,6 +136,8 @@ class Social {
 
 			return;
 		}
+
+		console.log("Profile: ", this.currentProfile)
 
 		const friendButton = document.createElement("button");
 		if (this.currentProfile.is_following) {
@@ -318,6 +320,35 @@ class MatchHistory {
 
 	async loadMatchHistory() {
 		const matchHistory = await this.getMatchHistory();
+		const games = matchHistory.games;
+
+		console.log("Matches:", games);
+
+		const matchDiv = document.getElementById("history");
+		matchDiv.innerHTML = "";
+
+		// Create list of matches
+		games.forEach(match => {
+			const matchItem = document.createElement("li");
+			matchItem.textContent = `Match: ${match.score}`;
+			matchDiv.appendChild(matchItem);
+		});
+
+		const addMatchButton = document.createElement("button");
+		addMatchButton.textContent = "Add Match";
+		addMatchButton.addEventListener("click", () => {
+			this.addMatch();
+		});
+		matchDiv.appendChild(addMatchButton);
+	}
+
+	async addMatch() {
+		try {
+			await postRequest("../api/score/add", { score: 69 });
+		} catch (error) {
+			console.error('Error adding match:', error);
+			alert('An error occurred while adding the match.');
+		}
 	}
 
 	load(user) {
@@ -358,14 +389,14 @@ class Stats {
 }
 
 class Chat {
-	constructor(me, user) {
+	constructor(me, other) {
 		this.me = me;
-		this.user = user;
+		this.other = other;
 	}
 
 	async getChats() {
 		try {
-			const chatData = await getRequest(`${CHAT_URL}?user_id=${this.user.id}`);
+			const chatData = await getRequest(`${CHAT_URL}?user_id=${this.other.id}`);
 			const chats = chatData.messages;
 			return chats;
 		}
@@ -379,6 +410,8 @@ class Chat {
 		const chats = await this.getChats();
 		const chatDiv = document.getElementById("chat-list");
 		chatDiv.innerHTML = "";
+
+		console.log("Chats:", chats);
 
 		chats.forEach(message => {
 			const content = message.content;
@@ -396,24 +429,27 @@ class Chat {
 	}
 
 	async sendChat(message) {
-		if (!this.user) {
+		if (!this.other) {
 			alert("Please select a friend to chat with.");
 			return;
 		}
 
 		try {
 			const data = await postRequest(SEND_CHAT_URL, {
-				recipient_id: this.user.id,
+				recipient_id: this.other.id,
 				content: message
 			});
+
+			console.log("Message sent:", data);
+
 		} catch (error) {
 			console.error('Error sending message:', error);
 			alert('An error occurred while sending the message.');
 		}
 	}
 
-	load(user) {
-		this.user = user;
+	load(other) {
+		this.other = other;
 
 		//Hide stats and history
 		document.getElementById("history").style.display = "none";
@@ -433,7 +469,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 	const searchForm = document.getElementById("search");
 	searchForm.addEventListener("submit", (event) => {
 		event.preventDefault();
-		const searchTerm = document.getElementById("search-box").value.trim();
+		const form = document.getElementById("search-box");
+		const searchTerm = form.value.trim();
+		form.value = "";
 
 		if (searchTerm) {
 			// social.clearChat();
@@ -446,7 +484,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 	chatForm.addEventListener("submit", (event) => {
 		event.preventDefault();
 
-		const message = document.getElementById("chat-box").value.trim();
+		const form = document.getElementById("chat-box");
+
+		const message = form.value.trim();
+		form.value = "";
 
 		if (message) {
 			social.Chat.sendChat(message);

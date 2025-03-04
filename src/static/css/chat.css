@@ -19,7 +19,7 @@ input {
 }
 
 img {
-	border-radius: 50%;
+	border-radius: 10px;
 }
 
 #sidebar {
@@ -73,7 +73,7 @@ img {
 	align-self: stretch;
 
 	background: #1e1e1e15;
-	border-radius: 100px;
+	border-radius: 10px;
 }
 
 #profile {
