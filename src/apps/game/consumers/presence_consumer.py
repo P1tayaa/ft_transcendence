@@ -29,7 +29,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         # send current online users to new connected user
         await self.send(json.dumps({
                'type': 'online_users',
-               'users': [await self.get_user_info(user.id) for user in PresenceConsumer.online_users]
+               'users': [await self.get_user_info(user_id) for user_id in PresenceConsumer.online_users]
            }))
 
 

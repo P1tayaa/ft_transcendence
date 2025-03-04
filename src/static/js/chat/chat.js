@@ -16,7 +16,6 @@ const LOGOUT_REDIRECT_URL = '../login';
 
 const CLEAR_CHAT_URL = '../api/chat/clear';
 
-
 class Social {
 	constructor() {
 		this.currentProfile = null;
@@ -198,12 +197,16 @@ class Social {
 		const friends = await this.getFriends();
 		const friendListDiv = document.getElementById("friends");
 
-
 		// Loop through and create list items
 		friends.forEach(friend => {
 			const li = document.createElement("li");
-			li.classList.add("friendBox");
-	
+			li.classList.add("friend");
+			li.setAttribute("user-id", friend.id);
+
+			// Add online status
+			const status = document.createElement("span");
+			status.classList.add("status");
+
 			// Create avatar image
 			const img = document.createElement("img");
 			img.classList.add("avatar");
@@ -212,11 +215,13 @@ class Social {
 			img.width = 64;
 			img.height = 64;
 	
+			
 			// Create name text
 			const nameText = document.createTextNode(friend.username);
-	
+			
 			// Append image and name
 			li.appendChild(img);
+			li.appendChild(status);
 			li.appendChild(nameText);
 	
 			// Add message button if applicable
@@ -234,6 +239,22 @@ class Social {
 				this.loadProfile(friend);
 			});
 		});
+	}
+
+	setOnlineStatus(user_id, status) {
+		const statusDiv = document.querySelector(`li[user-id="${user_id}"] .status`);
+
+		if (statusDiv) {
+			console.log("Setting status:", user_id, status);
+			
+			if (status === "online") {
+				statusDiv.classList.add("online");
+			} else {
+				statusDiv.classList.remove("online");
+			}
+		} else {
+			console.warn("Status div not found for user_id:", user_id);
+		}
 	}
 
 	async getSearchResults(searchTerm) {
@@ -268,7 +289,7 @@ class Social {
 			}
 
 			const li = document.createElement("li");
-			li.classList.add("friendBox");
+			li.classList.add("friend");
 
 			// Create avatar image
 			const img = document.createElement("img");
@@ -494,4 +515,28 @@ document.addEventListener("DOMContentLoaded", async () => {
 		}
 	});
 
+	const socket = new WebSocket("ws://localhost:8000/ws/presence/");
+
+	socket.addEventListener("open", function(event) {
+		console.log("Connected to the status socket.");
+	});
+
+	socket.addEventListener("close", function(event) {
+		console.log("Disconnected from the status socket.");
+	});
+
+	socket.addEventListener("message", function(event) {
+		const data = JSON.parse(event.data);
+		console.log("Message from status socket:", data);
+
+		if (data.type === "user_online") {
+			social.setOnlineStatus(data.user_id, "online");
+		} else if (data.type === "user_offline") {
+			social.setOnlineStatus(data.user_id, "offline");
+		} else if (data.type === "online_users") {
+			data.users.forEach(user => {
+				social.setOnlineStatus(user.user_id, "online");
+			});
+		}
+	});
 });
