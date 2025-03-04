@@ -42,7 +42,8 @@ class Profile(models.Model):
         return self.scores.all()
 
     def get_chat_with(self, other_user):
-        common_chats = self.user.chats.filter(participants=other_user)
+        user_chats = self.user.chats.all()
+        common_chats = user_chats.filter(participants=other_user)
         if common_chats.exists():
             return common_chats.first()
         return None
