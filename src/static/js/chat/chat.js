@@ -45,13 +45,12 @@ class Social {
 		this.loadProfileTop();
 
 		if (!this.currentScreen) {
-			this.MatchHistory = new MatchHistory(this.currentProfile);
 			this.Stats = new Stats(this.currentProfile);
 			this.Chat = new Chat(this.me, this.currentProfile);
+			this.MatchHistory = new MatchHistory(this.currentProfile);
 		}
 
 		this.currentScreen = this.MatchHistory;
-		this.currentScreen.load(this.currentProfile);
 
 		document.getElementById("chat-select").style.display = this.currentProfile === this.me ? "none" : "block";
 
@@ -344,7 +343,8 @@ class MatchHistory {
 
 	async addMatch() {
 		try {
-			await postRequest("../api/score/add", { score: 69 });
+			const data = await postRequest("../api/score/add", { score: 69 });
+			console.log("Match added:", data);
 		} catch (error) {
 			console.error('Error adding match:', error);
 			alert('An error occurred while adding the match.');
