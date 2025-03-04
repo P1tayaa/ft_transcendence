@@ -41,7 +41,7 @@ class Profile(models.Model):
     def get_scores(self):
         return self.scores.all()
 
-    def get_chat_with(self, other_user):
+    def get_or_create_chat_with(self, other_user):
         common_chats = Chat.objects.filter(
             participants=self.user
         ).filter(
@@ -50,7 +50,12 @@ class Profile(models.Model):
 
         if common_chats.exists():
             return common_chats.first()
-        return None
+
+        new_chat = Chat.objects.create()
+        new_chat.participants.add(self.user, other_user)
+        new_chat.save()
+
+        return new_chat
 
     def get_all_chats(self):
         # get all chats with latest message
