@@ -64,36 +64,33 @@ urlpatterns = [
     path("auth-status/", check_auth_status, name="check_auth_status"),
     path("me/", get_current_user, name="current_user"),
     path("search/", fetch_matching_usernames, name="search"),
+
     path("follow/", follow_user, name="follow_user"),
     path("follow/followers", get_followers, name="get_followers"),
     path("follow/following", get_following, name="get_following"),
     path("follow/unfollow", unfollow_user, name="unfollow_user"),
+
     path("score/", get_score_history, name="get_score_history"),
     path("score/add", add_score, name="add_score"),
     path("score/recent", get_recent_score, name="get_recent_score"),
     path("score/highscore", get_highscore, name="get_highscore"),
+
     path("profile/picture/", upload_profile_picture, name="upload_profile_picture"),
     path("profile/picture/delete", delete_profile_picture, name="delete_profile_picture"),
+
     path("chats/", get_chat_history, name="get_chats"),
     path("chats/message/", add_message, name="add_message"),
     path("chats/message/typing", update_typing_status, name="update_typing"),
     path("chats/message/read", mark_messages_read, name="mark_messages_read"),
-
-    # path("lobby/create/", create_lobby, name="create_lobby"),
-    # path("lobby/<int:lobby_id>/join/", join_lobby, name="join_lobby"),
-    # path("lobby/<int:lobby_id>/leave/", leave_lobby, name="leave_lobby"),
-    # path("lobby/<int:lobby_id>/ready/", set_player_ready, name="set_player_ready"),
-    # path("lobby/<int:lobby_id>/", get_lobby_details, name="get_lobby_details"),
-    # path("lobbies/", list_lobbies, name="list_lobbies"),
-    # path("lobby/<int:lobby_id>/notify-game-created/", notify_game_created, name='notify_game_created'),
+    path('chat/clear', clear_chat_data, name="clear_chat_data"),
 
     path("create_game/", create_game_room, name="create_game_room"),
     path("get_config_game_room/", get_config_game_room, name="get_config_game_room"),
     path("clear_game_rooms/", clear_game_rooms, name="clear_game_rooms"),
+
     path('tournament/create/', create_tournament, name="create_tournament"),
     path('tournament/list/', list_tournaments, name="list_tournaments"),
     path('tournament/<int:tournament_id>/join', join_tournament, name="join_tournament"),
     path('tournament/<int:tournament_id>/get_data', get_tournament_data, name="get_tournament_data"),
     path('tournament/<int:match_id>/update_scores', update_match_score, name="update_match_scores"),
-    path('chat/clear', clear_chat_data, name="clear_chat_data"),
 ]
