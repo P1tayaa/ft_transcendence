@@ -86,11 +86,11 @@ class Profile(models.Model):
             # return chat_data
         return chat_data        
 
-    def get_chat_history(self, chat_id, limit=50, offset=0):
+    def get_chat_history(self, chat_id):
         try:
             chat = Chat.objects.get(id=chat_id, participants=self.user)
             total_messages = chat.messages.count()
-            messages = chat.messages.all().order_by("timestamp")[offset : offset + limit]
+            messages = chat.messages.all().order_by("timestamp")
 
             return {
                 "chat_id": chat.id,
@@ -108,7 +108,6 @@ class Profile(models.Model):
                     }
                     for msg in messages
                 ],
-                "has_more": total_messages > (offset + limit),
                 "total_messages": total_messages,
             }
         except Chat.DoesNotExist:

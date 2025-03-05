@@ -410,11 +410,15 @@ class Chat {
 		this.me = me;
 		this.other = other;
 		this.chatDiv = document.getElementById("chat-list");
+		this.chat_id = null;
+		this.initSocket();
 	}
 
 	async getChats() {
 		try {
 			const chatData = await getRequest(`${CHAT_URL}?user_id=${this.other.id}`);
+			console.log("Chat data:", chatData);
+			this.chat_id = chatData.chat_id;
 			const chats = chatData.messages;
 			return chats;
 		}
@@ -480,7 +484,9 @@ class Chat {
 
 		//Load chat
 		this.loadChats();
+	}
 
+	initSocket() {
 		//Set up chat events
 		const socket = new WebSocket("ws://localhost:8000/ws/chat/");
 		socket.addEventListener("open", (event) => {
@@ -495,7 +501,10 @@ class Chat {
 			const data = JSON.parse(event.data);
 
 			if (data.type === "new_message") {
-				this.addChat(data.message);
+				console.log("New message:", data);
+				if (data.chat.id === this.chat_id) {
+					this.addChat(data.message);
+				}
 			}
 		});
 	}

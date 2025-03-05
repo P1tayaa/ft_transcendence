@@ -55,15 +55,16 @@ def add_message(request):
                 "sent_at": chat.sent_at.isoformat(),
             }
 
-            all_participants = chat.participants.all()
+            chat_participants = chat.participants.all()
             channel_layer = get_channel_layer()
-            for participant in all_participants:
+            for participant in chat_participants:
                 async_to_sync(channel_layer.group_send)(
                 f"user_{participant.id}",
                     {
                         "type": "new_message",
                         "message": message_data,
-                        "chat": chat_data
+                        "chat": chat_data,
+                        "chat_id": chat.id
                     }
                 )
 
@@ -83,11 +84,7 @@ def get_chats(request):
     try:
         chat_id = request.GET.get("chat_id")
         if chat_id:
-            chat_data = request.user.profile.get_chat_history(
-                chat_id,
-                limit=int(request.GET.get("limit", 50)),
-                offset=int(request.GET.get("offset", 0))
-            )
+            chat_data = request.user.profile.get_chat_history(chat_id)
             if not chat_data:
                 return Response({"error": "Chat not found"}, status=404)
             return Response(chat_data)
@@ -110,11 +107,7 @@ def get_chat_history(request):
                 if not chat:
                     return Response({"error": "No chat history found with this user"}, status=404)
 
-                chat_data = request.user.profile.get_chat_history(
-                    chat.id,
-                    limit=int(request.GET.get("limit", 50)),
-                    offset=int(request.GET.get("offset", 0))
-                )
+                chat_data = request.user.profile.get_chat_history(chat.id)
                 return Response(chat_data)
             except User.DoesNotExist:
                 return Response({"error": "User not found"}, status=404)
