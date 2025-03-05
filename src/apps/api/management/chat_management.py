@@ -55,8 +55,9 @@ def add_message(request):
                 "sent_at": chat.sent_at.isoformat(),
             }
 
+            all_participants = chat.participants.all()
             channel_layer = get_channel_layer()
-            for participant in other_participants:
+            for participant in all_participants:
                 async_to_sync(channel_layer.group_send)(
                 f"user_{participant.id}",
                     {
