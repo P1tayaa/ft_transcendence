@@ -409,6 +409,7 @@ class Chat {
 	constructor(me, other) {
 		this.me = me;
 		this.other = other;
+		this.chatDiv = document.getElementById("chat-list");
 	}
 
 	async getChats() {
@@ -423,25 +424,29 @@ class Chat {
 		}
 	}
 
+	addChat(message) {
+		const content = message.content;
+		const messageDiv = document.createElement("li");
+
+		if (message.sender === this.me.username) {
+			messageDiv.classList.add("message-self");
+		} else {
+			messageDiv.classList.add("message-other");
+		}
+
+		messageDiv.textContent = content;
+
+		this.chatDiv.appendChild(messageDiv);
+	}
+
 	async loadChats() {
 		const chats = await this.getChats();
-		const chatDiv = document.getElementById("chat-list");
-		chatDiv.innerHTML = "";
+		this.chatDiv.innerHTML = "";
 
 		console.log("Chats:", chats);
 
 		chats.forEach(message => {
-			const content = message.content;
-			const messageDiv = document.createElement("li");
-			if (message.sender === this.me.username) {
-				messageDiv.classList.add("message-self");
-			} else {
-				messageDiv.classList.add("message-other");
-			}
-
-			messageDiv.textContent = content;
-	
-			chatDiv.appendChild(messageDiv);
+			this.addChat(message);
 		});
 	}
 
@@ -475,6 +480,24 @@ class Chat {
 
 		//Load chat
 		this.loadChats();
+
+		//Set up chat events
+		const socket = new WebSocket("ws://localhost:8000/ws/chat/");
+		socket.addEventListener("open", (event) => {
+			console.log("Connected to the chat socket.");
+		});
+
+		socket.addEventListener("close", (event) => {
+			console.log("Disconnected from the chat socket.");
+		});
+
+		socket.addEventListener("message", (event) => {
+			const data = JSON.parse(event.data);
+
+			if (data.type === "new_message") {
+				this.addChat(data.message);
+			}
+		});
 	}
 }
 
