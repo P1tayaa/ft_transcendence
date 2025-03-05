@@ -28,12 +28,8 @@ def add_message(request):
         with transaction.atomic():
             try:
                 recipient = User.objects.get(id=recipient_id)
-                chat = profile.get_chat_with(recipient)
+                chat = profile.get_or_create_chat_with(recipient)
 
-                if not chat:
-                    chat = Chat.objects.create()
-                    chat.participants.add(request.user, recipient)
-                    chat.save()
             except User.DoesNotExist:
                 return Response({"success": False, "error": "Recipient not found"}, status=404)
 
