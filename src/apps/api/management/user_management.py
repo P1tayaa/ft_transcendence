@@ -263,7 +263,7 @@ def get_following(request):
         following_list = []
 
         for follow in following:
-            following_list.append({**serialize_user(follow.followed.user)})
+            following_list.append({**serialize_user(follow.followed.user, request.user)})
 
         return Response({
             "success": True,
