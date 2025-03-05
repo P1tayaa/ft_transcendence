@@ -1,6 +1,6 @@
-import { getCSRFToken, getRequest, postRequest, getUserName } from '../utils.js';
+import { getRequest, postRequest } from '../utils.js';
 
-const SEARCH_URL = '../api/fetch_matching_usernames/';
+const SEARCH_URL = '../api/search/';
 
 const FRIENDS_URL = '../api/follow/following';
 const FOLLOW_URL = '../api/follow/';
@@ -245,16 +245,12 @@ class Social {
 		const statusDiv = document.querySelector(`li[user-id="${user_id}"] .status`);
 
 		if (statusDiv) {
-			console.log("Setting status:", user_id, status);
-			
 			if (status === "online") {
 				statusDiv.classList.add("online");
 			} else {
 				statusDiv.classList.remove("online");
 			}
-		} else {
-			console.warn("Status div not found for user_id:", user_id);
-		}
+		} 
 	}
 
 	async getSearchResults(searchTerm) {
@@ -527,7 +523,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 	socket.addEventListener("message", function(event) {
 		const data = JSON.parse(event.data);
-		console.log("Message from status socket:", data);
 
 		if (data.type === "user_online") {
 			social.setOnlineStatus(data.user_id, "online");
