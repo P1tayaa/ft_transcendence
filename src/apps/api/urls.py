@@ -76,7 +76,6 @@ urlpatterns = [
     path("score/add", add_score, name="add_score"),
     path("score/recent", get_recent_score, name="get_recent_score"),
     path("score/highscore", get_highscore, name="get_highscore"),
-    path("add_message/", add_message, name="add_message"),
     path("profile/picture/", upload_profile_picture, name="upload_profile_picture"),
     path("profile/picture/delete", delete_profile_picture, name="delete_profile_picture"),
     path("chats/", get_chat_history, name="get_chats"),
