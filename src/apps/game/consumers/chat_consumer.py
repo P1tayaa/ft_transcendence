@@ -27,6 +27,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
              "chat": event["chat"]
          })
 
+
     async def typing_status(self, event):
         await self.send_json({
                  "type": "typing_status",
@@ -34,4 +35,3 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                  "chat_id": event["chat_id"],
                  "is_typing": event["is_typing"]
              })
-            
