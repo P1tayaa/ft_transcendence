@@ -488,7 +488,8 @@ class Chat {
 
 	initSocket() {
 		//Set up chat events
-		const socket = new WebSocket("ws://localhost:8000/ws/chat/");
+		const host = window.location.host;
+		const socket = new WebSocket("ws://" + host + "/ws/chat/");
 		socket.addEventListener("open", (event) => {
 			console.log("Connected to the chat socket.");
 		});
@@ -543,7 +544,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 		}
 	});
 
-	const socket = new WebSocket("ws://localhost:8000/ws/presence/");
+	const host = window.location.host;
+	const socket = new WebSocket("ws://" + host + "/ws/presence/");
 
 	socket.addEventListener("open", function(event) {
 		console.log("Connected to the status socket.");
