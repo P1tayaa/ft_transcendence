@@ -84,24 +84,4 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                    'type': 'room_list',
                    'rooms': formatted_rooms
                }))
-# frontend usage
-# // List available rooms
-# matchmakingSocket.send(JSON.stringify({
-#     type: 'list_rooms'
-# }));
 
-# // Or find random match
-# matchmakingSocket.send(JSON.stringify({
-#     type: 'find_random'
-# }));
-
-# matchmakingSocket.onmessage = (e) => {
-#     const data = JSON.parse(e.data);
-#     if (data.type === 'room_list') {
-#         // Show list of rooms to join
-#         console.log('Available rooms:', data.rooms);
-#     } else if (data.type === 'match_found') {
-#         // Join the game room
-#         window.location.href = `/game/${data.room_name}`;
-#     }
-# };
