@@ -1,11 +1,138 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong Game Setup</title>
+    <link rel="stylesheet" href="../static/css/lobby.css">
+</head>
+<body>
+    <div class="container">
+        <div class="setup-card">
+            <!-- Progress indicator -->
+            <div class="progress-bar">
+                <div class="progress-line active"></div>
+                <div class="progress-line"></div>
+                <div class="progress-line"></div>
+                <div class="progress-line"></div>
+            </div>
 
-<link rel="stylesheet" href="../static/css/lobby.css">
+            <!-- Step 1: Game Mode Selection -->
+            <div class="setup-step active" id="step-1">
+                <h2>Choose Game Mode</h2>
+                <div class="options-container">
+                    <button class="option-btn" data-mode="networked">
+                        <span>Online</span>
+                    </button>
+                    <button class="option-btn" data-mode="localsolo">
+                        <span>Against AI</span>
+                    </button>
+                    <button class="option-btn" data-mode="local">
+                        <span>Local Multiplayer</span>
+                    </button>
+                </div>
+            </div>
 
+            <!-- Step 2: Player Count Selection -->
+            <div class="setup-step" id="step-2">
+                <h2>Select Players</h2>
+                <div class="options-container">
+                    <button class="option-btn" data-players="2">
+                        <span class="player-count">2</span>
+                        <span>Players</span>
+                    </button>
+                    <button class="option-btn" data-players="4">
+                        <span class="player-count">4</span>
+                        <span>Players</span>
+                    </button>
+                </div>
+            </div>
 
-<title>Lobby</title>
-<div id="lobby">
-	<div id="carousel"</div>
-</div>
+            <!-- Step 3: Map Selection -->
+            <div class="setup-step" id="step-3">
+                <h2>Choose Map</h2>
+                <!-- 2-player maps -->
+                <div class="map-container" id="maps-2-player">
+                    <div class="map-option" data-map="classic">
+                        <div class="map-preview" id="classic-preview"></div>
+                        <div class="map-name">Classic</div>
+                    </div>
+                    <div class="map-option" data-map="arena">
+                        <div class="map-preview" id="arena-preview"></div>
+                        <div class="map-name">Arena</div>
+                    </div>
+                </div>
+                <!-- 4-player maps -->
+                <div class="map-container" hidden id="maps-4-player">
+                    <div class="map-option" data-map="classic4p">
+                        <div class="map-preview" id="classic4p-preview"></div>
+                        <div class="map-name">Classic 4 player</div>
+                    </div>
+                    <div class="map-option" data-map="battle">
+                        <div class="map-preview" id="battle-preview"></div>
+                        <div class="map-name">Battle Arena</div>
+                    </div>
+                    <div class="map-option" data-map="maze">
+                        <div class="map-preview" id="maze-preview"></div>
+                        <div class="map-name">Maze</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Powerup Selection -->
+            <div class="setup-step" id="step-4">
+                <h2>Select Powerups</h2>
+                <p class="instruction">Choose up to 3 powerups</p>
+                <div class="powerups-container">
+                    <div class="powerup-option" data-powerup="speed">
+                        <div class="powerup-icon">⚡</div>
+                        <div class="powerup-details">
+                            <div class="powerup-name">Speed Boost</div>
+                            <div class="powerup-description">Temporarily increases paddle speed</div>
+                        </div>
+                    </div>
+                    <div class="powerup-option" data-powerup="size">
+                        <div class="powerup-icon">↕️</div>
+                        <div class="powerup-details">
+                            <div class="powerup-name">Paddle Resize</div>
+                            <div class="powerup-description">Changes paddle length</div>
+                        </div>
+                    </div>
+                    <div class="powerup-option" data-powerup="multi">
+                        <div class="powerup-icon">🔄</div>
+                        <div class="powerup-details">
+                            <div class="powerup-name">Multi-Ball</div>
+                            <div class="powerup-description">Adds additional balls to the game</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation buttons -->
+            <div class="navigation-buttons">
+                <button id="prev-btn" class="nav-btn">Back</button>
+                <button id="next-btn" class="nav-btn" disabled>Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Final confirmation modal -->
+    <div class="modal hidden" id="confirmation-modal">
+        <div class="modal-content">
+            <h2>Game Setup Complete</h2>
+            <div class="setup-summary">
+                <p><strong>Mode:</strong> <span id="summary-mode"></span></p>
+                <p><strong>Players:</strong> <span id="summary-players"></span></p>
+                <p><strong>Map:</strong> <span id="summary-map"></span></p>
+                <p><strong>Powerups:</strong> <span id="summary-powerups"></span></p>
+            </div>
+            <div class="modal-buttons">
+                <button id="cancel-btn">Back to Setup</button>
+                <button id="start-game-btn">Start Game</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
 
 <script type="module" src="../static/js/lobby.js"></script>
