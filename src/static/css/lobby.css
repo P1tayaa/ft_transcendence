@@ -68,6 +68,7 @@ h2 {
     background-color: var(--border-color);
     position: relative;
     z-index: 1;
+    border-radius: 3px;
 }
 
 .progress-line.active {
