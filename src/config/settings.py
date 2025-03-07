@@ -29,8 +29,8 @@ SECRET_KEY = "django-insecure-%5=f05752dm2p1evef1iy9!=i*nyxtzc3m0tt2my@#=o+gyhbj
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'intra.42.fr', 'f1r3s6'] # attempting for intra login
-
+# ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'intra.42.fr', 'f1r3s6'] # attempting for intra login
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
