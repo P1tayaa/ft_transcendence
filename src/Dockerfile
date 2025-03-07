@@ -31,6 +31,7 @@ RUN npm run build
 
 WORKDIR /app
 
-RUN chmod +x src/entrypoint.sh
-CMD ["./src/entrypoint.sh"]
+RUN chmod +x src/entrypoint-dev.sh
+RUN chmod +x src/entrypoint-prod.sh
+CMD ["./src/entrypoint-dev.sh"]
 # CMD ["python", "src/manage.py", "runserver", "0.0.0.0:8000"]
