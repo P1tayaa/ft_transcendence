@@ -156,6 +156,7 @@ h2 {
 
 .map-option:hover {
     transform: scale(1.02);
+   background-color: var(--hover-color);
 }
 
 .map-option:active {
@@ -285,7 +286,7 @@ h2 {
 
 .nav-btn {
     background-color: var(--primary-color);
-    color: white;
+    color: var(--text-color);
     border: none;
     border-radius: 6px;
     padding: 12px 20px;
@@ -297,10 +298,6 @@ h2 {
     gap: 8px;
 }
 
-.nav-btn:hover {
-    background-color: #2980b9;
-}
-
 .nav-btn:disabled {
     background-color: var(--disabled-color);
     cursor: not-allowed;
@@ -309,10 +306,6 @@ h2 {
 #prev-btn {
     background-color: var(--hover-color);
     color: var(--text-color);
-}
-
-#prev-btn:hover {
-    background-color: var(--border-color);
 }
 
 /* Modal styling */
@@ -371,10 +364,6 @@ h2 {
     transition: background-color 0.2s ease;
 }
 
-#cancel-btn:hover {
-    background-color: var(--border-color);
-}
-
 #start-game-btn {
     background-color: var(--secondary-color);
     color: white;
@@ -384,10 +373,6 @@ h2 {
     font-size: 16px;
     cursor: pointer;
     transition: background-color 0.2s ease;
-}
-
-#start-game-btn:hover {
-    background-color: #27ae60;
 }
 
 /* Utility classes */

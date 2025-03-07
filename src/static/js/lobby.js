@@ -78,13 +78,9 @@ document.addEventListener('DOMContentLoaded', function() {
 		// Set up event listeners for mode selection
 		modeButtons.forEach(button => {
 			button.addEventListener('click', function() {
-				// Remove selected class from all buttons
 				modeButtons.forEach(btn => btn.classList.remove('selected'));
-				// Add selected class to clicked button
 				this.classList.add('selected');
-				// Update game state
 				gameState.mode = this.getAttribute('data-mode');
-				// Enable next button
 				nextBtn.disabled = false;
 			});
 		});
@@ -92,28 +88,29 @@ document.addEventListener('DOMContentLoaded', function() {
 		// Set up event listeners for player selection
 		playerButtons.forEach(button => {
 			button.addEventListener('click', function() {
-				// Remove selected class from all buttons
-				playerButtons.forEach(btn => btn.classList.remove('selected'));
-				// Add selected class to clicked button
+				playerButtons.forEach(player => player.classList.remove('selected'));
 				this.classList.add('selected');
-				// Update game state
-				gameState.players = parseInt(this.getAttribute('data-players'));
-				// Enable next button
 				nextBtn.disabled = false;
+
+				// Rreset map selection if player count changed
+				const players = parseInt(this.getAttribute('data-players'));
+				if (gameState.map !== null && gameState.players !== players) {
+					gameState.map = null;
+					mapOptions.forEach(map => map.classList.remove('selected'));
+				}
+
+				gameState.players = players;
 			});
 		});
 
 		// Set up event listeners for map selection
 		mapOptions.forEach(option => {
 			option.addEventListener('click', function() {
-				// Remove selected class from all maps
 				mapOptions.forEach(map => map.classList.remove('selected'));
-				// Add selected class to clicked map
 				this.classList.add('selected');
-				// Update game state
-				gameState.map = this.getAttribute('data-map');
-				// Enable next button
 				nextBtn.disabled = false;
+
+				gameState.map = this.getAttribute('data-map');
 			});
 		});
 
@@ -123,16 +120,14 @@ document.addEventListener('DOMContentLoaded', function() {
 				const powerup = this.getAttribute('data-powerup');
 
 				if (this.classList.contains('selected')) {
-					// If already selected, deselect it
 					this.classList.remove('selected');
-					// Remove from gameState
 					const index = gameState.powerups.indexOf(powerup);
-					gameState.powerups.splice(index, 1);
 
-				} else {
-					// Select it
+					gameState.powerups.splice(index, 1);
+				}
+				else {
 					this.classList.add('selected');
-					// Add to gameState
+	
 					gameState.powerups.push(powerup);
 				}
 			});
@@ -171,10 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	// Update the current step
 	function updateStep(stepNumber) {
-		// Hide current step
 		setupSteps[currentStep].classList.remove('active');
-
-		// Show new step
 		setupSteps[stepNumber].classList.add('active');
 
 		// Update progress bar
@@ -186,24 +178,36 @@ document.addEventListener('DOMContentLoaded', function() {
 			progressLines[stepNumber].classList.remove('completed');
 		}
 
+		nextBtn.disabled = true;
 
-		// Update current step
-		currentStep = stepNumber;
+		// Step specific logic
+		if (stepNumber === 0 && gameState.mode!== null) {
+			nextBtn.disabled = false;
+		}
 
-		// Show/hide previous button
-		prevBtn.disabled = (currentStep === 0);
+		if (stepNumber === 1 && gameState.players !== null) {
+			nextBtn.disabled = false;
+		}
 
-		// Update next button text on final step
-		nextBtn.innerHTML = (currentStep === totalSteps) ? 'Finish' : 'Next';
-
-		// Special case for map selection
-		if (currentStep === 2) {
+		if (stepNumber === 2) {
 			// Show appropriate maps based on player count
 			maps2Player.classList.toggle('hidden', gameState.players === 4);
 			maps4Player.classList.toggle('hidden', gameState.players === 2);
+
+			if (gameState.map !== null) {
+				nextBtn.disabled = false;
+			}
 		}
 
-		nextBtn.disabled = (currentStep !== 3);
+		if (stepNumber === 3) {
+			nextBtn.disabled = false;
+		}
+
+		prevBtn.disabled = (stepNumber === 0);
+
+		nextBtn.innerHTML = (stepNumber === totalSteps - 1) ? 'Finish' : 'Next';
+
+		currentStep = stepNumber;
 	}
 
 	// Show confirmation modal with summary
