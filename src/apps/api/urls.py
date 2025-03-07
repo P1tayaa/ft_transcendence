@@ -46,16 +46,6 @@ from .management.game_management import (
     clear_chat_data,
 )
 
-# from .management.lobby_management import (
-#     create_lobby,
-#     join_lobby,
-#     leave_lobby,
-#     set_player_ready,
-#     get_lobby_details,
-#     list_lobbies,
-#     notify_game_created,
-# )
-
 # here for API endpoints, pages are routed through templates
 urlpatterns = [
     path("register/", register_user, name="register_user"),
@@ -78,15 +68,6 @@ urlpatterns = [
     path("chats/message/", add_message, name="add_message"),
     path("chats/message/typing", update_typing_status, name="update_typing"),
     path("chats/message/read", mark_messages_read, name="mark_messages_read"),
-
-    # path("lobby/create/", create_lobby, name="create_lobby"),
-    # path("lobby/<int:lobby_id>/join/", join_lobby, name="join_lobby"),
-    # path("lobby/<int:lobby_id>/leave/", leave_lobby, name="leave_lobby"),
-    # path("lobby/<int:lobby_id>/ready/", set_player_ready, name="set_player_ready"),
-    # path("lobby/<int:lobby_id>/", get_lobby_details, name="get_lobby_details"),
-    # path("lobbies/", list_lobbies, name="list_lobbies"),
-    # path("lobby/<int:lobby_id>/notify-game-created/", notify_game_created, name='notify_game_created'),
-
     path("create_game/", create_game_room, name="create_game_room"),
     path("get_config_game_room/", get_config_game_room, name="get_config_game_room"),
     path("clear_game_rooms/", clear_game_rooms, name="clear_game_rooms"),
