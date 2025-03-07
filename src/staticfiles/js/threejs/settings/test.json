@@ -1,5 +1,0 @@
-{
-  "mode": "networked",
-  "serverUrl": "http://localhost:8000/api/",
-  "playerSide": "left"
-}
