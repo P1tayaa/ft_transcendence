@@ -1,0 +1,104 @@
+{
+  "playerCount": {
+    "label": "Number of Players",
+    "type": "select",
+    "options": [
+      {
+        "value": 2,
+        "label": "2 Players"
+      },
+      {
+        "value": 4,
+        "label": "4 Players"
+      }
+    ],
+    "default": 2
+  },
+  "powerUps": {
+    "label": "Enable Power-Ups",
+    "type": "checkbox",
+    "default": false,
+    "dependency": {
+      "type": "toggle",
+      "target": "powerUpOptions"
+    }
+  },
+  "powerUpOptions": {
+    "label": "Select Power-Ups",
+    "type": "checkboxGroup",
+    "options": [
+      {
+        "value": "speed",
+        "label": "Speed Boost"
+      },
+      {
+        "value": "size",
+        "label": "Size Change"
+      },
+      {
+        "value": "multiBall",
+        "label": "Multi Ball"
+      }
+    ],
+    "visible": true
+  },
+  "map": {
+    "label": "Select Map",
+    "type": "select",
+    "options": [],
+    "default": "",
+    "dependency": {
+      "type": "mapBasedOnPlayers",
+      "source": "playerCount",
+      "mapping": {
+        "2": [
+          {
+            "value": "classic",
+            "label": "Classic"
+          },
+          {
+            "value": "arena",
+            "label": "Arena"
+          }
+        ],
+        "4": [
+          {
+            "value": "classic4p",
+            "label": "Classic 4P"
+          },
+          {
+            "value": "maze",
+            "label": "Maze"
+          },
+          {
+            "value": "battle",
+            "label": "Battle Arena"
+          }
+        ]
+      }
+    }
+  },
+  "gamemode": {
+    "label": "Mode",
+    "type": "select",
+    "options": [
+      {
+        "value": "networked",
+        "label": "Public"
+      },
+      {
+        "value": "networked",
+        "label": "Private"
+      },
+      {
+        "value": "local",
+        "label": "Local"
+      },
+      {
+        "value": "localsolo",
+        "label": "Local Vs Bots"
+      }
+    ],
+    "default": "Public"
+  }
+}
