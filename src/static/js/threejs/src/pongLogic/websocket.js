@@ -5,7 +5,7 @@
 // consumers.py is where you can find all
 
 import { intToPlayerSide, strToPlayerSide, PlayerSide } from './setting.js'
-
+import { endGame } from '../main.js';
 
 class MyWebSocket {
   constructor() {
@@ -263,6 +263,7 @@ class MyWebSocket {
       };
 
       this.socket.onclose = (event) => {
+        endGame()
         console.warn('WebSocket connection closed', event);
       };
 

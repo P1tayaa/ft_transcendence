@@ -98,7 +98,12 @@ class main {
 
       this.pongLogic.socket.didReset = false;
     }
-
+    console.log(this.score.scores)
+    this.score.playerSides.forEach(side => {
+      if (this.score.scores[side] > 11) {
+        endGame();
+      }
+    });
 
     updateLightsForActivePlayers(this.init.lightManager, this.gameScene, this.init.settings.playerSide, this.pongLogic.lastWinner)
     if (this.init.settings.mode === Mode.NETWORKED) {
@@ -122,6 +127,13 @@ class main {
 let startInit = false;
 let config = null;
 let roomName;
+
+
+export function endGame() {
+  console.log("quite game")
+  window.location.href = "/endGame?" + roomName
+}
+
 
 document.addEventListener("startGame", (event) => {
   const detail = event.detail;

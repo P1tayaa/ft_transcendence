@@ -33,6 +33,12 @@
 /******/ 	})();
 /******/ 	
 /************************************************************************/
+var __webpack_exports__ = {};
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  I: () => (/* binding */ endGame)
+});
 
 // NAMESPACE OBJECT: ./src/pongLogic/setting.js
 var setting_namespaceObject = {};
@@ -61444,6 +61450,7 @@ function spawnPadles(settings, init, assetsPath, callback) {
 // consumers.py is where you can find all
 
 
+
 class MyWebSocket {
   constructor() {
     this.socket = null;
@@ -61665,6 +61672,7 @@ class MyWebSocket {
         }
       };
       this.socket.onclose = event => {
+        endGame();
         console.warn('WebSocket connection closed', event);
       };
       this.socket.onerror = error => {
@@ -106390,6 +106398,12 @@ class main {
       this.pongLogic.reset(this.init);
       this.pongLogic.socket.didReset = false;
     }
+    console.log(this.score.scores);
+    this.score.playerSides.forEach(side => {
+      if (this.score.scores[side] > 11) {
+        endGame();
+      }
+    });
     updateLightsForActivePlayers(this.init.lightManager, this.gameScene, this.init.settings.playerSide, this.pongLogic.lastWinner);
     if (this.init.settings.mode === Mode.NETWORKED) {} else {
       const ballCurrentSpeed = {
@@ -106405,6 +106419,10 @@ class main {
 let startInit = false;
 let config = null;
 let roomName;
+function endGame() {
+  console.log("quite game");
+  window.location.href = "/endGame?" + roomName;
+}
 document.addEventListener("startGame", event => {
   const detail = event.detail;
   config = detail.gameConfig;
