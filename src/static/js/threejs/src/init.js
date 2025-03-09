@@ -7,7 +7,7 @@ import Pong from './pongLogic/pong.js';
 import Score from './pongLogic/score.js';
 import { initPowerUp, AllPowerUp } from './powerUp/AllPowerUp.js';
 import { Mode, MapStyle, get_settings, Setting } from "./pongLogic/setting.js";
-const assetsPath = "http://localhost:8000/static/glfw/";
+var assetsPath = window.location.protocol + '//' + window.location.host + "/static/glfw/";
 
 
 import { loadClassicMap, loadBathMap, loadCircleMap, loadRectangleMap } from "./init/loadMap.js";

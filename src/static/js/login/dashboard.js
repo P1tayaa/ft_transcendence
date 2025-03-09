@@ -1,14 +1,14 @@
-import { getCSRFToken, getUserName } from '../utils.js';
+import { getCSRFToken, getUserName , getURL} from '../utils.js';
 
 console.log("Please exist");
-const LOGOUT_URL = '../api/logout/';
-const LOGOUT_REDIRECT_URL = '../login';
+const LOGOUT_URL = getURL() + '/api/logout/';
+const LOGOUT_REDIRECT_URL = getURL() + '/login';
 
-const ADD_SCORE_URL = '../api/score/add';
+const ADD_SCORE_URL = getURL() + '/api/score/add';
 
-const RECENT_SCORE_URL = '../api/score/recent';
-const HIGHSCORE_URL = '../api/score/highscore';
-const GET_FRIENDS_URL = '../api/get_friends/';
+const RECENT_SCORE_URL = getURL() + '/api/score/recent';
+const HIGHSCORE_URL = getURL() + '/api/score/highscore';
+const GET_FRIENDS_URL = getURL() + '/api/get_friends/';
 const csrfToken = getCSRFToken();
 
 

@@ -1,4 +1,4 @@
-import { getRequest, postRequest } from './utils.js';
+import { getURL, postRequest } from './utils.js';
 
 const CREATE_GAME_URL = 'http://localhost:8000/api/create_game/'
 

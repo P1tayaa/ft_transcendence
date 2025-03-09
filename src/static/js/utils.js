@@ -8,7 +8,7 @@ export function getCSRFToken() {
       ?.split('=')[1];
 }
 
-const GET_ME_URL = "http://localhost:8000/api/me"
+var GET_ME_URL = getURL()  + "/api/me"
 // "username": user.username,
 // "date_joined": user.date_joined.isoformat(),
 // "highscore": profile.highscore,
@@ -62,7 +62,7 @@ export async function getRequest(url, data) {
     return responce_data;
 
   } catch (error) {
-    console.error('Error: An error occurred. Please try again.', error);
+    throw error;
   }
 }
 
@@ -93,7 +93,36 @@ export async function postRequest(url, data) {
     return responseData; // Return parsed response
 
   } catch (error) {
-    console.error("Error in postRequest:", error);
-    return null; // Ensure function always returns something
+    throw error;
+  }
+}
+
+// function getCurrentUrl() {
+//   var url = window.location.href;
+  
+//   // Extract the protocol (e.g., "http://")
+//   var protocol = window.location.protocol + "//";
+  
+//   // Extract the host (e.g., "localhost:8000")
+//   var host = window.location.host;
+  
+//   // Extract the path (e.g., "/social/...")
+//   var path = window.location.pathname;
+  
+//   // Return as an array with the three components
+//   return [protocol, host, path];
+// }
+
+export function getURL(){
+  return window.location.protocol + '//' + window.location.host 
+}
+
+export function getWebsocketHost() {
+  console.log(window.location.protocol)
+  if (window.location.protocol === "http:") {
+    return "ws://" + window.location.host 
+  }
+  if (window.location.protocol === "https:") {
+    return "wss://" + window.location.host 
   }
 }

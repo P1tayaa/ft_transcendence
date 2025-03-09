@@ -1,7 +1,10 @@
 
-import { getCSRFToken } from '../utils.js';
+import { getCSRFToken, getURL  } from '../utils.js';
 
-const CREATE_GAME_URL = 'http://localhost:8000/api/create_game/'
+const CREATE_GAME_URL = getURL() + '/api/create_game/'
+
+
+
 
 async function make_room(config) {
   const csrfToken = getCSRFToken();

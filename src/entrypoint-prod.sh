@@ -28,5 +28,5 @@ cd /app/src
 
 python manage.py collectstatic --noinput
 export PYTHONPATH=$PYTHONPATH:/app/src
-export DJANGO_SETTINGS_MODULE=config.settings
+export DJANGO_SETTINGS_MODULE=config.settings.prod
 exec daphne -e ssl:8000:privateKey=/app/ssl/key.pem:certKey=/app/ssl/cert.pem config.asgi:application
