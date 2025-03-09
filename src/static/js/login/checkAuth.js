@@ -1,6 +1,6 @@
 export async function checkAuthStatus() {
   try {
-    const response = await fetch('/api/auth-status/', {
+    const response = await fetch(getURL() + '/api/auth-status/', {
       credentials: 'include'
     });
     const data = await response.json();

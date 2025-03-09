@@ -1,20 +1,20 @@
-import { getRequest, postRequest } from '../utils.js';
+import { getRequest, postRequest, getURL, getWebsocketHost } from '../utils.js';
 
-const SEARCH_URL = '../api/search/';
+const SEARCH_URL = getURL() + '/api/search/';
 
-const FRIENDS_URL = '../api/follow/following';
-const FOLLOW_URL = '../api/follow/';
-const UNFOLLOW_URL = '../api/follow/unfollow';
+const FRIENDS_URL = getURL() + '/api/follow/following';
+const FOLLOW_URL = getURL() + '/api/follow/';
+const UNFOLLOW_URL = getURL() + '/api/follow/unfollow';
 
-const CHAT_URL = '../api/chats/';
-const SEND_CHAT_URL = '../api/chats/message/';
+const CHAT_URL = getURL() + '/api/chats/';
+const SEND_CHAT_URL = getURL() + '/api/chats/message/';
 
-const GET_ME_URL = '../api/me';
+const GET_ME_URL = getURL() + '/api/me';
 
-const LOGOUT_URL = '../api/logout/';
-const LOGOUT_REDIRECT_URL = '../login';
+const LOGOUT_URL = getURL() + '/api/logout/';
+const LOGOUT_REDIRECT_URL = getURL() + '/login';
 
-const CLEAR_CHAT_URL = '../api/chat/clear';
+const CLEAR_CHAT_URL = getURL() + '/api/chat/clear';
 
 class Social {
 	constructor() {
@@ -489,7 +489,7 @@ class Chat {
 	initSocket() {
 		//Set up chat events
 		const host = window.location.host;
-		const socket = new WebSocket("ws://" + host + "/ws/chat/");
+		const socket = new WebSocket(getWebsocketHost() + "/ws/chat/");
 		socket.addEventListener("open", (event) => {
 			console.log("Connected to the chat socket.");
 		});
@@ -545,7 +545,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 	});
 
 	const host = window.location.host;
-	const socket = new WebSocket("ws://" + host + "/ws/presence/");
+	const socket = new WebSocket(getWebsocketHost() + "/ws/presence/");
 
 	socket.addEventListener("open", function(event) {
 		console.log("Connected to the status socket.");
