@@ -16,6 +16,9 @@ from .management.user_management import (
     unfollow_user,
     upload_profile_picture,
     delete_profile_picture,
+    block_user,
+    unblock_user,
+    get_blocked,
 )
 from .management.chat_management import (
     add_message,
@@ -58,6 +61,9 @@ urlpatterns = [
     path("follow/followers", get_followers, name="get_followers"),
     path("follow/following", get_following, name="get_following"),
     path("follow/unfollow", unfollow_user, name="unfollow_user"),
+    path("block/", block_user, name="block_user"),
+    path("block/unblock", unblock_user, name="unblock_user"),
+    path("block/get", get_blocked, name="get_blocked"),
     path("score/", get_score_history, name="get_score_history"),
     path("score/add", add_score, name="add_score"),
     path("score/recent", get_recent_score, name="get_recent_score"),
