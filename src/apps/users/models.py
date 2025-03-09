@@ -37,6 +37,18 @@ class Profile(models.Model):
 
     def get_followers(self):
         return self.followers.all()
+    
+    def block_user(self, profile):
+        return Block.objects.create(blocker=self, blocked=profile)
+    
+    def unblock_user(self, profile):
+        return self.blocking.filter(blocking=profile).delete()
+    
+    def is_blocking(self, profile):
+        return self.blocking.filter(blocked=profile).exists()
+    
+    def get_blocking(self):
+        return self.blocking.all()
 
     def get_scores(self):
         return self.scores.all()
@@ -163,6 +175,13 @@ class Follow(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     class Meta:
         unique_together = ["follower", "followed"]
+    
+class Block(models.Model):
+    blocker = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="blocking")
+    blocked = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="blocked")
+    blocked_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        unique_together = ["blocker", "blocked"]
 
 
 class Chat(models.Model):

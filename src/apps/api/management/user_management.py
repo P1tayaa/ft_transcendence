@@ -28,6 +28,9 @@ def serialize_user(user_to_serialize, viewing_user=None):
 
     if viewing_user and viewing_user != user_to_serialize:
         data["is_following"] = viewing_user.profile.is_following(user_to_serialize.profile)
+    
+    if viewing_user and viewing_user != user_to_serialize:
+        data["is_blocking"] = viewing_user.profile.is_blocking(user_to_serialize.profile)
 
     return data
 
@@ -192,7 +195,7 @@ def fetch_matching_usernames(request):
     except Exception as e:
         return Response({
                 "success": False,
-                "error": str(e),
+                "message": str(e),
             }, status=500,
         )
 
@@ -264,7 +267,7 @@ def get_followers(request):
             "followers": followers_list
         })
     except Exception as e:
-        return Response({"success": False, "error": str(e)}, status=500)
+        return Response({"success": False, "message": str(e)}, status=500)
 
 @api_view(["POST"])
 @login_required
@@ -272,17 +275,17 @@ def unfollow_user(request):
     try:
         user_id = request.data.get("user_id")
         if not user_id:
-            return Response({"success": False, "error": "user_id is required"}, status=400)
+            return Response({"success": False, "message": "user_id is required"}, status=400)
 
         try:
             user_id = int(user_id)
         except ValueError:
-            return Response({"success": False, "error": "Invalid user id format"}, status=400)
+            return Response({"success": False, "message": "Invalid user id format"}, status=400)
 
         try:
             user_to_unfollow = User.objects.get(id=user_id)
         except User.DoesNotExist:
-            return Response({"error": f"User not found"}, status=404)
+            return Response({"message": f"User not found"}, status=404)
 
         follower_profile = request.user.profile
         followed_profile = user_to_unfollow.profile
@@ -296,10 +299,10 @@ def unfollow_user(request):
         else:
             return Response({
                 "success": False,
-                "error": f"You are not following {user_to_unfollow.username}"
+                "message": f"You are not following {user_to_unfollow.username}"
             }, status=404)
     except Exception as e:
-        return Response({"success": False, "error": str(e)}, status=500)
+        return Response({"success": False, "message": str(e)}, status=500)
 
 
 
@@ -307,11 +310,11 @@ def unfollow_user(request):
 @login_required
 def upload_profile_picture(request):
     if 'profile_picture' not in request.FILES:
-        return Response({'error': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
 
     image = request.FILESi['profile_picture']
     if not image.content_type.startswith('image/'):
-        return Response({'error': 'File must be an image'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': 'File must be an image'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         img = Image.open(image)
@@ -334,10 +337,10 @@ def upload_profile_picture(request):
             'url': request.user.profile.get_profile_picture_url()
         })
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
         
-api_view(["POST"])
+@api_view(["POST"])
 @login_required
 def delete_profile_picture(request):
     profile = request.user.profile
@@ -348,3 +351,78 @@ def delete_profile_picture(request):
         profile.save()
     
     return Response({'message': 'Profile picture deleted successfully'})            
+
+
+@api_view(["POST"])
+@login_required
+def block_user(request):
+    try:
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return Response({"success": False, "message": "user_id is required"}, status=400)
+        user_to_block = User.objects.get(id=user_id)
+        profile_to_block = user_to_block.profile
+        profile_blocking = request.user.profile
+
+        if profile_blocking.is_blocking(profile_to_block):
+            return Response({"success": False, "message": f"Already blocking {user_to_block.username}"}, status=400)
+        block = profile_blocking.block_user(profile_to_block)
+        return Response({
+            "success": True,
+            "message": f"Successfully blocked {user_to_block.username}",
+            "follow_id": block.id
+        }, status = 201)
+    
+    except Exception as e:
+        return Response({'message': str(e)}, status=500)
+
+
+@api_view(["POST"])
+@login_required
+def unblock_user(request):
+    try:
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return Response({"success": False, "message": "user_id is required"}, status=400)
+
+        try:
+            user_to_unblock = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"message": f"User not found"}, status=404)
+
+        unblocking_profile = request.user.profile
+        unblocked_profile = user_to_unblock.profile
+
+        deleted_count, _ = unblocking_profile.unblock_user(unblocked_profile)
+        if deleted_count > 0:
+            return Response({
+                "success": True,
+                "message": f"Successfully unfollowed {user_to_unblock.username}"
+            })
+        else:
+            return Response({
+                "success": False,
+                "message": f"You are not following {user_to_unblock.username}"
+            }, status=404)
+
+    
+    except Exception as e:
+        return Response({'message': str(e)}, status=500)
+
+
+@api_view(["GET"])
+@login_required
+def get_blocked(request):
+    try:
+        user_id = request.user.id
+        if not user_id:
+            return Response({"success": False, "message": "user_id is required"}, status=400)
+        
+        user = User.objects.get(id=user_id)
+        profile = user.profile
+
+        profile.get_blocking()
+        
+    except Exception as e:
+        return Response({'message': str(e)}, status=500)
+        
