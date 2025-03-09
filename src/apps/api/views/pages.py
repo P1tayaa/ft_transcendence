@@ -20,8 +20,12 @@ def profile(request):
     return render(request, "base.html", {"template_name": "pages/profile.html"})
 
 
-def chat(request):
-    return render(request, "base.html", {"template_name": "pages/chat.html"})
+def lobby(request):
+    return render(request, "base.html", {"template_name": "pages/lobby.html"})
+
+
+def social(request):
+    return render(request, "base.html", {"template_name": "pages/social.html"})
 
 
 def friendlist(request):
@@ -49,10 +53,3 @@ def gameStarting(request):
 def gameSpectate(request):
     return render(request, "base.html", {"template_name": "pages/Spectate.html"})
 
-
-
-# @api_view(["POST"])
-# def create_profile(request):
-#     data = request.data
-#     # Process the data here
-#     return Response({"status": "Profile created", "data": data})

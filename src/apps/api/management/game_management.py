@@ -53,6 +53,7 @@ def get_config_game_room(request):
             'message': str(e),
         }, status=500)   
 
+
 @login_required
 @require_http_methods(["POST"])
 def create_game_room(request):
@@ -61,10 +62,7 @@ def create_game_room(request):
         config_data = data.get('config')
 
         if not config_data:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'No configuration provided'
-            }, status=400)
+            return JsonResponse({'status': 'error', 'message': 'No configuration provided'}, status=400)
 
         try:
             game_config = GameConfig.create_from_frontend(config_data)
@@ -80,10 +78,8 @@ def create_game_room(request):
         game_room = GameRoom.objects.create(
             room_name = f"game_{request.user.username}_{game_config.id}",
             config = game_config,
-            # max_players = int(config_data['playerCount'])
         )
     
-        # game_room.join_game(request.user)
         return JsonResponse({
             'status': 'success',
             'room_id': game_room.id,
@@ -118,13 +114,9 @@ def clear_chat_data(request):
                 }
             })
     except Exception as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': f'Failed to clear game rooms: {str(e)}'
-        }, status=500)
+        return JsonResponse({'status': 'error', 'message': f'Failed to clear game rooms: {str(e)}'}, status=500)
 
 
-# @user_passes_test(lambda u: u.is_staff)  # Only allow staff users to clear rooms
 @login_required
 @require_http_methods(["POST"])
 def clear_game_rooms(request):

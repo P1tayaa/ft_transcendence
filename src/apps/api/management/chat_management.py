@@ -21,16 +21,15 @@ def add_message(request):
             return Response({"success": False, "error": "Message content is required"}, status=400)
         if not recipient_id:
             return Response({"success": False, "error": "recipient_id is required"}, status=400)
+        if recipient_id == request.user.id:
+            return Response({"success": False, "error": "Can't chat to yourself"}, status=400)
+            
 
         with transaction.atomic():
             try:
                 recipient = User.objects.get(id=recipient_id)
-                chat = profile.get_chat_with(recipient)
+                chat = profile.get_or_create_chat_with(recipient)
 
-                if not chat:
-                    chat = Chat.objects.create()
-                    chat.participants.add(request.user, recipient)
-                    chat.save()
             except User.DoesNotExist:
                 return Response({"success": False, "error": "Recipient not found"}, status=404)
 
@@ -56,14 +55,16 @@ def add_message(request):
                 "sent_at": chat.sent_at.isoformat(),
             }
 
+            chat_participants = chat.participants.all()
             channel_layer = get_channel_layer()
-            for participant in other_participants:
+            for participant in chat_participants:
                 async_to_sync(channel_layer.group_send)(
                 f"user_{participant.id}",
                     {
                         "type": "new_message",
                         "message": message_data,
-                        "chat": chat_data
+                        "chat": chat_data,
+                        "chat_id": chat.id
                     }
                 )
 
@@ -83,11 +84,7 @@ def get_chats(request):
     try:
         chat_id = request.GET.get("chat_id")
         if chat_id:
-            chat_data = request.user.profile.get_chat_history(
-                chat_id,
-                limit=int(request.GET.get("limit", 50)),
-                offset=int(request.GET.get("offset", 0))
-            )
+            chat_data = request.user.profile.get_chat_history(chat_id)
             if not chat_data:
                 return Response({"error": "Chat not found"}, status=404)
             return Response(chat_data)
@@ -110,11 +107,7 @@ def get_chat_history(request):
                 if not chat:
                     return Response({"error": "No chat history found with this user"}, status=404)
 
-                chat_data = request.user.profile.get_chat_history(
-                    chat.id,
-                    limit=int(request.GET.get("limit", 50)),
-                    offset=int(request.GET.get("offset", 0))
-                )
+                chat_data = request.user.profile.get_chat_history(chat.id)
                 return Response(chat_data)
             except User.DoesNotExist:
                 return Response({"error": "User not found"}, status=404)
