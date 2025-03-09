@@ -42,7 +42,7 @@ class Profile(models.Model):
         return Block.objects.create(blocker=self, blocked=profile)
     
     def unblock_user(self, profile):
-        return self.blocking.filter(blocking=profile).delete()
+        return self.blocking.filter(blocked=profile).delete()
     
     def is_blocking(self, profile):
         return self.blocking.filter(blocked=profile).exists()
