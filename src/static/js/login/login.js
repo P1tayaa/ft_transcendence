@@ -1,5 +1,5 @@
 import { checkAuthStatus } from './checkAuth.js';
-import { getCSRFToken } from '../utils.js';
+import { getCSRFToken, getURL } from '../utils.js';
 
 (async () => {
   const isAuthenticated = await checkAuthStatus();
@@ -26,8 +26,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!csrfToken) {
         throw new Error('CSRF token not found');
       }
-
-      const response = await fetch("/api/login/", {
+      var url = getURL() + "/api/login/"
+      console.log(url)
+      const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

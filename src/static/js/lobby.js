@@ -1,4 +1,4 @@
-import { getRequest, postRequest } from './utils.js';
+import { getURL, postRequest } from './utils.js';
 
 const LOBBY_LIST_URL = '../api/lobbies';
 

@@ -1,14 +1,11 @@
 
-import { getCSRFToken, postRequest } from '../utils.js';
+import { getCSRFToken, postRequest, getURL, getWebsocketHost } from '../utils.js';
 
+var socket_url = getWebsocketHost() + "/ws/matchmaking/"
+console.log(socket_url)
+const socket = new WebSocket(socket_url);
 
-
-
-
-
-const socket = new WebSocket("ws://localhost:8000/ws/matchmaking/");
-
-const GET_CONFIG_URL = "localhost:8000/api/get_config_game_room/";
+const GET_CONFIG_URL = getURL() + "api/get_config_game_room/";
 
 async function getConfig(roomName) {
   try {

@@ -1,5 +1,6 @@
+import { getURL, postRequest } from './utils.js';
 
-const url = 'http://localhost:8000/';
+var url = getURL();
 
 const headerContent = `
 <header>
