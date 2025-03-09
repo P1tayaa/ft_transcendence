@@ -1,4 +1,4 @@
-import { getRequest, postRequest, getURL, getWebsocketHost } from '../utils.js';
+import { getRequest, postRequest, getURL, getWebsocketHost } from './utils.js';
 
 const SEARCH_URL = getURL() + '/api/search/';
 
