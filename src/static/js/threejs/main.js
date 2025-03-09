@@ -33,6 +33,12 @@
 /******/ 	})();
 /******/ 	
 /************************************************************************/
+var __webpack_exports__ = {};
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  I: () => (/* binding */ endGame)
+});
 
 // NAMESPACE OBJECT: ./src/pongLogic/setting.js
 var setting_namespaceObject = {};
@@ -61444,12 +61450,14 @@ function spawnPadles(settings, init, assetsPath, callback) {
 // consumers.py is where you can find all
 
 
+
 class MyWebSocket {
   constructor() {
     this.socket = null;
     this.host;
     this.isSpectator;
     this.Connected = false;
+    this.didReset = true;
     this.serverState = null;
     this.winner = "";
     this.game_over = false;
@@ -61658,9 +61666,13 @@ class MyWebSocket {
           console.error(event.data);
         } else if (data.type === "errors") {
           console.error(event.data);
+        } else if (data.type === "reset_round") {
+          console.log("reset_round");
+          this.didReset = true;
         }
       };
       this.socket.onclose = event => {
+        endGame();
         console.warn('WebSocket connection closed', event);
       };
       this.socket.onerror = error => {
@@ -61962,12 +61974,11 @@ class Pong {
     this.checkCollisions(BallPos, gameScene);
   }
   reset(init) {
-    this.resetBall = false;
     // console.log(this.ballPos)
     if (this.settings.mode === Mode.NETWORKED) {
       // init.score.incrementScore(intToPlayerSide(this.lastWinner));
       this.socket.resetRound(this);
-      // this.socket.updateScore(this)
+      this.socket.updateScore(this);
     } else {
       init.score.incrementScore((0,setting_namespaceObject["default"])(this.lastWinner));
     }
@@ -106366,7 +106377,9 @@ class main {
       botControl(this.init.settings, this.gameScene.getAssetPossition('Ball'));
     }
     const input = this.init.controlHandler.getPaddleSpeeds();
-    this.pongLogic.update(input, this.gameScene);
+    if (this.pongLogic.socket.didReset) {
+      this.pongLogic.update(input, this.gameScene);
+    }
     // let Paddle2Win = 0;
     // let Paddle1Win = 0;
     // let Ball_Reset = false;
@@ -106376,14 +106389,21 @@ class main {
     //   Paddle1Win = 0;
     //   Ball_Reset = false;
     // }
-
+    this.pongLogic.settings.playerSide.forEach(side => {
+      this.score.updateScoreDisplay(side);
+    });
     if (this.pongLogic.resetBall === true && this.init.settings.host === true) {
       console.log("this.pongLogic.resetBall", this.pongLogic.resetBall);
+      this.pongLogic.resetBall = false;
       this.pongLogic.reset(this.init);
-      this.pongLogic.settings.playerSide.forEach(side => {
-        this.score.updateScoreDisplay(side);
-      });
+      this.pongLogic.socket.didReset = false;
     }
+    console.log(this.score.scores);
+    this.score.playerSides.forEach(side => {
+      if (this.score.scores[side] > 11) {
+        endGame();
+      }
+    });
     updateLightsForActivePlayers(this.init.lightManager, this.gameScene, this.init.settings.playerSide, this.pongLogic.lastWinner);
     if (this.init.settings.mode === Mode.NETWORKED) {} else {
       const ballCurrentSpeed = {
@@ -106399,6 +106419,10 @@ class main {
 let startInit = false;
 let config = null;
 let roomName;
+function endGame() {
+  console.log("quite game");
+  window.location.href = "/endGame?" + roomName;
+}
 document.addEventListener("startGame", event => {
   const detail = event.detail;
   config = detail.gameConfig;

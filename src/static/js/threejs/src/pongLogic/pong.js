@@ -293,12 +293,11 @@ class Pong {
   }
 
   reset(init) {
-    this.resetBall = false;
     // console.log(this.ballPos)
     if (this.settings.mode === Mode.NETWORKED) {
       // init.score.incrementScore(intToPlayerSide(this.lastWinner));
       this.socket.resetRound(this);
-      // this.socket.updateScore(this)
+      this.socket.updateScore(this)
     } else {
       init.score.incrementScore(intToPlayerSide(this.lastWinner));
     }
