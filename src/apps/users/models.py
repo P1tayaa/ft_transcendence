@@ -41,11 +41,21 @@ class Profile(models.Model):
     def get_scores(self):
         return self.scores.all()
 
-    def get_chat_with(self, other_user):
-        common_chats = self.user.chats.filter(participants=other_user)
+    def get_or_create_chat_with(self, other_user):
+        common_chats = Chat.objects.filter(
+            participants=self.user
+        ).filter(
+            participants=other_user
+        )
+
         if common_chats.exists():
             return common_chats.first()
-        return None
+
+        new_chat = Chat.objects.create()
+        new_chat.participants.add(self.user, other_user)
+        new_chat.save()
+
+        return new_chat
 
     def get_all_chats(self):
         # get all chats with latest message
@@ -76,11 +86,11 @@ class Profile(models.Model):
             # return chat_data
         return chat_data        
 
-    def get_chat_history(self, chat_id, limit=50, offset=0):
+    def get_chat_history(self, chat_id):
         try:
             chat = Chat.objects.get(id=chat_id, participants=self.user)
             total_messages = chat.messages.count()
-            messages = chat.messages.all().order_by("timestamp")[offset : offset + limit]
+            messages = chat.messages.all().order_by("timestamp")
 
             return {
                 "chat_id": chat.id,
@@ -98,7 +108,6 @@ class Profile(models.Model):
                     }
                     for msg in messages
                 ],
-                "has_more": total_messages > (offset + limit),
                 "total_messages": total_messages,
             }
         except Chat.DoesNotExist:

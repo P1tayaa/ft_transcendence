@@ -60946,7 +60946,7 @@ class Setting {
     // Parse the JSON and fill in the settings
     this.mode = this.parseMode(setting_json.mode);
     console.log("this.mode", this.mode);
-    this.serverurl = setting_json.serverurl || "http://localhost:8000/api/";
+    this.serverurl = setting_json.serverurl || window.location.protocol + '//' + window.location.host + "/api/";
     this.powerup = setting_json.powerup; // Convert to boolean
     console.log("this.powerup", this.powerup);
     this.powerupList = this.parsePoweruplist(setting_json.poweruplist);
@@ -106151,7 +106151,7 @@ function updateLoadingScreen(init, sides, socket) {
 
 
 
-const assetsPath = "http://localhost:8000/static/glfw/";
+var assetsPath = window.location.protocol + '//' + window.location.host + "/static/glfw/";
 
 
 

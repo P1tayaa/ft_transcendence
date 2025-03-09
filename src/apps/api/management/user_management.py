@@ -161,30 +161,6 @@ def check_auth_status(request):
         return JsonResponse({"isAuthenticated": False})
 
 
-# @login_requied
-# def get_chat_data(request, chat_id=None):
-#     profile = request.user.profile
-#     print("test2")
-#     if chat_id:
-#         chat_data = profile.get_chat_history(
-#             chat_id,
-#             limit=int(request.GET.get("limit", 50)),
-#             offset=int(request.GET.get("offset", 0)),
-#         )
-#         if not chat_data:
-#             with open("test.txt", "a") as myfile:
-#                 myfile.write("appended text")
-#             return JsonResponse({"error": "Chat not found"}, status=404)
-#     else:
-#         with open("test.txt", "a") as myfile:
-#             myfile.write("appended text")
-#         chat_data = profile.get_all_chats()
-
-#     with open("test.txt", "a") as myfile:
-#         myfile.write("appended text")
-#     return JsonResponse(chat_data, safe=False)
-
-
 @api_view(["GET"])
 @login_required
 def get_current_user(request):
@@ -263,7 +239,7 @@ def get_following(request):
         following_list = []
 
         for follow in following:
-            following_list.append({**serialize_user(follow.followed.user)})
+            following_list.append({**serialize_user(follow.followed.user, request.user)})
 
         return Response({
             "success": True,

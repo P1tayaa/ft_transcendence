@@ -1,21 +1,20 @@
-import { getCSRFToken, getRequest, postRequest, getUserName } from '../utils.js';
+import { getRequest, postRequest, getURL, getWebsocketHost } from '../utils.js';
 
-const SEARCH_URL = '../api/fetch_matching_usernames/';
+const SEARCH_URL = getURL() + '/api/search/';
 
-const FRIENDS_URL = '../api/follow/following';
-const FOLLOW_URL = '../api/follow/';
-const UNFOLLOW_URL = '../api/follow/unfollow';
+const FRIENDS_URL = getURL() + '/api/follow/following';
+const FOLLOW_URL = getURL() + '/api/follow/';
+const UNFOLLOW_URL = getURL() + '/api/follow/unfollow';
 
-const CHAT_URL = '../api/chats/';
-const SEND_CHAT_URL = '../api/add_message/';
+const CHAT_URL = getURL() + '/api/chats/';
+const SEND_CHAT_URL = getURL() + '/api/chats/message/';
 
-const GET_ME_URL = '../api/me';
+const GET_ME_URL = getURL() + '/api/me';
 
-const LOGOUT_URL = '../api/logout/';
-const LOGOUT_REDIRECT_URL = '../login';
+const LOGOUT_URL = getURL() + '/api/logout/';
+const LOGOUT_REDIRECT_URL = getURL() + '/login';
 
-const CLEAR_CHAT_URL = '../api/chat/clear';
-
+const CLEAR_CHAT_URL = getURL() + '/api/chat/clear';
 
 class Social {
 	constructor() {
@@ -45,13 +44,12 @@ class Social {
 		this.loadProfileTop();
 
 		if (!this.currentScreen) {
-			this.MatchHistory = new MatchHistory(this.currentProfile);
 			this.Stats = new Stats(this.currentProfile);
 			this.Chat = new Chat(this.me, this.currentProfile);
+			this.MatchHistory = new MatchHistory(this.currentProfile);
 		}
 
 		this.currentScreen = this.MatchHistory;
-		this.currentScreen.load(this.currentProfile);
 
 		document.getElementById("chat-select").style.display = this.currentProfile === this.me ? "none" : "block";
 
@@ -137,6 +135,8 @@ class Social {
 			return;
 		}
 
+		console.log("Profile: ", this.currentProfile)
+
 		const friendButton = document.createElement("button");
 		if (this.currentProfile.is_following) {
 			friendButton.textContent = "Remove Friend";
@@ -197,12 +197,16 @@ class Social {
 		const friends = await this.getFriends();
 		const friendListDiv = document.getElementById("friends");
 
-
 		// Loop through and create list items
 		friends.forEach(friend => {
 			const li = document.createElement("li");
-			li.classList.add("friendBox");
-	
+			li.classList.add("friend");
+			li.setAttribute("user-id", friend.id);
+
+			// Add online status
+			const status = document.createElement("span");
+			status.classList.add("status");
+
 			// Create avatar image
 			const img = document.createElement("img");
 			img.classList.add("avatar");
@@ -211,11 +215,13 @@ class Social {
 			img.width = 64;
 			img.height = 64;
 	
+			
 			// Create name text
 			const nameText = document.createTextNode(friend.username);
-	
+			
 			// Append image and name
 			li.appendChild(img);
+			li.appendChild(status);
 			li.appendChild(nameText);
 	
 			// Add message button if applicable
@@ -233,6 +239,18 @@ class Social {
 				this.loadProfile(friend);
 			});
 		});
+	}
+
+	setOnlineStatus(user_id, status) {
+		const statusDiv = document.querySelector(`li[user-id="${user_id}"] .status`);
+
+		if (statusDiv) {
+			if (status === "online") {
+				statusDiv.classList.add("online");
+			} else {
+				statusDiv.classList.remove("online");
+			}
+		} 
 	}
 
 	async getSearchResults(searchTerm) {
@@ -267,7 +285,7 @@ class Social {
 			}
 
 			const li = document.createElement("li");
-			li.classList.add("friendBox");
+			li.classList.add("friend");
 
 			// Create avatar image
 			const img = document.createElement("img");
@@ -318,6 +336,36 @@ class MatchHistory {
 
 	async loadMatchHistory() {
 		const matchHistory = await this.getMatchHistory();
+		const games = matchHistory.games;
+
+		console.log("Matches:", games);
+
+		const matchDiv = document.getElementById("history");
+		matchDiv.innerHTML = "";
+
+		// Create list of matches
+		games.forEach(match => {
+			const matchItem = document.createElement("li");
+			matchItem.textContent = `Match: ${match.score}`;
+			matchDiv.appendChild(matchItem);
+		});
+
+		const addMatchButton = document.createElement("button");
+		addMatchButton.textContent = "Add Match";
+		addMatchButton.addEventListener("click", () => {
+			this.addMatch();
+		});
+		matchDiv.appendChild(addMatchButton);
+	}
+
+	async addMatch() {
+		try {
+			const data = await postRequest("../api/score/add", { score: 69 });
+			console.log("Match added:", data);
+		} catch (error) {
+			console.error('Error adding match:', error);
+			alert('An error occurred while adding the match.');
+		}
 	}
 
 	load(user) {
@@ -358,14 +406,19 @@ class Stats {
 }
 
 class Chat {
-	constructor(me, user) {
+	constructor(me, other) {
 		this.me = me;
-		this.user = user;
+		this.other = other;
+		this.chatDiv = document.getElementById("chat-list");
+		this.chat_id = null;
+		this.initSocket();
 	}
 
 	async getChats() {
 		try {
-			const chatData = await getRequest(`${CHAT_URL}?user_id=${this.user.id}`);
+			const chatData = await getRequest(`${CHAT_URL}?user_id=${this.other.id}`);
+			console.log("Chat data:", chatData);
+			this.chat_id = chatData.chat_id;
 			const chats = chatData.messages;
 			return chats;
 		}
@@ -375,45 +428,54 @@ class Chat {
 		}
 	}
 
+	addChat(message) {
+		const content = message.content;
+		const messageDiv = document.createElement("li");
+
+		if (message.sender === this.me.username) {
+			messageDiv.classList.add("message-self");
+		} else {
+			messageDiv.classList.add("message-other");
+		}
+
+		messageDiv.textContent = content;
+
+		this.chatDiv.appendChild(messageDiv);
+	}
+
 	async loadChats() {
 		const chats = await this.getChats();
-		const chatDiv = document.getElementById("chat-list");
-		chatDiv.innerHTML = "";
+		this.chatDiv.innerHTML = "";
+
+		console.log("Chats:", chats);
 
 		chats.forEach(message => {
-			const content = message.content;
-			const messageDiv = document.createElement("li");
-			if (message.sender === this.me.username) {
-				messageDiv.classList.add("message-self");
-			} else {
-				messageDiv.classList.add("message-other");
-			}
-
-			messageDiv.textContent = content;
-	
-			chatDiv.appendChild(messageDiv);
+			this.addChat(message);
 		});
 	}
 
 	async sendChat(message) {
-		if (!this.user) {
+		if (!this.other) {
 			alert("Please select a friend to chat with.");
 			return;
 		}
 
 		try {
 			const data = await postRequest(SEND_CHAT_URL, {
-				recipient_id: this.user.id,
+				recipient_id: this.other.id,
 				content: message
 			});
+
+			console.log("Message sent:", data);
+
 		} catch (error) {
 			console.error('Error sending message:', error);
 			alert('An error occurred while sending the message.');
 		}
 	}
 
-	load(user) {
-		this.user = user;
+	load(other) {
+		this.other = other;
 
 		//Hide stats and history
 		document.getElementById("history").style.display = "none";
@@ -422,6 +484,30 @@ class Chat {
 
 		//Load chat
 		this.loadChats();
+	}
+
+	initSocket() {
+		//Set up chat events
+		const host = window.location.host;
+		const socket = new WebSocket(getWebsocketHost() + "/ws/chat/");
+		socket.addEventListener("open", (event) => {
+			console.log("Connected to the chat socket.");
+		});
+
+		socket.addEventListener("close", (event) => {
+			console.log("Disconnected from the chat socket.");
+		});
+
+		socket.addEventListener("message", (event) => {
+			const data = JSON.parse(event.data);
+
+			if (data.type === "new_message") {
+				console.log("New message:", data);
+				if (data.chat.id === this.chat_id) {
+					this.addChat(data.message);
+				}
+			}
+		});
 	}
 }
 
@@ -433,7 +519,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 	const searchForm = document.getElementById("search");
 	searchForm.addEventListener("submit", (event) => {
 		event.preventDefault();
-		const searchTerm = document.getElementById("search-box").value.trim();
+		const form = document.getElementById("search-box");
+		const searchTerm = form.value.trim();
+		form.value = "";
 
 		if (searchTerm) {
 			// social.clearChat();
@@ -446,11 +534,38 @@ document.addEventListener("DOMContentLoaded", async () => {
 	chatForm.addEventListener("submit", (event) => {
 		event.preventDefault();
 
-		const message = document.getElementById("chat-box").value.trim();
+		const form = document.getElementById("chat-box");
+
+		const message = form.value.trim();
+		form.value = "";
 
 		if (message) {
 			social.Chat.sendChat(message);
 		}
 	});
 
+	const host = window.location.host;
+	const socket = new WebSocket(getWebsocketHost() + "/ws/presence/");
+
+	socket.addEventListener("open", function(event) {
+		console.log("Connected to the status socket.");
+	});
+
+	socket.addEventListener("close", function(event) {
+		console.log("Disconnected from the status socket.");
+	});
+
+	socket.addEventListener("message", function(event) {
+		const data = JSON.parse(event.data);
+
+		if (data.type === "user_online") {
+			social.setOnlineStatus(data.user_id, "online");
+		} else if (data.type === "user_offline") {
+			social.setOnlineStatus(data.user_id, "offline");
+		} else if (data.type === "online_users") {
+			data.users.forEach(user => {
+				social.setOnlineStatus(user.user_id, "online");
+			});
+		}
+	});
 });
