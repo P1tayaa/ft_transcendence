@@ -22,79 +22,55 @@ export async function getUserName() {
   }
 }
 
-export async function getRequest(url, data) {
-  try {
-    const csrfToken = getCSRFToken();
+export async function getRequest(url) {
+  const csrfToken = getCSRFToken();
 
-    if (!csrfToken) {
-      throw new Error('CSRF token not found');
-    }
-
-    let response = null;
-    if (data) {
-      response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": csrfToken
-        },
-        credentials: 'include',
-      });
-
-
-    } else {
-      response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": csrfToken
-        },
-        credentials: 'include'
-      });
-
-    }
-    if (!response.ok) {
-      let errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to logout');
-    }
-
-    let responce_data = await response.json();
-    return responce_data;
-
-  } catch (error) {
-    throw error;
+  if (!csrfToken) {
+    throw new Error('CSRF token not found');
   }
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken
+    },
+    credentials: 'include'
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "GET request failed");
+  }
+
+  return (data);
 }
 
-export async function postRequest(url, data) {
-  try {
-    const csrfToken = getCSRFToken();
+export async function postRequest(url, body) {
+  const csrfToken = getCSRFToken();
 
-    if (!csrfToken) {
-      throw new Error("CSRF token not found");
-    }
-
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": csrfToken,
-      },
-      credentials: "include",
-      body: JSON.stringify(data),
-    });
-
-    const responseData = await response.json(); // Fixed variable name
-
-    if (!response.ok) {
-      throw new Error(responseData.error || "Request failed");
-    }
-
-    return responseData; // Return parsed response
-
-  } catch (error) {
-    throw error;
+  if (!csrfToken) {
+    throw new Error("CSRF token not found");
   }
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken,
+    },
+    credentials: "include",
+    body: JSON.stringify(body),
+  });
+
+  const data = await response.json(); // Fixed variable name
+
+  if (!response.ok) {
+    throw new Error(data.message || "POST request failed");
+  }
+
+  return data;
 }
 
 // function getCurrentUrl() {

@@ -1,8 +1,8 @@
-import { getRequest, postRequest } from './utils.js';
+import { getURL, getRequest, postRequest } from './utils.js';
 
 // API endpoints
-const LOGIN_URL = 'http://localhost:8000/api/login/';
-const REGISTER_URL = 'http://localhost:8000/api/register/';
+const LOGIN_URL = getURL() + '/api/login/';
+const REGISTER_URL = getURL() + '/api/register/';
 
 document.addEventListener('DOMContentLoaded', function() {
 	// Tab switching functionality
@@ -67,31 +67,25 @@ document.addEventListener('DOMContentLoaded', function() {
 	loginForm.addEventListener('submit', async function(e) {
 		e.preventDefault();
 
-		if (!loginUsername.value || !loginPassword.value) {
+		const username = loginUsername.value;
+		const password = loginPassword.value;
+
+		if (!username || !password) {
 			alert('Please enter both username and password');
 			return;
 		}
 
 		try {
 			const response = await postRequest(LOGIN_URL, {
-				username: loginUsername.value,
-				password: loginPassword.value
+				username: username,
+				password: password
 			});
 
-			if (response.success) {
-				// Store auth token if provided
-				if (response.token) {
-					localStorage.setItem('authToken', response.token);
-				}
-
-				// Redirect to lobby or game
-				window.location.href = '/lobby';
-			} else {
-				alert(response.message || 'Login failed. Please check your credentials.');
-			}
+			// Redirect to lobby or game
+			window.location.href = '/';
 		} catch (error) {
-			console.error('Login error:', error);
-			alert('An error occurred during login. Please try again.');
+			console.error('Login error:', error.message);
+			alert(error.message);
 		}
 	});
 
@@ -99,45 +93,33 @@ document.addEventListener('DOMContentLoaded', function() {
 	registerForm.addEventListener('submit', async function(e) {
 		e.preventDefault();
 
+		const username = registerUsername.value;
+		const password = registerPassword.value;
+		const confirm = confirmPassword.value;
+		const image = profileImage.files[0];
+
 		// Validate form
-		if (!registerUsername.value || !registerPassword.value) {
+		if (!username || !password) {
 			alert('Please provide both username and password');
 			return;
 		}
 
-		if (registerPassword.value !== confirmPassword.value) {
+		if (password !== confirm) {
 			alert('Passwords do not match');
 			return;
 		}
 
-		// Create FormData for file upload
-		const formData = new FormData();
-		formData.append('username', registerUsername.value);
-		formData.append('password', registerPassword.value);
-
-		if (profileImage.files[0]) {
-				formData.append('profile_image', profileImage.files[0]);
-		}
-
 		try {
-			// Use fetch directly for FormData
-			const response = await fetch(REGISTER_URL, {
-				method: 'POST',
-				body: formData
+			const response = await postRequest(REGISTER_URL, {
+				username: username,
+				email: null,
+				password: password
 			});
 
-			const data = await response.json();
-
-			if (data.success) {
-				alert('Registration successful! You can now log in.');
-				// Switch to login tab
-				tabButtons[0].click();
-			} else {
-				alert(data.message || 'Registration failed. Please try a different username.');
-			}
+			tabButtons[0].click();
 		} catch (error) {
 			console.error('Registration error:', error);
-			alert('An error occurred during registration. Please try again.');
+			alert(error.message);
 		}
 	});
 });
