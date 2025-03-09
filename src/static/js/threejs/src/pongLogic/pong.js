@@ -6,6 +6,8 @@ import { PlayerSide, Mode, MapStyle, get_settings, Setting } from "./setting.js"
 import { getNewPosition, getRightSpeed, posSpawn } from "../init/loadPadle.js"
 import MyWebSocket from "./websocket.js"
 import intToPlayerSide from "./setting.js"
+import { endGame } from '../main.js';
+
 
 class Pong {
   constructor() {
@@ -270,6 +272,9 @@ class Pong {
   update(input, gameScene) {
     if (this.mode === Mode.NETWORKED) {
       this.settings.playerSide.forEach(Padle => {
+        if (!this.settings.paddleLoc[Padle]) {
+          endGame()
+        }
         gameScene.moveAsset(Padle, getNewPosition(Padle, this.settings.mapStyle, this.settings.paddleLoc[Padle].position));
       });
       // console.log(input, this.settings.paddleLoc);

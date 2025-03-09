@@ -55,6 +55,12 @@ class BaseConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, close_code):
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'player_disconnected',
+            }
+        )
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
@@ -378,6 +384,8 @@ class GameConsumer(BaseConsumer):
     async def player_ready(self, event):
         await self.send(text_data = json.dumps(event))
     async def all_players_ready(self, event):
+        await self.send(text_data = json.dumps(event))
+    async def player_disconnected(self, event):
         await self.send(text_data = json.dumps(event))
         
 

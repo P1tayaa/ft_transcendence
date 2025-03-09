@@ -61669,6 +61669,9 @@ class MyWebSocket {
         } else if (data.type === "reset_round") {
           console.log("reset_round");
           this.didReset = true;
+        } else if (data.type === "player_disconnected") {
+          console.log("caught disconnected");
+          endGame();
         }
       };
       this.socket.onclose = event => {
@@ -61687,6 +61690,7 @@ class MyWebSocket {
 /* harmony default export */ const websocket = (MyWebSocket);
 ;// ./src/pongLogic/pong.js
 // src/pongLogic/pong.js
+
 
 
 
@@ -61950,6 +61954,9 @@ class Pong {
   update(input, gameScene) {
     if (this.mode === Mode.NETWORKED) {
       this.settings.playerSide.forEach(Padle => {
+        if (!this.settings.paddleLoc[Padle]) {
+          endGame();
+        }
         gameScene.moveAsset(Padle, getNewPosition(Padle, this.settings.mapStyle, this.settings.paddleLoc[Padle].position));
       });
       // console.log(input, this.settings.paddleLoc);
@@ -106421,7 +106428,8 @@ let config = null;
 let roomName;
 function endGame() {
   console.log("quite game");
-  window.location.href = "/endGame?" + roomName;
+  // window.location.href = "gameOver?" + roomName
+  window.location.href = "../gameOver";
 }
 document.addEventListener("startGame", event => {
   const detail = event.detail;

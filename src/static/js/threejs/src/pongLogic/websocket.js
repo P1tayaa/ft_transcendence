@@ -258,6 +258,9 @@ class MyWebSocket {
         } else if (data.type === "reset_round") {
           console.log("reset_round")
           this.didReset = true;
+        } else if (data.type === "player_disconnected") {
+          console.log("caught disconnected")
+          endGame()
         }
 
       };

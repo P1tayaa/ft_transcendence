@@ -35,6 +35,8 @@ from apps.api.views.pages import (
     configGame,
     gameStarting,
     gameSpectate,
+    gameOver,
+    joinGame
 )
 
 
@@ -75,5 +77,8 @@ urlpatterns = [
     path("gameStarting/", gameStarting, name="gameStarting"),
 
     path("gameSpectate/",gameSpectate, name="gameSpectate"),
+
+    path("gameOver/",gameOver, name="gameOver"),
+    path("joinGame/",joinGame, name="joinGame"),
     # ... other paths
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

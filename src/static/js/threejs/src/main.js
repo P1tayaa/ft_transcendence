@@ -131,7 +131,8 @@ let roomName;
 
 export function endGame() {
   console.log("quite game")
-  window.location.href = "/endGame?" + roomName
+  // window.location.href = "gameOver?" + roomName
+  window.location.href = "../gameOver"
 }
 
 
