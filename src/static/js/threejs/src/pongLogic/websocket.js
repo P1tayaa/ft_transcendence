@@ -5,10 +5,9 @@
 // consumers.py is where you can find all
 
 import { intToPlayerSide, strToPlayerSide, PlayerSide } from './setting.js'
-import { endGame } from '../main.js';
 
 class MyWebSocket {
-  constructor() {
+  constructor(settings) {
     this.socket = null;
     this.host;
     this.isSpectator;
@@ -21,6 +20,8 @@ class MyWebSocket {
     this.myPosStruc = null;
     this.gameStarted = false;
     this.allPlayerReady = false;
+    this.settings = settings
+    this.endGame = false
   }
 
   isPlaying() {
@@ -175,6 +176,15 @@ class MyWebSocket {
     // }
   }
 
+  async socket_game_done() {
+    const playerRequest = {
+      type: 'game_over',
+    }
+    this.socket.send(JSON.stringify(playerRequest))
+  }
+
+
+
   async askAllReady() {
     console.log("askAllReady")
     const playerRequest = {
@@ -260,13 +270,13 @@ class MyWebSocket {
           this.didReset = true;
         } else if (data.type === "player_disconnected") {
           console.log("caught disconnected")
-          endGame()
+          this.endGame = true
         }
 
       };
 
       this.socket.onclose = (event) => {
-        endGame()
+        this.endGame = true
         console.warn('WebSocket connection closed', event);
       };
 
