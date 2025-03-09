@@ -6,6 +6,9 @@ const FRIENDS_URL = getURL() + '/api/follow/following';
 const FOLLOW_URL = getURL() + '/api/follow/';
 const UNFOLLOW_URL = getURL() + '/api/follow/unfollow';
 
+const BLOCK_URL = getURL() + '/api/block/';
+const UNBLOCK_URL = getURL() + '/api/block/unblock';
+
 const CHAT_URL = getURL() + '/api/chats/';
 const SEND_CHAT_URL = getURL() + '/api/chats/message/';
 
@@ -44,14 +47,20 @@ class Social {
 		this.loadProfileTop();
 
 		if (!this.currentScreen) {
-			this.Stats = new Stats(this.currentProfile);
 			this.Chat = new Chat(this.me, this.currentProfile);
 			this.MatchHistory = new MatchHistory(this.currentProfile);
 		}
 
 		this.currentScreen = this.MatchHistory;
 
-		document.getElementById("chat-select").style.display = this.currentProfile === this.me ? "none" : "block";
+		const chatButton = document.getElementById("chat-select");
+
+		// hide chat
+		if (this.currentProfile === this.me || this.currentProfile.is_blocking) {
+			chatButton.style.display = 'none';
+		} else {
+			chatButton.style.display = 'block';
+		}
 
 		this.setupTabEvents();
 	}
@@ -59,7 +68,6 @@ class Social {
 	setupTabEvents() {
 		const tabs = [
 			{ id: "history-select", screen: this.MatchHistory },
-			{ id: "stats-select", screen: this.Stats },
 			{ id: "chat-select", screen: this.Chat }
 		];
 
@@ -151,11 +159,19 @@ class Social {
 		}
 		buttons.appendChild(friendButton);
 
-		const block = document.createElement("button");
-		block.textContent = "Block";
-		buttons.appendChild(block);
-
-
+		const blockBtn = document.createElement("button");
+		if (this.currentProfile.is_blocking) {
+			blockBtn.textContent = "Unblock";
+			blockBtn.addEventListener("click", () => {
+				this.unblockUser(this.currentProfile.id);
+			});
+		} else {
+			blockBtn.textContent = "Block";
+			blockBtn.addEventListener("click", () => {
+				this.blockUser(this.currentProfile.id);
+			});
+		}
+		buttons.appendChild(blockBtn);
 	}
 
 	async getFriends() {
@@ -191,6 +207,24 @@ class Social {
 			return false;
 		}
 		return true;
+	}
+
+	async blockUser(user_id) {
+		try {
+			await postRequest(BLOCK_URL, { user_id: user_id });
+		}
+		catch (error) {
+			console.error('Error blocking user:', error);
+		}
+	}
+
+	async unblockUser(user_id) {
+		try {
+			await postRequest(UNBLOCK_URL, { user_id: user_id });
+		}
+		catch (error) {
+			console.error('Error unblocking user:', error);
+		}
 	}
 
 	async loadFriendList() {
