@@ -79,6 +79,7 @@ urlpatterns = [
     path("chats/message/", add_message, name="add_message"),
     path("chats/message/typing", update_typing_status, name="update_typing"),
     path("chats/message/read", mark_messages_read, name="mark_messages_read"),
+
     path("create_game/", create_game_room, name="create_game_room"),
     path("get_config_game_room/", get_config_game_room, name="get_config_game_room"),
     path("clear_game_rooms/", clear_game_rooms, name="clear_game_rooms"),

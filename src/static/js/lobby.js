@@ -1,36 +1,5 @@
-import { getURL, postRequest } from './utils.js';
-
-const CREATE_GAME_URL = 'http://localhost:8000/api/create_game/'
-
-class Config {
-	constructor () {
-		this.mode = null,
-
-		this.playerCount = null,
-		this.playerside = [],
-
-		this.bots = false,
-		this.botsSide = [],
-
-		this.powerup = false,
-		this.poweruplist = [],
-		
-		this.map_style = null,
-
-		this.host = true,
-
-		this.Spectator = false
-	}
-
-	async makeRoom() {
-		try {
-			const response = await postRequest(CREATE_GAME_URL, { config: this.config });
-			return response;
-		} catch (error) {
-			console.error(error);
-		}
-	}
-}
+import { getWebsocketHost } from './utils.js';
+import { initializeGame } from './gameSettings/startGame.js';
 
 document.addEventListener('DOMContentLoaded', function() {
 	const gameState = {
@@ -45,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	const totalSteps = 4;
 
 	// DOM Elements
+	const modals = document.querySelectorAll('.modal');
 	const setupSteps = document.querySelectorAll('.setup-step');
 	const progressLines = document.querySelectorAll('.progress-line');
 	const prevBtn = document.getElementById('prev-btn');
@@ -73,8 +43,136 @@ document.addEventListener('DOMContentLoaded', function() {
 	const cancelBtn = document.getElementById('cancel-btn');
 	const startGameBtn = document.getElementById('start-game-btn');
 
+	// Room list elements
+	const createGameBtn = document.getElementById('create-game-btn');
+	const createGameModal = document.getElementById('create-game-modal');
+	const closeSetupBtn = document.getElementById('close-setup-btn');
+	const roomsContainer = document.getElementById('rooms-container');
+	const noRoomsMessage = document.getElementById('no-rooms-message');
+	const roomTemplate = document.getElementById('room-template');
+
+	const SOCKET_URL = getWebsocketHost() + "/ws/matchmaking/"
+	const socket = new WebSocket(SOCKET_URL);
+
+	socket.addEventListener('open', function() {
+		socket.send(JSON.stringify({ type: 'list_rooms' }));
+	});
+
+	socket.addEventListener('message', function(event) {
+		const data = JSON.parse(event.data);
+
+		console.log("event:", data);
+
+		if (data.type === 'room_list') {
+			console.log('Received room list:', data.rooms);
+
+			// Clear existing rooms
+			roomsContainer.innerHTML = '';
+
+			if (data.rooms.length === 0) {
+				noRoomsMessage.classList.remove('hidden');
+			} else {
+				noRoomsMessage.classList.add('hidden');
+			}
+
+			data.rooms.forEach(room => {
+				const roomElement = createRoomElement(room);
+				roomsContainer.appendChild(roomElement);
+			});
+		} else if (data.type === 'match_found') {
+			console.log('Match found:', data);
+
+			window.location.href = '/game/' + data.room_name;
+		}
+	});
+
+	async function joinGame(room) {
+		console.log('Joining room:', room);
+		if (!room.config) {
+			console.error("Failed to get config, cannot start game.");
+			return;
+		}
+	
+		setTimeout(() => {
+			document.dispatchEvent(new CustomEvent("startGame", {
+				detail: { gameConfig: room.config, room_name: room.room_name }
+			}));
+		}, 3000);
+	}
+
+	// Create a room element from the template
+	function createRoomElement(room) {
+		console.log('Creating room element:', room);
+
+		// Clone the template
+		const roomElement = roomTemplate.content.cloneNode(true).querySelector('.room-item');
+
+		// Fill in room details
+		roomElement.querySelector('.room-name').textContent = room.room_name;
+
+		// Display current/max players
+		const playerInfo = `?/${room.config.playerCount}`;
+		roomElement.querySelector('.room-players').textContent = "Players: " + playerInfo;
+
+		// Map name
+		const mapNames = {
+			'classic': 'Classic',
+			'arena': 'Arena',
+			'classic4p': 'Classic 4-Player',
+			'battle': 'Arena 4-Player',
+			'maze': 'Maze'
+		};
+		const mapText = "Map: " + mapNames[room.config.map_style] || room.config.map_style;
+		roomElement.querySelector('.room-map').textContent = mapText;
+
+		// Powerups
+		const powerupNames = {
+			'speed': 'Speed',
+			'size': 'Size',
+			'multi': 'Multi-Ball'
+		};
+
+		let powerupText = "Powerups: ";
+
+		if (room.config.powerup === "true") {
+			room.config.poweruplist.forEach(powerupId => {
+				powerupText += powerupNames[powerupId] + ", " || "Invalid";
+			});
+		} else {
+			powerupText += "None";
+		}
+		
+		roomElement.querySelector('.room-powerups').textContent = powerupText;
+
+		// Handle join button click
+		const joinBtn = roomElement.querySelector('.join-btn');
+		joinBtn.addEventListener('click', () => joinGame(room));
+
+		// Disable join button if room is full
+		// if (room.current_players >= room.max_players) {
+		// 	joinBtn.disabled = true;
+		// 	joinBtn.textContent = 'Full';
+		// 	joinBtn.classList.add('disabled');
+		// }
+
+		// Store room ID as data attribute for easier access
+		roomElement.dataset.roomId = room.id;
+
+		return roomElement;
+	}
+
 	// Initialize the setup wizard
 	function init() {
+		// Open setup modal
+		createGameBtn.addEventListener('click', function() {
+			createGameModal.classList.remove('hidden');
+		});
+
+		// Close button for setup modal
+		closeSetupBtn.addEventListener('click', function() {
+			createGameModal.classList.add('hidden');
+		});
+
 		// Set up event listeners for mode selection
 		modeButtons.forEach(button => {
 			button.addEventListener('click', function() {
@@ -133,6 +231,14 @@ document.addEventListener('DOMContentLoaded', function() {
 			});
 		});
 
+		modals.forEach(modal => {
+			modal.addEventListener('click', function(event) {
+				if (event.target === modal) {
+					modal.classList.add('hidden');
+				}
+			});
+		});
+
 		// Navigation buttons
 		prevBtn.addEventListener('click', prev);
 		nextBtn.addEventListener('click', next);
@@ -144,6 +250,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		startGameBtn.addEventListener('click', function() {
 			console.log('Current settings:', gameState);
+			initializeGame(gameState);
+			modals.forEach(modal => modal.classList.add('hidden'));
 		});
 	}
 
@@ -244,7 +352,6 @@ document.addEventListener('DOMContentLoaded', function() {
 		
 		// Show modal
 		confirmationModal.classList.remove('hidden');
-
 	}
 
 	init();

@@ -37,11 +37,11 @@ async function make_room(config) {
 export async function initializeGame(config) {
   let gameConfig = {
 
-    mode: config.gamemode,
+    mode: config.mode,
     // serverurl: "ws://localhost:8000/ws/room/poop",
-    powerup: config.powerUps,
-    poweruplist: config.powerUpOptions,
-    playerCount: config.playerCount,
+    powerup: (config.powerups.length > 0),
+    poweruplist: config.powerups,
+    playerCount: config.players,
     map_style: config.map,
     playerside: [],
     bots: false,
@@ -55,13 +55,13 @@ export async function initializeGame(config) {
 
 
   switch (gameConfig.playerCount) {
-    case "2":
+    case 2:
       gameConfig.playerside = [
         "left",
         "right",
       ]
       break;
-    case "4":
+    case 4:
       gameConfig.playerside = [
         "left",
         "right",
