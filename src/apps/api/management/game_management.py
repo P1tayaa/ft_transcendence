@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 import json
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from apps.game.models.game import GameConfig, GameRoom, PlayerState,BaseGameRoom
 from django.db import transaction
 from apps.users.models import Chat
@@ -78,6 +80,21 @@ def create_game_room(request):
         game_room = GameRoom.objects.create(
             room_name = f"game_{request.user.username}_{game_config.id}",
             config = game_config,
+        )
+
+        channel_layer = get_channel_layer()
+        room_data = {
+            'room_id': game_room.id,
+            'room_name': game_room.room_name,
+            'config': game_config.to_dict(),
+        }
+
+        async_to_sync(channel_layer.group_send)(
+            "matchmaking",
+            {
+                "type": "game_created",
+                "room": room_data,
+            }
         )
     
         return JsonResponse({
