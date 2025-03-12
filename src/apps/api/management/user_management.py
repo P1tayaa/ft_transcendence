@@ -54,7 +54,6 @@ def register_user(request):
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
     try:
-        # Use request.body instead of request.data
         data = json.loads(request.body)
         username = data.get("username")
         password = data.get("password")
@@ -66,7 +65,6 @@ def register_user(request):
                 status=400,
             )
 
-        # Check if user already exists
         if User.objects.filter(username=username).exists():
             return JsonResponse(
                 {"success": False, "message": "Username already exists."}, status=400
@@ -75,6 +73,27 @@ def register_user(request):
         user = User.objects.create_user(
             username=username, email=email if email else "", password=password
         )
+
+        # !INFO form must include enctype="multipart/form-data"
+        if 'profile_picture' in request.FILES:
+            image = request.FILES['profile_picture']
+            if image.content_type.startswith('image/'):
+                try:
+                    img = Image.open(image)
+                    max_size = (500, 500)
+                    img.thumbnail(max_size, Image.Resampling.LANCZOS)
+                    output = BytesIO()
+                    img.save(output, format='PNG', quality=85)
+                    output.seek(0)
+                    user.profile.profile_picture.save(
+                        f'profile_pic_{username}.png',
+                        ContentFile(output.read()),
+                        save=True
+                    )
+                except Exception as e:
+                    print(f"Error saving profile picture: {str(e)}")
+            else:
+                return JsonResponse({"success": False, "message": "File must be an image"}, status=400)
 
         return JsonResponse(
             {
@@ -108,11 +127,9 @@ def login_user(request):
                 status=400,
             )
 
-        # authenticate() checks if username/password combination exists
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            # login() creates the session
             login(request, user)
             return JsonResponse(
                 {
@@ -312,7 +329,7 @@ def upload_profile_picture(request):
     if 'profile_picture' not in request.FILES:
         return Response({'error': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
 
-    image = request.FILESi['profile_picture']
+    image = request.FILES['profile_picture']
     if not image.content_type.startswith('image/'):
         return Response({'error': 'File must be an image'}, status=status.HTTP_400_BAD_REQUEST)
 
