@@ -7,6 +7,7 @@ import { getNewPosition, getRightSpeed, posSpawn } from "../init/loadPadle.js"
 import MyWebSocket from "./websocket.js"
 import intToPlayerSide from "./setting.js"
 
+
 class Pong {
   constructor() {
     // Game properties
@@ -269,7 +270,13 @@ class Pong {
 
   update(input, gameScene) {
     if (this.mode === Mode.NETWORKED) {
+      if (!this.settings) {
+        return "shit"
+      }
       this.settings.playerSide.forEach(Padle => {
+        if (!this.settings.paddleLoc[Padle]) {
+          return "shit"
+        }
         gameScene.moveAsset(Padle, getNewPosition(Padle, this.settings.mapStyle, this.settings.paddleLoc[Padle].position));
       });
       // console.log(input, this.settings.paddleLoc);
@@ -293,12 +300,11 @@ class Pong {
   }
 
   reset(init) {
-    this.resetBall = false;
     // console.log(this.ballPos)
     if (this.settings.mode === Mode.NETWORKED) {
       // init.score.incrementScore(intToPlayerSide(this.lastWinner));
       this.socket.resetRound(this);
-      // this.socket.updateScore(this)
+      this.socket.updateScore(this)
     } else {
       init.score.incrementScore(intToPlayerSide(this.lastWinner));
     }

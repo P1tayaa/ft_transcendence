@@ -14,15 +14,20 @@ from apps.game.models.tournament import TournamentRoom, TournamentParticipant, T
 def create_tournament(request):
     data = json.loads(request.body)
     try:
+        config_data = data.get('config')
+        if not config_data:
+            return JsonResponse({'status': 'error', 'message': 'No configuration provided'}, status=400)
+
         tournament = TournamentRoom.objects.create(
             tournament_name=data['tournament_name'],
-            max_participant=data.get('max_participants', 8),
-            creator=request.user
+            max_participants=data.get('max_participants', 8),
+            creator=request.user,
+            config=config_data
         )
         tournament.join_tournament(request.user) # creator joints tournament automatically
         return JsonResponse({
             'tournament_id': tournament.id,
-            'tournament_name': tournament.name,
+            'tournament_name': tournament.tournament_name,
             'status': tournament.status
         })
     except Exception as e:
@@ -32,7 +37,7 @@ def create_tournament(request):
 @login_required
 @api_view(["POST"])
 def join_tournament(request, tournament_id):
-    tournament = get_object_or_404(TournamentMatch, id=tournament_id)
+    tournament = get_object_or_404(TournamentRoom, id=tournament_id)
     try:
         tournament.join_tournament(request.user)
         return JsonResponse({'status': 'success'})
@@ -71,7 +76,7 @@ def update_match_score(request, match_id):
 
             if data.get('is_complete'):
                 winner = match.player1 if match.score1 > match.score2 else match.player2
-                match.tournament.complete_match(match, winner)
+                match.tournament.process_completed_match(match, winner)
 
         return JsonResponse({'status': 'success'})
     except Exception as e:

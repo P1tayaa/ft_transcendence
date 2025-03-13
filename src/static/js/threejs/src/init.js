@@ -9,7 +9,6 @@ import { initPowerUp, AllPowerUp } from './powerUp/AllPowerUp.js';
 import { Mode, MapStyle, get_settings, Setting } from "./pongLogic/setting.js";
 var assetsPath = window.location.protocol + '//' + window.location.host + "/static/glfw/";
 
-
 import { loadClassicMap, loadBathMap, loadCircleMap, loadRectangleMap } from "./init/loadMap.js";
 import { spawnPadles } from './init/loadPadle.js';
 import { showLoadingScreen, hideLoadingScreen, updateLoadingScreen } from "./style/intro.js"
@@ -114,7 +113,6 @@ export default class Init {
 
     return intervalId;
   }
-
 
 
   async initialize(settings, roomName) {

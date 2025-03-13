@@ -6,14 +6,13 @@
 
 import { intToPlayerSide, strToPlayerSide, PlayerSide } from './setting.js'
 
-
 class MyWebSocket {
-  constructor() {
+  constructor(settings) {
     this.socket = null;
     this.host;
     this.isSpectator;
     this.Connected = false;
-
+    this.didReset = true;
     this.serverState = null;
     this.winner = "";
     this.game_over = false;
@@ -21,6 +20,8 @@ class MyWebSocket {
     this.myPosStruc = null;
     this.gameStarted = false;
     this.allPlayerReady = false;
+    this.settings = settings
+    this.endGame = false
   }
 
   isPlaying() {
@@ -175,6 +176,15 @@ class MyWebSocket {
     // }
   }
 
+  async socket_game_done() {
+    const playerRequest = {
+      type: 'game_over',
+    }
+    this.socket.send(JSON.stringify(playerRequest))
+  }
+
+
+
   async askAllReady() {
     console.log("askAllReady")
     const playerRequest = {
@@ -255,11 +265,18 @@ class MyWebSocket {
           console.error(event.data);
         } else if (data.type === "errors") {
           console.error(event.data);
+        } else if (data.type === "reset_round") {
+          console.log("reset_round")
+          this.didReset = true;
+        } else if (data.type === "player_disconnected") {
+          console.log("caught disconnected")
+          this.endGame = true
         }
 
       };
 
       this.socket.onclose = (event) => {
+        this.endGame = true
         console.warn('WebSocket connection closed', event);
       };
 

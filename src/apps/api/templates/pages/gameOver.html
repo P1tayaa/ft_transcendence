@@ -1,0 +1,26 @@
+
+<script type="module">
+  import { getUserName, getURL } from '../static/js/utils.js';
+
+ const url = window.location.href;
+  
+  // Check if there are any parameters (a question mark exists in the URL)
+  var paramPart
+  
+        getUserName();
+
+
+  try {
+    var request_url = getURL() + "/score/recent"
+    var response = await getRequest(request_url)
+    
+    document.getElementById('parameterDisplay').textContent = response.score
+  } catch(error) {
+    console.log("no recent match", error)
+    // window.location.href = "/login"
+  }
+
+</script>
+
+
+<h1 id="parameterDisplay"></h1>

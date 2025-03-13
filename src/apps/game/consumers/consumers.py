@@ -4,6 +4,8 @@ import asyncio
 from django.core.exceptions import ValidationError
 from channels.db import database_sync_to_async
 from apps.game.models.game import GameRoom, GameConfig
+from django.contrib.auth.models import User
+
 
 def remap_player_data_by_position(game_state):
     position_mapped = {
@@ -55,6 +57,12 @@ class BaseConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, close_code):
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'player_disconnected',
+            }
+        )
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
@@ -283,23 +291,44 @@ class GameConsumer(BaseConsumer):
     async def handle_game_over(self, data):
         if not self.game_state['is_playing']:
             return
-
-        winner_id = data.get('winner_id')
-        if not winner_id:
-            return
+        
+        highest_score = -1
+        winner_id = None
+    
+        for player_id, score in self.game_state['score'].items():
+            if score > highest_score:
+                highest_score = score
+                winner_id = player_id
         self.game_state['is_playing'] = False
-
+        
         try:
+            # First, update most_recent_score for all players in the game
+            for player_id, score in self.game_state['score'].items():
+                await database_sync_to_async(self.update_player_recent_score)(player_id, score)
+            
+            # Then save the game result as before
             await database_sync_to_async(self.game_room.save_game_result)(winner_id, self.game_state['score'])
+            
             await self.broadcast_game_state(extra={
                 'game_over': True,
                 'winner': winner_id
             })
         except ValidationError as e:
             await self.send(text_data=json.dumps({
-                 'type': 'error',
-                 'message': str(e)
-             }))
+                'type': 'error',
+                'message': str(e)
+            }))
+    
+    def update_player_recent_score(self, player_id, score):
+        try:
+            user = User.objects.get(id=player_id)
+            if hasattr(user, 'profile'):
+                user.profile.most_recent_score = score
+                user.profile.save()
+            return True
+        except User.DoesNotExist:
+            return False
+        
 
     async def disconnect(self, close_code):
         if hasattr(self, 'game_room'):
@@ -378,6 +407,8 @@ class GameConsumer(BaseConsumer):
     async def player_ready(self, event):
         await self.send(text_data = json.dumps(event))
     async def all_players_ready(self, event):
+        await self.send(text_data = json.dumps(event))
+    async def player_disconnected(self, event):
         await self.send(text_data = json.dumps(event))
         
 

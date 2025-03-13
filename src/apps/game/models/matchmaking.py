@@ -39,9 +39,17 @@ class MatchmakingQueue(models.Model):
 
 class MatchmakingConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        await self.channel_layer.group_add(
+            "matchmaking",
+            self.channel_name
+        )
         await self.accept()
 
     async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(
+            "matchmaking",
+            self.channel_name,
+        )
         if hasattr(self, 'queue_entry'):
             await database_sync_to_async(self.queue_entry.cancel_queue)()
 
@@ -85,3 +93,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                    'rooms': formatted_rooms
                }))
 
+    async def game_created(self, event):
+        await self.send(json.dumps({
+               'type': 'new_game_notification',
+               'room': event['room'],
+           }))

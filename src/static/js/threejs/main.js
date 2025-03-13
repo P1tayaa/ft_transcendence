@@ -61445,11 +61445,12 @@ function spawnPadles(settings, init, assetsPath, callback) {
 
 
 class MyWebSocket {
-  constructor() {
+  constructor(settings) {
     this.socket = null;
     this.host;
     this.isSpectator;
     this.Connected = false;
+    this.didReset = true;
     this.serverState = null;
     this.winner = "";
     this.game_over = false;
@@ -61457,6 +61458,8 @@ class MyWebSocket {
     this.myPosStruc = null;
     this.gameStarted = false;
     this.allPlayerReady = false;
+    this.settings = settings;
+    this.endGame = false;
   }
   isPlaying() {
     if (this.serverState) {
@@ -61593,6 +61596,12 @@ class MyWebSocket {
     }
     // }
   }
+  async socket_game_done() {
+    const playerRequest = {
+      type: 'game_over'
+    };
+    this.socket.send(JSON.stringify(playerRequest));
+  }
   async askAllReady() {
     console.log("askAllReady");
     const playerRequest = {
@@ -61658,9 +61667,16 @@ class MyWebSocket {
           console.error(event.data);
         } else if (data.type === "errors") {
           console.error(event.data);
+        } else if (data.type === "reset_round") {
+          console.log("reset_round");
+          this.didReset = true;
+        } else if (data.type === "player_disconnected") {
+          console.log("caught disconnected");
+          this.endGame = true;
         }
       };
       this.socket.onclose = event => {
+        this.endGame = true;
         console.warn('WebSocket connection closed', event);
       };
       this.socket.onerror = error => {
@@ -61937,7 +61953,13 @@ class Pong {
   }
   update(input, gameScene) {
     if (this.mode === Mode.NETWORKED) {
+      if (!this.settings) {
+        return "shit";
+      }
       this.settings.playerSide.forEach(Padle => {
+        if (!this.settings.paddleLoc[Padle]) {
+          return "shit";
+        }
         gameScene.moveAsset(Padle, getNewPosition(Padle, this.settings.mapStyle, this.settings.paddleLoc[Padle].position));
       });
       // console.log(input, this.settings.paddleLoc);
@@ -61962,12 +61984,11 @@ class Pong {
     this.checkCollisions(BallPos, gameScene);
   }
   reset(init) {
-    this.resetBall = false;
     // console.log(this.ballPos)
     if (this.settings.mode === Mode.NETWORKED) {
       // init.score.incrementScore(intToPlayerSide(this.lastWinner));
       this.socket.resetRound(this);
-      // this.socket.updateScore(this)
+      this.socket.updateScore(this);
     } else {
       init.score.incrementScore((0,setting_namespaceObject["default"])(this.lastWinner));
     }
@@ -106301,6 +106322,7 @@ function botControl(settings, ballPos) {
 
 
 
+var gameEnded = false;
 class main {
   constructor() {
     this.init = new Init();
@@ -106331,69 +106353,99 @@ class main {
     this.renderer.setAnimationLoop(this.animate);
   }
   animate() {
-    if (this.init.doneLoadingAssets === false) {
-      return;
-    }
-    if (this.init.settings.mode === Mode.NETWORKED) {
-      if (this.init.settings.powerup) {
-        this.pongLogic.socket.update(this.pongLogic, this.init.score, this.init.settings, this.init.allPower.powerUps);
-      } else {
-        this.pongLogic.socket.update(this.pongLogic, this.init.score, this.init.settings);
+    try {
+      if (this.init.doneLoadingAssets === false) {
+        return;
       }
-    }
-    if (this.init.settings.mode === Mode.NETWORKED) {
-      if (!this.init.settings.host) {
-        const newBallPos = lerpVectors(this.gameScene.getAssetPossition('Ball'), {
-          x: this.pongLogic.ballPos.x,
-          y: this.pongLogic.ballPos.y,
-          z: 0
-        }, 0);
-        this.gameScene.moveAsset('Ball', newBallPos);
-      } else {
-        const newBallPos = {
-          x: this.pongLogic.ballPos.x,
-          y: this.pongLogic.ballPos.y,
-          z: 0
-        };
-        // console.log(newBallPos)
-        this.gameScene.moveAsset('Ball', newBallPos);
+      if (this.init.settings.mode === Mode.NETWORKED) {
+        if (this.init.settings.powerup) {
+          this.pongLogic.socket.update(this.pongLogic, this.init.score, this.init.settings, this.init.allPower.powerUps);
+        } else {
+          var temp = this.pongLogic.socket.update(this.pongLogic, this.init.score, this.init.settings);
+          if (this.pongLogic.socket.endGame) {
+            this.game_done();
+          }
+        }
       }
-    } else {}
-    if (this.init.settings.powerup && this.init.settings.mode !== Mode.NETWORKED) {
-      this.allPowers.update(this.gameScene, this.pongLogic);
-    }
-    if (this.init.settings.bots) {
-      botControl(this.init.settings, this.gameScene.getAssetPossition('Ball'));
-    }
-    const input = this.init.controlHandler.getPaddleSpeeds();
-    this.pongLogic.update(input, this.gameScene);
-    // let Paddle2Win = 0;
-    // let Paddle1Win = 0;
-    // let Ball_Reset = false;
+      if (this.init.settings.mode === Mode.NETWORKED) {
+        if (!this.init.settings.host) {
+          const newBallPos = lerpVectors(this.gameScene.getAssetPossition('Ball'), {
+            x: this.pongLogic.ballPos.x,
+            y: this.pongLogic.ballPos.y,
+            z: 0
+          }, 0);
+          this.gameScene.moveAsset('Ball', newBallPos);
+        } else {
+          const newBallPos = {
+            x: this.pongLogic.ballPos.x,
+            y: this.pongLogic.ballPos.y,
+            z: 0
+          };
+          // console.log(newBallPos)
+          this.gameScene.moveAsset('Ball', newBallPos);
+        }
+      } else {}
+      if (this.init.settings.powerup && this.init.settings.mode !== Mode.NETWORKED) {
+        this.allPowers.update(this.gameScene, this.pongLogic);
+      }
+      if (this.init.settings.bots) {
+        botControl(this.init.settings, this.gameScene.getAssetPossition('Ball'));
+      }
+      const input = this.init.controlHandler.getPaddleSpeeds();
+      if (this.pongLogic.socket.didReset) {
+        var temp = this.pongLogic.update(input, this.gameScene);
+        if (temp === "shit") {
+          this.game_done();
+        }
+      }
+      // let Paddle2Win = 0;
+      // let Paddle1Win = 0;
+      // let Ball_Reset = false;
 
-    // if (this.pongLogic.paddleCollided) {
-    //   Paddle2Win = 0;
-    //   Paddle1Win = 0;
-    //   Ball_Reset = false;
-    // }
-
-    if (this.pongLogic.resetBall === true && this.init.settings.host === true) {
-      console.log("this.pongLogic.resetBall", this.pongLogic.resetBall);
-      this.pongLogic.reset(this.init);
+      // if (this.pongLogic.paddleCollided) {
+      //   Paddle2Win = 0;
+      //   Paddle1Win = 0;
+      //   Ball_Reset = false;
+      // }
       this.pongLogic.settings.playerSide.forEach(side => {
         this.score.updateScoreDisplay(side);
       });
+      if (this.pongLogic.resetBall === true && this.init.settings.host === true) {
+        console.log("this.pongLogic.resetBall", this.pongLogic.resetBall);
+        this.pongLogic.resetBall = false;
+        this.pongLogic.reset(this.init);
+        this.pongLogic.socket.didReset = false;
+      }
+      console.log(this.score.scores);
+      this.score.playerSides.forEach(side => {
+        if (this.score.scores[side] > 11) {
+          this.game_done();
+        }
+      });
+      updateLightsForActivePlayers(this.init.lightManager, this.gameScene, this.init.settings.playerSide, this.pongLogic.lastWinner);
+      if (this.init.settings.mode === Mode.NETWORKED) {} else {
+        const ballCurrentSpeed = {
+          x: this.pongLogic.ballSpeed.x,
+          y: this.pongLogic.ballSpeed.y,
+          z: 0
+        };
+        this.gameScene.moveAssetBy('Ball', ballCurrentSpeed);
+      }
+      this.renderer.render(this.scene, this.camera);
+    } catch (error) {
+      console.log(error);
+      this.game_done();
     }
-    updateLightsForActivePlayers(this.init.lightManager, this.gameScene, this.init.settings.playerSide, this.pongLogic.lastWinner);
-    if (this.init.settings.mode === Mode.NETWORKED) {} else {
-      const ballCurrentSpeed = {
-        x: this.pongLogic.ballSpeed.x,
-        y: this.pongLogic.ballSpeed.y,
-        z: 0
-      };
-      this.gameScene.moveAssetBy('Ball', ballCurrentSpeed);
+  }
+  async game_done() {
+    if (gameEnded) return;
+    gameEnded = true;
+    if (this.pongLogic.settings === Mode.NETWORKED) {
+      await this.socket.socket_game_done();
+    } else {
+      // add a post request to send backend the score of solo
     }
-    this.renderer.render(this.scene, this.camera);
+    window.location.href = "../gameOver";
   }
 }
 let startInit = false;

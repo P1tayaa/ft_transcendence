@@ -96,10 +96,6 @@ async function clearRoom() {
 
 }
 
-
-
-
-
 document.addEventListener('DOMContentLoaded', () => {
   const button = document.getElementById("clearRooms");
 
