@@ -72,6 +72,8 @@ export async function startTournament(config) {
 
 	console.log("Info of tournament", info);
 
+	window.location.href = `/tournament/${room.tournament_id}`;
+
 	// setTimeout(() => {
 	// 	document.dispatchEvent(new CustomEvent("startGame", { detail: { gameConfig: config, room_name: room.room_name } }));
 	// }, 3000);

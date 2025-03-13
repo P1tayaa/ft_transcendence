@@ -2,8 +2,9 @@ import { api } from './ApiManager.js';
 
 document.addEventListener('DOMContentLoaded', function() {
 	// Get tournament ID from URL parameter
-	const urlParams = new URLSearchParams(window.location.search);
-	const tournamentId = urlParams.get('id');
+	const path = window.location.pathname;
+	console.log('Path:', path);
+	const tournamentId = path.split('/')[2];
 	const me = api.getCurrentUser();
 
 	if (!tournamentId) {
