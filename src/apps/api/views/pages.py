@@ -56,5 +56,8 @@ def gameSpectate(request):
 def joinGame(request):
     return render(request, "base.html", {"template_name": "pages/joinGame.html"})
 
+def tournament(request):
+    return render(request, "base.html", {"template_name": "pages/tournament.html"})
+
 def gameOver(request):
     return render(request, "base.html", {"template_name": "pages/gameOver.html"})

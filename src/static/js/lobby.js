@@ -1,12 +1,14 @@
 import { getWebsocketHost } from './utils.js';
-import { initializeGame } from './gameSettings/startGame.js';
+import { startGame, startTournament, Config } from './gameSettings/startGame.js';
+import { api } from './ApiManager.js';
 
 document.addEventListener('DOMContentLoaded', function() {
-	const gameState = {
+	const selection = {
 		mode: null,
 		players: null,
 		map: null,
-		powerups: []
+		powerups: [],
+		tournament: false
 	};
 
 	// Current step tracking
@@ -25,6 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	// Step 2: Player Count Selection
 	const playerButtons = document.querySelectorAll('[data-players]');
+	const tournamentBtn = document.getElementById('tournament-btn');
 
 	// Step 3: Map Selection
 	const maps2Player = document.getElementById('maps-2-player');
@@ -66,13 +69,11 @@ document.addEventListener('DOMContentLoaded', function() {
 		if (data.type === 'room_list') {
 			console.log('Received room list:', data.rooms);
 
-			// Clear existing rooms
-			roomsContainer.innerHTML = '';
-
 			if (data.rooms.length === 0) {
 				noRoomsMessage.classList.remove('hidden');
 			} else {
 				noRoomsMessage.classList.add('hidden');
+				roomsContainer.innerHTML = '';
 			}
 
 			data.rooms.forEach(room => {
@@ -178,8 +179,13 @@ document.addEventListener('DOMContentLoaded', function() {
 			button.addEventListener('click', function() {
 				modeButtons.forEach(btn => btn.classList.remove('selected'));
 				this.classList.add('selected');
-				gameState.mode = this.getAttribute('data-mode');
 				nextBtn.disabled = false;
+
+				const mode = this.getAttribute('data-mode');
+
+				tournamentBtn.classList.toggle('hidden', mode !== 'networked');
+
+				selection.mode = mode;
 			});
 		});
 
@@ -191,13 +197,23 @@ document.addEventListener('DOMContentLoaded', function() {
 				nextBtn.disabled = false;
 
 				// Rreset map selection if player count changed
-				const players = parseInt(this.getAttribute('data-players'));
-				if (gameState.map !== null && gameState.players !== players) {
-					gameState.map = null;
+				let players = parseInt(this.getAttribute('data-players'));
+				if (selection.map !== null && selection.players !== players) {
+					selection.map = null;
 					mapOptions.forEach(map => map.classList.remove('selected'));
 				}
 
-				gameState.players = players;
+				if (players === 8) {
+					selection.tournament = true;
+					players = 2
+				} else {
+					selection.tournament = false;
+				}
+
+				maps2Player.classList.toggle('hidden', players !== 2);
+				maps4Player.classList.toggle('hidden', players !== 4);
+
+				selection.players = players;
 			});
 		});
 
@@ -208,7 +224,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				this.classList.add('selected');
 				nextBtn.disabled = false;
 
-				gameState.map = this.getAttribute('data-map');
+				selection.map = this.getAttribute('data-map');
 			});
 		});
 
@@ -219,14 +235,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 				if (this.classList.contains('selected')) {
 					this.classList.remove('selected');
-					const index = gameState.powerups.indexOf(powerup);
+					const index = selection.powerups.indexOf(powerup);
 
-					gameState.powerups.splice(index, 1);
+					selection.powerups.splice(index, 1);
 				}
 				else {
 					this.classList.add('selected');
 	
-					gameState.powerups.push(powerup);
+					selection.powerups.push(powerup);
 				}
 			});
 		});
@@ -249,8 +265,12 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 
 		startGameBtn.addEventListener('click', function() {
-			console.log('Current settings:', gameState);
-			initializeGame(gameState);
+			const config = new Config(selection);
+			if (selection.tournament) {
+				startTournament(config, api);
+			} else {
+				startGame(config, api);
+			}
 			modals.forEach(modal => modal.classList.add('hidden'));
 		});
 	}
@@ -289,22 +309,16 @@ document.addEventListener('DOMContentLoaded', function() {
 		nextBtn.disabled = true;
 
 		// Step specific logic
-		if (stepNumber === 0 && gameState.mode!== null) {
+		if (stepNumber === 0 && selection.mode!== null) {
 			nextBtn.disabled = false;
 		}
 
-		if (stepNumber === 1 && gameState.players !== null) {
+		if (stepNumber === 1 && selection.players !== null) {
 			nextBtn.disabled = false;
 		}
 
-		if (stepNumber === 2) {
-			// Show appropriate maps based on player count
-			maps2Player.classList.toggle('hidden', gameState.players === 4);
-			maps4Player.classList.toggle('hidden', gameState.players === 2);
-
-			if (gameState.map !== null) {
-				nextBtn.disabled = false;
-			}
+		if (stepNumber === 2 && selection.map !== null) {
+			nextBtn.disabled = false;
 		}
 
 		if (stepNumber === 3) {
@@ -326,10 +340,13 @@ document.addEventListener('DOMContentLoaded', function() {
 			'local': 'Local Multiplayer',
 			'networked': 'Online Multiplayer',
 		};
-		summaryMode.textContent = modeNames[gameState.mode] || gameState.mode;
+		summaryMode.textContent = modeNames[selection.mode] || selection.mode;
 		
-		let playerText = gameState.players + " Players";
-		summaryPlayers.textContent = playerText;
+		if (selection.tournament) {
+			summaryPlayers.textContent = "8 Players (Tournament)";
+		} else { 
+			summaryPlayers.textContent = selection.players + " Players";
+		}
 		
 		// Map names
 		const mapNames = {
@@ -339,7 +356,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			'battle': 'Arena 4-Player',
 			'maze': 'Maze'
 		};
-		summaryMap.textContent = mapNames[gameState.map] || gameState.map;
+		summaryMap.textContent = mapNames[selection.map] || selection.map;
 		
 		// Powerup names
 		const powerupNames = {
@@ -347,8 +364,8 @@ document.addEventListener('DOMContentLoaded', function() {
 			'size': 'Paddle Resize',
 			'multi': 'Multi-Ball'
 		};
-		const powerupsList = gameState.powerups.map(p => powerupNames[p] || p).join(", ");
-		summaryPowerups.textContent = powerupsList;
+		const powerupsList = selection.powerups.map(p => powerupNames[p] || p).join(", ");
+		summaryPowerups.textContent = powerupsList || "None";
 		
 		// Show modal
 		confirmationModal.classList.remove('hidden');

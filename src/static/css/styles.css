@@ -1,27 +1,36 @@
-:root {
-    --Background: #1E1E1E;
-    --Text: #FFF9F9;
+/* Base styling */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 
+:root {
+    --primary-color: #3b82f6;    /* Vivid blue */
+    --secondary-color: #10b981;  /* Emerald */
+    --background-color: #1e1e1e; /* Very dark blue/gray */
+    --card-color: #262626;       /* Dark blue/gray */
+    --border-color: #595959;     /* Medium gray */
+    --hover-color: #404040;      /* Slightly lighter than card */
+    --disabled-color: #a6a6a6;   /* Medium gray */
+    --text-color: #f2f2f2;       /* Off-white */
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
     font-family: 'Outfit', sans-serif;
 }
 
-html {
-    height: 100%;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-}
-
 body {
-    height: 100%;
-    width: 100%;
-    margin: 0;
-    padding: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+}
 
-
-    /* background: var(--Background); */
+.container {
+    width: 100%;
+    max-width: 800px;
+    padding: 20px;
 }

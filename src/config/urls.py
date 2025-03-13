@@ -36,6 +36,7 @@ from apps.api.views.pages import (
     gameStarting,
     gameSpectate,
     gameOver,
+    tournament,
     joinGame
 )
 
@@ -80,5 +81,6 @@ urlpatterns = [
 
     path("gameOver/",gameOver, name="gameOver"),
     path("joinGame/",joinGame, name="joinGame"),
+    path("tournament/", tournament, name="tournament"),
     # ... other paths
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

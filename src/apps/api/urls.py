@@ -39,7 +39,7 @@ from .management.tournament_management import (
     join_tournament,
     get_tournament_data,
     list_tournaments,
-    update_match_score,   
+    update_match_score,
 )
 
 from .management.game_management import (
@@ -85,8 +85,8 @@ urlpatterns = [
     path("clear_game_rooms/", clear_game_rooms, name="clear_game_rooms"),
 
     path('tournament/create/', create_tournament, name="create_tournament"),
+    path('tournament/join/', join_tournament, name="join_tournament"),
     path('tournament/list/', list_tournaments, name="list_tournaments"),
-    path('tournament/<int:tournament_id>/join', join_tournament, name="join_tournament"),
-    path('tournament/<int:tournament_id>/get_data', get_tournament_data, name="get_tournament_data"),
-    path('tournament/<int:match_id>/update_scores', update_match_score, name="update_match_scores"),
+    path('tournament/get_data/', get_tournament_data, name="get_tournament_data"),
+    path('tournament/update_score/', update_match_score, name="update_match_scores"),
 ]
