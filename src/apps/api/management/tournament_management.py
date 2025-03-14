@@ -151,7 +151,7 @@ def list_tournaments(request):
 @login_required
 @api_view(["POST"])
 def leave_tournament(request):
-    data = json.loads(request.body)
+    data = request.data
     player_id = request.user.id
     tournament_id = data.get('tournament_id')
     if not tournament_id:
