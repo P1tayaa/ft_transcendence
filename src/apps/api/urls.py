@@ -42,6 +42,7 @@ from .management.tournament_management import (
     get_tournament_data,
     list_tournaments,
     update_match_score,
+    leave_tournament,
 )
 
 from .management.game_management import (
@@ -96,4 +97,5 @@ urlpatterns = [
     path('tournament/list/', list_tournaments, name="list_tournaments"),
     path('tournament/get_data/', get_tournament_data, name="get_tournament_data"),
     path('tournament/update_score/', update_match_score, name="update_match_scores"),
+    path('tournament/leave/', leave_tournament, name="leave_tournament"),
 ]

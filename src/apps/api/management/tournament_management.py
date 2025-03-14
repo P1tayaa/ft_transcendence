@@ -147,3 +147,35 @@ def list_tournaments(request):
     return JsonResponse({
         'tournaments': tournament_list
     })
+
+@login_required
+@api_view(["POST"])
+def leave_tournament(request):
+    data = json.loads(request.body)
+    player_id = data.get('player_id')
+    tournament_id = data.get('tournament_id')
+    if not player_id:
+        return JsonResponse({'success': False, 'message': "player_id is required"})
+
+    try:
+        participant = TournamentParticipant.object.get(player=player_id)
+        if not participant:
+            return JsonResponse({'success': False, 'message': "Could not find TournamentParticipant"})
+
+        if self.status == "WAITING":
+            TournamentScore.object.filter(tournament=tournament_id, player=player_id).delete()
+
+        elif self.status == "IN_PROGRESS":
+            participant.is_active = False
+            participant.save()
+
+            active_matches = TournamentMatch.object.filter(tournament=tournament_id, player_states__player=player_id)
+            for match in active_matches:
+                opponent_state = match.player_states.exclude(player=player_id).first()
+                if opponent_state:
+                    scores = {
+                        str(opponent_state.player.id): 1,
+                        str(player.id): 0
+                    }
+                    match.complete_game(opponent_state.player.id, scores)
+
