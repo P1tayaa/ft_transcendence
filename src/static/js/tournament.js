@@ -1,5 +1,18 @@
 import { api } from './ApiManager.js';
 
+/**
+ * Socket:
+ * 	- On connect
+ * 		-> Backend adds the user to the tournament room
+ * 		-> Backend sends the tournament data to the user
+ * 
+ * - On disconnect
+ * 		-> Backend removes the user from the tournament room
+ * 
+ * - On tournament update
+ * 		-> Backend sends the updated tournament data to all users in the room
+ */
+
 document.addEventListener('DOMContentLoaded', function() {
 	// Get tournament ID from URL parameter
 	const path = window.location.pathname;
@@ -25,6 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	const noMatchesMessage = document.getElementById('no-matches-message');
 	const backBtn = document.getElementById('back-btn');
 	const joinBtn = document.getElementById('join-btn');
+	const resetBtn = document.getElementById('reset-btn');
 
 	const participantTemplate = document.getElementById('participant-template');
 	const matchTemplate = document.getElementById('match-template');
@@ -102,14 +116,16 @@ document.addEventListener('DOMContentLoaded', function() {
 				});
 			}
 
+			console.log('Status:', data.status);
 			// Update matches list (if available)
 			if (data.matches && data.matches.length > 0) {
 				noMatchesMessage.classList.add('hidden');
 
-				data.matches.forEach(match => {
-					const matchElement = createMatchElement(match);
-					matchesContainer.appendChild(matchElement);
-				});
+				// data.matches.forEach(match => {
+				// 	const matchElement = createMatchElement(match);
+				// 	matchesContainer.appendChild(matchElement);
+				// });
+
 			} else {
 				noMatchesMessage.classList.remove('hidden');
 			}
@@ -153,7 +169,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	// Event listeners
 	backBtn.addEventListener('click', () => {
-		window.location.href = '/lobby';
+		api.leaveTournament(tournamentId);
+
+		// window.location.href = '/lobby';
+	});
+
+	resetBtn.addEventListener('click', () => {
+		api.resetDatabase();
 	});
 
 	joinBtn.addEventListener('click', () => {

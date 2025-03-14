@@ -90,7 +90,7 @@ urlpatterns = [
     path("create_game/", create_game_room, name="create_game_room"),
     path("get_config_game_room/", get_config_game_room, name="get_config_game_room"),
     path("clear_game_rooms/", clear_game_rooms, name="clear_game_rooms"),
-    path('game/dev_reset', reset_dev_game_database, name="reset_game_database"),
+    path('dev_reset/', reset_dev_game_database, name="reset_game_database"),
 
     path('tournament/create/', create_tournament, name="create_tournament"),
     path('tournament/join/', join_tournament, name="join_tournament"),

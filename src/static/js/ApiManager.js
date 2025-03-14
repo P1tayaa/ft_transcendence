@@ -22,9 +22,12 @@ export class ApiManager {
 			getTournamentList: '/api/tournament/list/',
 			getTournamentInfo: '/api/tournament/get_data/',
 			joinTournament: '/api/tournament/join/',
+			leaveTournament: '/api/tournament/leave/',
 			updateTournament: '/api/tournament/update_score/',
 
 			createGame: '/api/create_game/',
+
+			resetDatabase: '/api/dev_reset/',
 		};
 	}
 
@@ -97,6 +100,7 @@ export class ApiManager {
 			return this.makeRequest(url);
 		} catch (error) {
 			console.error('GET request failed', error);
+			throw error;
 		}
 	}
 
@@ -111,6 +115,7 @@ export class ApiManager {
 			return this.makeRequest(this.baseUrl + endpoint, 'POST', data);
 		} catch (error) {
 			console.error('POST request failed', error);
+			throw error;
 		}
 	}
 
@@ -218,6 +223,14 @@ export class ApiManager {
 
 	async joinTournament(tournamentId) {
 		return this.post(this.endpoints.joinTournament, { tournament_id: tournamentId });
+	}
+
+	async leaveTournament(tournamentId) {
+		return this.post(this.endpoints.leaveTournament, { tournament_id: tournamentId });
+	}
+
+	async resetDatabase() {
+		return this.post(this.endpoints.resetDatabase);
 	}
 }
 
