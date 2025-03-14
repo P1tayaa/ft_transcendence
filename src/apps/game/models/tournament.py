@@ -144,7 +144,7 @@ class TournamentRoom(models.Model):
             'participants': [{
                     'id': p.player.id,
                     'username': p.player.username,
-                    'eliminated': p.player.eliminated,
+                    'eliminated': p.eliminated,
             } for p in self.participants.all()],
             'current_matches': [{
                 'match_id': m.id,
