@@ -59,7 +59,7 @@ class TournamentRoom(models.Model):
             }
         )
 
-        participant_count = self.participants.filter(is_active=True).count()
+        participant_count = self.participants.all().count()
         # auto start when full
         if participant_count == self.max_participants:
             self.start_tournament()
@@ -72,7 +72,7 @@ class TournamentRoom(models.Model):
             raise ValidationError("Tournament has already started")
 
         with transaction.atomic():
-            participants = list(self.participants.filter(is_active=True))
+            participants = list(self.participants.all())
             if len(participants) < 2:
                 raise ValidationError("Not enough participants to start tournament")
 
@@ -210,7 +210,7 @@ class TournamentMatch(GameRoom):
 
     def join_game(self, player):
         result = super().join_game(player)
-        if self.is_full():
+        if self.players.count() == 2:
             self.status = 'IN_PROGRESS'
             self.save()
         return result

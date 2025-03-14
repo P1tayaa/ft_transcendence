@@ -33,7 +33,7 @@ def create_tournament(request):
 
         tournament = TournamentRoom.objects.create(
             tournament_name = f"tournament_{request.user.username}_{game_config.id}",
-            max_participants = data.get('max_participants', 8),
+            max_participants = data.get('max_participants', 4),
             creator = request.user,
             config = game_config
         )
@@ -51,7 +51,7 @@ def create_tournament(request):
 @api_view(["POST"])
 def join_tournament(request):
     try:
-        tournament_id = request.query_params.get('tournament_id')
+        tournament_id = request.data.get('tournament_id')
         tournament = get_object_or_404(TournamentRoom, id=tournament_id)
 
         tournament.join_tournament(request.user)
@@ -85,6 +85,10 @@ def get_tournament_data(request):
             'losses': score.losses,
             'points': score.points
         } for score in standings
+    ]
+
+    response['status'] = [
+        tournament.get_tournament_status()
     ]
 
     return JsonResponse(response)
