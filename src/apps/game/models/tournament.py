@@ -47,6 +47,7 @@ class TournamentRoom(models.Model):
             is_active=True,
         )
 
+
         TournamentScore.objects.get_or_create(
             tournament=self,
             player=player,
@@ -58,8 +59,9 @@ class TournamentRoom(models.Model):
             }
         )
 
+        participant_count = self.participants.filter(is_active=True).count()
         # auto start when full
-        if self.participants.count() == self.max_participants:
+        if participant_count == self.max_participants:
             self.start_tournament()
 
         return participant
