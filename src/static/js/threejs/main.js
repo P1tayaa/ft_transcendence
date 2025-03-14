@@ -60950,7 +60950,7 @@ class Setting {
     this.powerup = setting_json.powerup; // Convert to boolean
     console.log("this.powerup", this.powerup);
     this.powerupList = this.parsePoweruplist(setting_json.poweruplist);
-    this.playercount = parseInt(setting_json.playerCount); // Default to 2 players
+    this.playercount = setting_json.playerCount; // Default to 2 players
     this.mapStyle = this.parseMapStyle(setting_json["map_style"]);
     this.playerSide = this.parseMultipleSides(setting_json.playerside);
     this.bots = setting_json.bots; // Convert to boolean

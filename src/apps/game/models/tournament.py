@@ -32,7 +32,7 @@ class TournamentRoom(models.Model):
     @classmethod
     def get_available_tournaments(cls):
         with transaction.atomic():
-            return {cls.objects.select_related('config').filter(is_active=True, status='WAITING')}
+            return cls.objects.select_related('config').filter(is_active=True, status='WAITING')
 
     def join_tournament(self, player):
         # allow to join if not started and not full
@@ -44,7 +44,7 @@ class TournamentRoom(models.Model):
         participant, _ = TournamentParticipant.objects.get_or_create(
             tournament=self,
             player=player,
-            default={'is_active': True}
+            is_active=True,
         )
 
 
@@ -146,7 +146,7 @@ class TournamentRoom(models.Model):
             'participants': [{
                     'id': p.player.id,
                     'username': p.player.username,
-                    'eliminated': p.player.eliminated,
+                    'eliminated': p.eliminated,
             } for p in self.participants.all()],
             'current_matches': [{
                 'match_id': m.id,

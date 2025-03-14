@@ -1,30 +1,68 @@
-<!-- Login Page -->
+<!DOCTYPE html>
+<html lang="en">
 
-<div class="login-container">
-  <h1>Login</h1>
-  <form id="loginForm">
-    <div class="form-group">
-      <label for="username">Username</label>
-      <input type="text" id="username" name="username" required>
-    </div>
-    <div class="form-group">
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" required>
-    </div>
-    <button type="submit">Login</button>
-  </form>
-  <p id="errorMessage" class="error-message"></p>
-  <div class="register-redirect">
-    <p>Don't have an account?</p>
-    <button id="registerButton">Register</button>
-  <script>
-    document.getElementById("registerButton").addEventListener("click", function() {
-      window.location.href = "../register"; 
-    });
-  </script>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Pong Game - Login</title>
+	<link rel="stylesheet" href="../static/css/login.css">
+</head>
 
-  </div>
+<body>
 
-<script type="module" src="../static/js/login/login.js">
-</script>
+<div class="container">
+	<div class="auth-card">
+		<!-- Tab switcher -->
+		<div class="tab-switcher">
+			<button class="tab-btn active" data-tab="login">Login</button>
+			<button class="tab-btn" data-tab="register">Register</button>
+		</div>
+
+		<!-- Login Form -->
+		<div class="auth-form active" id="login-form">
+			<h2>Welcome Back</h2>
+			<form>
+				<div class="form-group">
+					<label for="login-username">Username</label>
+					<input type="text" id="login-username" class="form-input" placeholder="Enter your username" required>
+				</div>
+				<div class="form-group">
+					<label for="login-password">Password</label>
+					<input type="password" id="login-password" class="form-input" placeholder="Enter your password" required>
+				</div>
+				<button type="submit" class="submit-btn">Login</button>
+			</form>
+		</div>
+
+		<!-- Registration Form -->
+		<div class="auth-form" id="register-form">
+			<h2>Create Account</h2>
+			<form>
+				<div class="form-group">
+					<div class="image-upload-container">
+					<img class="image-preview" src="default_profile.png" id="image-preview"></img>
+					<input type="file" class="file-input" accept="image/*" id="profile-image">
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="register-username">Username</label>
+					<input type="text" id="register-username" class="form-input" placeholder="Choose a username" required>
+				</div>
+				<div class="form-group">
+					<label for="register-password">Password</label>
+					<input type="password" id="register-password" class="form-input" placeholder="Create a password" required>
+				</div>
+				<div class="form-group">
+					<label for="confirm-password">Confirm Password</label>
+					<input type="password" id="confirm-password" class="form-input" placeholder="Confirm your password" required>
+				</div>
+				<button type="submit" class="submit-btn">Register</button>
+			</form>
+		</div>
+	</div>
 </div>
+
+<script type="module" src="../static/js/login.js"></script>
+
+</body>
+</html>
