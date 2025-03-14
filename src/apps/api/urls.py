@@ -49,6 +49,7 @@ from .management.game_management import (
     clear_game_rooms,
     get_config_game_room,
     clear_chat_data,
+    reset_dev_game_database
 )
 
 # here for API endpoints, pages are routed through templates
@@ -87,4 +88,5 @@ urlpatterns = [
     path('tournament/<int:tournament_id>/get_data', get_tournament_data, name="get_tournament_data"),
     path('tournament/<int:match_id>/update_scores', update_match_score, name="update_match_scores"),
     path('chat/clear', clear_chat_data, name="clear_chat_data"),
+    path('game/dev_reset', reset_dev_game_database, name="reset_game_database"),
 ]
