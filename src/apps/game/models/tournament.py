@@ -106,7 +106,7 @@ class TournamentRoom(models.Model):
     def process_completed_match(self, match):
         with transaction.atomic():
             winner = match.get_winner()
-            loser = match.player_states.excludes(player=winner).first().player
+            loser = match.player_states.exclude(player=winner).first().player
 
             winner_score = TournamentScore.objects.get(tournament=self, player=winner)
             loser_score = TournamentScore.objects.get(tournament=self, player=loser)
@@ -116,7 +116,7 @@ class TournamentRoom(models.Model):
             winner_score.points += match.get_player_score(winner)
             winner_score.save()
 
-            loser_score.matches_player += 1
+            loser_score.matches_played += 1
             loser_score.losses += 1
             loser_score.points += match.get_player_score(loser)
             loser_score.save()
@@ -204,7 +204,7 @@ class TournamentMatch(GameRoom):
 
     def complete_game(self, winner_id, scores):
         super().complete_game(winner_id, scores)
-        self.tournament.process_completed_matches(self)
+        self.tournament.process_completed_match(self)
 
     def join_game(self, player):
         result = super().join_game(player)
