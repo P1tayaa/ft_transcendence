@@ -129,14 +129,13 @@ def list_tournaments(request):
 @api_view(["POST"])
 def leave_tournament(request):
     data = request.data
-    player_id = request.user.id
     tournament_id = data.get('tournament_id')
     if not tournament_id:
         return JsonResponse({'success': False, 'message': "tournament_id is required"})
 
     try:
         tournament = TournamentRoom.objects.get(id=tournament_id)
-        tournament.leave_tournament(player_id)
+        tournament.leave_tournament(request.user)
         return JsonResponse({'success': True, 'message': 'succesfully left tournament'})
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
