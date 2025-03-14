@@ -3,7 +3,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from django.db import models
 from django.core.exceptions import ValidationError
 from channels.db import database_sync_to_async
-from apps.game.models.game import GameRoom
+from apps.game.models import GameRoom, TournamentRoom
 from django.db import transaction
 from django.contrib.auth.models import User
 
@@ -58,6 +58,20 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         message_type = data.get('type')
 
         if message_type == 'list_rooms':
+            tournaments = await database_sync_to_async(TournamentRoom.get_available_tournaments())
+            tournament_data = await database_sync_to_async(lambda: [{
+                'id': t.id,
+                'name': t.tournament_name,
+                'creator': t.creator.username,
+                'participants': t.participants.count(),
+                'max_participants': t.max_participants,
+                'config': {
+                    'mode': t.config.mode,
+                    'map_style': t.config.map_style,
+                    'powerups_enabled': t.config.powerups_enabled
+                }
+            } for t in tournaments])()
+
             rooms = await database_sync_to_async(GameRoom.get_available_rooms)()
             rooms_data = await database_sync_to_async(lambda: list(rooms.values(
                 'room_name',
@@ -90,7 +104,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             } for room in rooms_data]
             await self.send(json.dumps({
                    'type': 'room_list',
-                   'rooms': formatted_rooms
+                   'rooms': formatted_rooms,
+                   'tournaments': tournament_data
                }))
 
     async def game_created(self, event):
@@ -98,3 +113,10 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                'type': 'new_game_notification',
                'room': event['room'],
            }))
+        
+    async def tournament_update(self, event):
+        await self.send(json.dumps({
+                   'type': 'tournament_update',
+                   'tournament_data': event['tournament_data']
+               }))
+        

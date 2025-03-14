@@ -76,17 +76,6 @@ def get_tournament_data(request):
         }
     }
 
-    standings = tournament.get_standings()
-    response['standings'] = [
-        {
-            'player': score.player.username,
-            'matches_played': score.matches_played,
-            'wins': score.wins,
-            'losses': score.losses,
-            'points': score.points
-        } for score in standings
-    ]
-
     response['status'] = [
         tournament.get_tournament_status()
     ]

@@ -1,4 +1,6 @@
 from django.db import models
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -58,6 +60,7 @@ class TournamentRoom(models.Model):
                 'points': 0
             }
         )
+        self.broadcast_tournament_update()
 
         participant_count = self.participants.all().count()
         # auto start when full
@@ -72,6 +75,7 @@ class TournamentRoom(models.Model):
             if self.status == "WAITING":
                 TournamentScore.objects.filter(tournament=self, player=player).delete()
                 participant.delete()
+                self.broadcast_tournament_update()
                 return True
 
             elif self.status == "IN_PROGRESS":
@@ -88,6 +92,8 @@ class TournamentRoom(models.Model):
                             str(player): 0
                         }
                         match.complete_game(opponent_state.player.id, scores)
+
+                self.broadcast_tournament_update()
                 return True
             else:
                 raise ValidationError("Cannot leave completed tournament!")
@@ -115,6 +121,7 @@ class TournamentRoom(models.Model):
             )
             self.status = 'IN_PROGRESS'
             self.save()
+            self.broadcast_tournament_update()
 
     def create_round_matches(self, round_number, players):
         for i in range(0, len(players), 2):
@@ -173,6 +180,7 @@ class TournamentRoom(models.Model):
                     self.save()
                 else:
                     self.create_round_matches(round_number=current_round + 1, players=round_winners)
+            self.broadcast_tournament_update()
 
     def get_tournament_status(self):
         return {
@@ -199,6 +207,52 @@ class TournamentRoom(models.Model):
                 'points': s.points,
             }for s in self.get_standings()]
         }
+
+    def broadcast_tournament_update(self):
+        channel_layer = get_channel_layer()
+    
+        # Get complete tournament status data
+        tournament_data = {
+            'id': self.id,
+            'name': self.tournament_name,
+            'status': self.status,
+            'creator': self.creator.username if self.creator else None,
+            'max_participants': self.max_participants,
+            'participants': [{
+                'id': p.player.id,
+                'username': p.player.username,
+                'is_active': p.is_active,
+                'eliminated': p.eliminated
+            } for p in self.participants.all()],
+            'matches': [{
+                'id': m.id,
+                'round_number': m.round_number,
+                'match_number': m.match_number,
+                'room_name': m.room_name,
+                'status': m.status,
+                'players': [{
+                    'id': ps.player.id,
+                    'username': ps.player.username,
+                    'score': ps.score
+                } for ps in m.player_states.all()]
+            } for m in self.tournament_matches.all()],
+            'standings': [{
+                'player': s.player.username,
+                'matches_played': s.matches_played,
+                'wins': s.wins,
+                'losses': s.losses,
+                'points': s.points
+            } for s in self.get_standings()]
+        }
+    
+        # Send the data to all connected clients
+        async_to_sync(channel_layer.group_send)(
+            'matchmaking',,
+            {
+                'type': 'tournament_update',
+                'tournament_data': tournament_data
+            }
+        )
 
 
 class TournamentParticipant(models.Model):
