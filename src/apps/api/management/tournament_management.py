@@ -159,26 +159,8 @@ def leave_tournament(request):
 
     try:
         tournament = TournamentRoom.object.get(id=tournament_id)
-        participant = TournamentParticipant.object.get(player=player_id)
-        if not participant:
-            return JsonResponse({'success': False, 'message': "Could not find TournamentParticipant"})
-
-        if tournament.status == "WAITING":
-            TournamentScore.object.filter(tournament=tournament_id, player=player_id).delete()
-
-        elif tournament.status == "IN_PROGRESS":
-            participant.is_active = False
-            participant.save()
-
-            active_matches = TournamentMatch.object.filter(tournament=tournament_id, player_states__player=player_id)
-            for match in active_matches:
-                opponent_state = match.player_states.exclude(player=player_id).first()
-                if opponent_state:
-                    scores = {
-                        str(opponent_state.player.id): 1,
-                        str(player_id): 0
-                    }
-                    match.complete_game(opponent_state.player.id, scores)
+        tournament.leave_tournament(player_id)
+        return JsonResponse({'success': True, 'message': 'succesfully left tournament'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 

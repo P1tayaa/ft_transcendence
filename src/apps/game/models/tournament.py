@@ -27,7 +27,7 @@ class TournamentRoom(models.Model):
         return self.tournament_matches.filter(status='COMPLETED')
 
     def get_standings(self):
-        return self.participant_scores.all().order_by('-wins', '-points')
+        return self.participant_scores.all().order_by('-wins', '-points')        
 
     @classmethod
     def get_available_tournaments(cls):
@@ -65,6 +65,37 @@ class TournamentRoom(models.Model):
             self.start_tournament()
 
         return participant
+
+    def leave_tournament(self, player):
+        try:
+            participant = TournamentParticipant.objects.get(tournament=self, player=player)
+            if self.status == "WAITING":
+                TournamentScore.objects.filter(tournament=self, player=player).delete()
+                participant.delete()
+                return True
+
+            elif self.status == "IN_PROGRESS":
+                participant.is_active = False
+                participant.eliminated = True
+                participant.save()
+
+                active_matches = TournamentMatch.objects.filter(tournament=self, player_states__player=player, status="IN_PROGRESS")
+                for match in active_matches:
+                    opponent_state = match.player_states.exclude(player=player).first()
+                    if opponent_state:
+                        scores = {
+                            str(opponent_state.player.id): 1,
+                            str(player): 0
+                        }
+                        match.complete_game(opponent_state.player.id, scores)
+                return True
+            else:
+                raise ValidationError("Cannot leave completed tournament!")
+        except TournamentParticipant.DoesNotExist:
+            raise ValidationError("Participant not found")
+        
+
+
 
 
     def start_tournament(self):
