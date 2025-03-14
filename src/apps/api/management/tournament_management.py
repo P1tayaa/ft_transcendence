@@ -154,14 +154,15 @@ def leave_tournament(request):
         return JsonResponse({'success': False, 'message': "tournament_id is required"})
 
     try:
+        tournament = TournamentRoom.object.get(id=tournament_id)
         participant = TournamentParticipant.object.get(player=player_id)
         if not participant:
             return JsonResponse({'success': False, 'message': "Could not find TournamentParticipant"})
 
-        if self.status == "WAITING":
+        if tournament.status == "WAITING":
             TournamentScore.object.filter(tournament=tournament_id, player=player_id).delete()
 
-        elif self.status == "IN_PROGRESS":
+        elif tournament.status == "IN_PROGRESS":
             participant.is_active = False
             participant.save()
 
