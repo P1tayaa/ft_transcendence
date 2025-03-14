@@ -89,7 +89,7 @@ class TournamentRoom(models.Model):
                     if opponent_state:
                         scores = {
                             str(opponent_state.player.id): 1,
-                            str(player): 0
+                            str(player.id): 0
                         }
                         match.complete_game(opponent_state.player.id, scores)
 

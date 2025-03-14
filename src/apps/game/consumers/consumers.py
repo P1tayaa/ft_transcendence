@@ -75,10 +75,6 @@ class GameConsumer(BaseConsumer):
 
     def get_player_count(self):
         return len(self.game_state['players'])
-    # DB state
-    # db_count = await database_sync_to_async(
-    #     self.game_room.player_states.filter(is_active=True).count
-    # )()
 
     async def connect(self):
         await super().connect()
