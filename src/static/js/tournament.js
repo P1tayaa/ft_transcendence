@@ -96,12 +96,12 @@ document.addEventListener('DOMContentLoaded', function() {
 			console.log('Tournament data:', data);
 
 			// Update tournament info
-			tournamentName.textContent = data.info.name;
-			tournamentCreator.textContent = data.info.creator;
-			tournamentParticipants.textContent = `${data.standings.length}/${data.info.max_participants}`;
-			tournamentIdElement.textContent = data.info.id;
-			tournamentStatus.textContent = data.info.status;
-			updateStatusClass(data.info.status);
+			tournamentName.textContent = data.name;
+			tournamentCreator.textContent = data.creator;
+			tournamentParticipants.textContent = `${data.participants_count}/${data.participants_max}`;
+			tournamentIdElement.textContent = data.id;
+			tournamentStatus.textContent = data.status;
+			updateStatusClass(data.status);
 
 			// Update participant list
 			if (data.standings.length === 0) {
@@ -116,7 +116,6 @@ document.addEventListener('DOMContentLoaded', function() {
 				});
 			}
 
-			console.log('Status:', data.status);
 			// Update matches list (if available)
 			if (data.matches && data.matches.length > 0) {
 				noMatchesMessage.classList.add('hidden');
@@ -132,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 			// Update join button state
 			const isParticipant = data.standings.some(p => p.player === me);
-			const isFull = data.standings.length >= data.info.max_participants;
+			const isFull = data.participant_count >= data.participants_max;
 
 			if (isParticipant) {
 				joinBtn.textContent = 'Already Joined';
@@ -146,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 
 			// Disable join button if tournament is in progress or completed
-			if (data.info.status !== 'WAITING') {
+			if (data.status !== 'WAITING') {
 				joinBtn.textContent = 'Tournament Started';
 				joinBtn.disabled = true;
 			}
