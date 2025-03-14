@@ -166,6 +166,7 @@ class BaseGameRoom(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices = ROOM_STATUS, default = 'WAITING')
     config = models.ForeignKey(GameConfig, on_delete=models.PROTECT, related_name='game_rooms')
+    is_tournament_game = models.BooleanField(default=False)
 
     class Meta:
         abstract = True
@@ -280,5 +281,6 @@ class GameRoom(BaseGameRoom):
                 .select_related('config')
                 .filter(
                     is_active=True,
-                    status='WAITING'
+                    status='WAITING',
+                    is_tournament_game=False
                 ))    
