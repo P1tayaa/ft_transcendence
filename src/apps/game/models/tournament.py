@@ -182,9 +182,14 @@ class TournamentRoom(models.Model):
                     self.create_round_matches(round_number=current_round + 1, players=round_winners)
             self.broadcast_tournament_update()
 
-    def get_tournament_status(self):
+    def get_tournament_data(self):
         return {
+            'id': self.id,
+            'name': self.tournament_name,
             'status': self.status,
+            'creator': self.creator.username,
+            'participants_count': self.participants.all().count(),
+            'participants_max': self.max_participants,
             'participants': [{
                     'id': p.player.id,
                     'username': p.player.username,
