@@ -158,9 +158,9 @@ def leave_tournament(request):
         return JsonResponse({'success': False, 'message': "tournament_id is required"})
 
     try:
-        tournament = TournamentRoom.object.get(id=tournament_id)
+        tournament = TournamentRoom.objects.get(id=tournament_id)
         tournament.leave_tournament(player_id)
         return JsonResponse({'success': True, 'message': 'succesfully left tournament'})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
 

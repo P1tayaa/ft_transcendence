@@ -127,13 +127,16 @@ class TournamentRoom(models.Model):
                     player_sides = ['left', 'right']
                 )
 
-                TournamentMatch.objects.create(
+                match = TournamentMatch.objects.create(
                     tournament = self,
                     round_number = round_number,
                     match_number = i / 2,
                     room_name = f"{self.tournament_name}_R{round_number}M{i/2}",
                     config =match_config,
-                ).join_game(players[i]).join_game(players[i + 1])
+                )
+
+                match.join_game(players[i])
+                match.join_game(players[i + 1])
 
 
     def process_completed_match(self, match):
