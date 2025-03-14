@@ -22,7 +22,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	if (!tournamentId) {
 		console.error('No tournament ID provided');
-		document.querySelector('.tournament-card').innerHTML = '<h2>Error: No tournament ID provided</h2>';
+		document.querySelector('.tournament-card').innerHTML = '<h2>Redirecting</h2> <p>No id provided, redirecting to the game list...</p>';
+		setTimeout(() => {
+			window.location.href = '/lobby';
+		}, 2000);
+
 		return;
 	}
 
