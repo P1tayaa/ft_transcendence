@@ -66,30 +66,7 @@ def get_tournament_data(request):
 
     tournament = get_object_or_404(TournamentRoom, id=tournament_id)
 
-    response = {
-        'info': {
-            'id': tournament.id,
-            'name': tournament.tournament_name,
-            'status': tournament.status,
-            'creator': tournament.creator.username,
-            'max_participants': tournament.max_participants,
-        }
-    }
-
-    standings = tournament.get_standings()
-    response['standings'] = [
-        {
-            'player': score.player.username,
-            'matches_played': score.matches_played,
-            'wins': score.wins,
-            'losses': score.losses,
-            'points': score.points
-        } for score in standings
-    ]
-
-    response['status'] = [
-        tournament.get_tournament_status()
-    ]
+    response = tournament.get_tournament_data()
 
     return JsonResponse(response)
 
