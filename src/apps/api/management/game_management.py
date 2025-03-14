@@ -6,6 +6,7 @@ import json
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from apps.game.models.game import GameConfig, GameRoom, PlayerState,BaseGameRoom
+from apps.game.models.tournament import TournamentScore, TournamentParticipant, TournamentMatch, TournamentRoom
 from django.db import transaction
 from apps.users.models import Chat
 
@@ -167,4 +168,39 @@ def clear_game_rooms(request):
         return JsonResponse({
             'status': 'error',
             'message': f'Failed to clear game rooms: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+def reset_dev_game_database(request):
+    try:
+        with transaction.atomic():
+            deleted_counts = {}
+            
+            # Order matters - delete dependent models first
+            models_to_delete = [
+                PlayerState,
+                TournamentScore,
+                TournamentParticipant,
+                TournamentMatch,
+                TournamentRoom,
+                GameRoom,
+                GameConfig
+            ]
+            
+            for model in models_to_delete:
+                count = model.objects.count()
+                model_name = model.__name__
+                model.objects.all().delete()
+                deleted_counts[model_name] = count
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Dev database reset successfully',
+                'deleted': deleted_counts
+            }, status=200)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Reset failed: {str(e)}'
         }, status=500)

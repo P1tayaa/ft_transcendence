@@ -19,6 +19,8 @@ from .management.user_management import (
     block_user,
     unblock_user,
     get_blocked,
+    change_password,
+    change_username
 )
 from .management.chat_management import (
     add_message,
@@ -47,6 +49,7 @@ from .management.game_management import (
     clear_game_rooms,
     get_config_game_room,
     clear_chat_data,
+    reset_dev_game_database
 )
 
 # here for API endpoints, pages are routed through templates
@@ -56,6 +59,8 @@ urlpatterns = [
     path("logout/", logout_user, name="logout_user"),
     path("auth-status/", check_auth_status, name="check_auth_status"),
     path("me/", get_current_user, name="current_user"),
+    path("me/change_username", change_username, name="change_username"),
+    path("me/change_password", change_password, name="change_password"),
     path("search/", fetch_matching_usernames, name="search"),
     path("follow/", follow_user, name="follow_user"),
     path("follow/followers", get_followers, name="get_followers"),
@@ -83,4 +88,5 @@ urlpatterns = [
     path('tournament/<int:tournament_id>/get_data', get_tournament_data, name="get_tournament_data"),
     path('tournament/<int:match_id>/update_scores', update_match_score, name="update_match_scores"),
     path('chat/clear', clear_chat_data, name="clear_chat_data"),
+    path('game/dev_reset', reset_dev_game_database, name="reset_game_database"),
 ]
