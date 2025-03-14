@@ -152,10 +152,10 @@ def list_tournaments(request):
 @api_view(["POST"])
 def leave_tournament(request):
     data = json.loads(request.body)
-    player_id = data.get('player_id')
+    player_id = request.user.id
     tournament_id = data.get('tournament_id')
-    if not player_id:
-        return JsonResponse({'success': False, 'message': "player_id is required"})
+    if not tournament_id:
+        return JsonResponse({'success': False, 'message': "tournament_id is required"})
 
     try:
         participant = TournamentParticipant.object.get(player=player_id)
@@ -175,7 +175,9 @@ def leave_tournament(request):
                 if opponent_state:
                     scores = {
                         str(opponent_state.player.id): 1,
-                        str(player.id): 0
+                        str(player_id): 0
                     }
                     match.complete_game(opponent_state.player.id, scores)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
