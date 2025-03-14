@@ -94,19 +94,28 @@ def get_tournament_data(request):
 def update_match_score(request):
     match_id = request.query_params.get('match_id')
     match = get_object_or_404(TournamentMatch, id=match_id)
-    if request.user not in [match.player1, match.player2]:
+    
+    if not match.player_states.filter(player=request.user).exists():
         return JsonResponse({'message': 'Not authorized'}, status=403)
+    
 
     data = json.loads(request.body)
     try:
         with transaction.atomic():
-            match.score1 = data['score1']
-            match.score2 = data['score2']
-            match.save()
+            player_scores = data.get('player_scores', {})
+
+            if len(player_scores) != match.player_states.count():
+                return JsonResponse({'error': 'Invalid score data: must provide scores for all players'}, status=400)
+            
+            for player_id, score in player_scores.items():
+                player_state = match.player_states.get(player=player_id)
+                player_state.score = score
+                player_state.save()
 
             if data.get('is_complete'):
-                winner = match.player1 if match.score1 > match.score2 else match.player2
-                match.tournament.process_completed_match(match, winner)
+                winner_state = match.player_states.order_by('-score').first()
+                scores = {str(ps.player.id): ps.score for ps in match.player_states.all()}
+                match.complete_game(winner_state.player.id, scores)
 
         return JsonResponse({'status': 'success'})
     except Exception as e:

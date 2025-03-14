@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view 
+from django.contrib.auth import update_session_auth_hash
 from rest_framework import status
 from django.contrib.auth import logout
 from django.views.decorators.http import require_http_methods
@@ -367,7 +368,58 @@ def delete_profile_picture(request):
         profile.profile_picture = None
         profile.save()
     
-    return Response({'message': 'Profile picture deleted successfully'})            
+    return Response({'message': 'Profile picture deleted successfully'})
+
+@api_view(["POST"])
+@login_required
+def change_username(request):
+    data = json.loads(request.body)
+    new_username = data.get('new_username')
+    if not new_username:
+        return JsonResponse({'success': False, 'message': 'new_username is required'}, status=400)
+    
+    # check if taken
+    if User.objects.filter(username=new_username).exclude(id=request.user.id).exists():
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Username already exists'
+        }, status=400)
+    try:
+        user = request.user
+        user.username = new_username
+        user.save()
+        return JsonResponse({
+            'success': True,
+            'message': 'Username updated successfully',
+            'username': new_username
+        }, status=200)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+@api_view(["POST"])
+@login_required
+def change_password(request):
+    data = json.loads(request.body)
+    old_password = data.get('old_password')
+    new_password1 = data.get('new_password1')
+    new_password2 = data.get('new_password2')
+
+    if not all([new_password1, new_password2, old_password]):
+        return JsonResponse({'success': False, 'message': 'old and new_password are both required'}, status=400)
+    
+    if not request.user.check_password(old_password):
+        return JsonResponse({'success': False, 'message': 'Old password does not match'}, status=400)
+    if new_password1 != new_password2:
+        return JsonResponse({'success': False, 'message': 'New passwords do not match'}, status=400)
+
+    try:
+        user = request.user
+        user.set_password(new_password1)
+        user.save()
+        update_session_auth_hash(request, user)
+        return JsonResponse({'success': True, 'message': 'Password successfully updated'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
 
 
 @api_view(["POST"])
