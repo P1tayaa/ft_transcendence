@@ -95,14 +95,23 @@ def register_user(request):
                     print(f"Error saving profile picture: {str(e)}")
             else:
                 return JsonResponse({"success": False, "message": "File must be an image"}, status=400)
-
-        return JsonResponse(
-            {
-                "success": True,
-                "message": "User registered successfully.",
-                "username": user.username,
-            }
-        )
+        
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return JsonResponse({
+                'success': True,
+                "message": "Successfully registered and login successfully",
+                "username": username
+            })
+        else:
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": "User registered successfully.",
+                    "username": user.username,
+                }
+            )
 
     except json.JSONDecodeError:
         return JsonResponse(

@@ -253,7 +253,7 @@ class TournamentRoom(models.Model):
     
         # Send the data to all connected clients
         async_to_sync(channel_layer.group_send)(
-            'matchmaking',
+            'tournament',
             {
                 'type': 'tournament_update',
                 'tournament_data': tournament_data

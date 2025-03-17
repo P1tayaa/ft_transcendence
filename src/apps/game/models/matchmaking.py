@@ -1,6 +1,7 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.db import models
+from asgiref.sync import sync_to_async
 from django.core.exceptions import ValidationError
 from channels.db import database_sync_to_async
 from apps.game.models import GameRoom, TournamentRoom
