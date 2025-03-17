@@ -2,6 +2,7 @@ import json
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 import asyncio
+from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 from channels.db import database_sync_to_async
 from apps.game.models import GameRoom, GameConfig, TournamentRoom
@@ -38,9 +39,6 @@ class TournamentConsumer(AsyncWebsocketConsumer):
              'type': 'tournament_update',
              'tournament_data': event['tournament_data']
          }))
-
-        
-
 
 
 

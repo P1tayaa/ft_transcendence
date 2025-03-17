@@ -140,6 +140,7 @@ class TournamentRoom(models.Model):
                     match_number = i / 2,
                     room_name = f"{self.tournament_name}_R{round_number}M{i/2}",
                     config =match_config,
+                    is_tournament_game = True
                 )
 
                 match.join_game(players[i])
@@ -252,7 +253,7 @@ class TournamentRoom(models.Model):
     
         # Send the data to all connected clients
         async_to_sync(channel_layer.group_send)(
-            'matchmaking',
+            'tournament',
             {
                 'type': 'tournament_update',
                 'tournament_data': tournament_data
