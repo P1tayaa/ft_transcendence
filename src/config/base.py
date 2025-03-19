@@ -18,7 +18,7 @@ from pathlib import Path
 APP_DIR = Path(__file__).resolve().parent.parent.parent # ~/app/
 BASE_DIR = APP_DIR / 'src'
 
-MEDIA_ROOT = BASE_DIR / 'media/'
+MEDIA_ROOT = APP_DIR / 'media/'
 MEDIA_URL = '/media/'
 
 STATIC_URL = '/static/'

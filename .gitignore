@@ -3,11 +3,11 @@
 __pycache__/
 
 # ThreeJS
-src/static/js/threejs/node_modules/*
-src/static/js/threejs/dist/*
-src/static/js/threejs/models/*
-src/static/js/threejs/
+threejs/node_modules/*
+threejs/dist/*
+threejs/models/*
+threejs/
 
 # Volumes
-./static/*
-./media/*
+/static/profile_pics/*
+/media/*
