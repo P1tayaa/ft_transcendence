@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view
 
 
 # pattern for single page application
-def spa_entry(request):
+def spa_entry(request, path=None):
     context = {
         'csrf_token': get_token(request),
     }
