@@ -2,10 +2,9 @@
 // src/pongLogic/pong.js
 
 
-import { PlayerSide, Mode, MapStyle, get_settings, Setting } from "./setting.js";
+import { PlayerSide, Mode, intToPlayerSide } from "./setting.js";
 import { getNewPosition, getRightSpeed, posSpawn } from "../init/loadPadle.js"
-import MyWebSocket from "./websocket.js"
-import intToPlayerSide from "./setting.js"
+import { MyWebSocket } from "./websocket.js"
 
 
 class Pong {

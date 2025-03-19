@@ -1,15 +1,21 @@
 from django.shortcuts import render
-import os
-from rest_framework.decorators import api_view
-
+from django.contrib.auth.decorators import login_required
 
 # pattern for single page application
+@login_required(login_url='/login/')
 def home(request):
     return render(request, "base.html", {"template_name": "pages/home.html"})
 
+@login_required(login_url='/login/')
+def game(request, name = None):
+    context = {
+        "template_name": "pages/gameplay.html",
+    }
 
-def game(request):
-    return render(request, "base.html", {"template_name": "pages/gameplay.html"})
+    if name:
+        context["name"] = name
+
+    return render(request, "base.html", context)
 
 
 def register(request):

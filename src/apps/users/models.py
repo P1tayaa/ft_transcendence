@@ -13,8 +13,6 @@ class Profile(models.Model):
     most_recent_game_score = models.IntegerField(default=0)
     profile_picture = models.ImageField(
         upload_to=user_profile_path,
-        null=True,
-        blank=True,
         default='default_profile.png'
     )
 

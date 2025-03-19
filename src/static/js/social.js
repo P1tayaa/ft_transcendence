@@ -578,7 +578,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 		}
 	});
 
-	const host = window.location.host;
 	const socket = new WebSocket(getWebsocketHost() + "/ws/presence/");
 
 	socket.addEventListener("open", function(event) {

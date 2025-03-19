@@ -14,7 +14,6 @@ from django.db import transaction
 def add_message(request):
     try:
         content = request.data.get("content")
-        profile = request.user.profile
         recipient_id = request.data.get("recipient_id")
 
         if not content:
@@ -28,7 +27,7 @@ def add_message(request):
         with transaction.atomic():
             try:
                 recipient = User.objects.get(id=recipient_id)
-                chat = profile.get_or_create_chat_with(recipient)
+                chat = request.user.profile.get_or_create_chat_with(recipient)
 
             except User.DoesNotExist:
                 return Response({"success": False, "error": "Recipient not found"}, status=404)
@@ -77,24 +76,6 @@ def add_message(request):
     except Exception as e:
         return Response({"success": False, "error": str(e)}, status=500)
 
-
-@api_view(["GET"])
-@login_required
-def get_chats(request):
-    try:
-        chat_id = request.GET.get("chat_id")
-        if chat_id:
-            chat_data = request.user.profile.get_chat_history(chat_id)
-            if not chat_data:
-                return Response({"error": "Chat not found"}, status=404)
-            return Response(chat_data)
-        else:
-            # Get all chats with latest messages
-            chats = request.user.profile.get_all_chats()
-            return Response({**chats})
-    except Exception as e:
-        return Response({"error": str(e)}, status=500)
-
 @api_view(["GET"])
 @login_required
 def get_chat_history(request):
@@ -103,16 +84,14 @@ def get_chat_history(request):
         if user_id:
             try:
                 other_participant = User.objects.get(id = user_id)
-                chat = Chat.objects.filter(participants=request.user).filter(participants=other_participant).first()
-                if not chat:
-                    return Response({"error": "No chat history found with this user"}, status=404)
+                chat = request.user.profile.get_or_create_chat_with(other_participant)
 
                 chat_data = request.user.profile.get_chat_history(chat.id)
                 return Response(chat_data)
             except User.DoesNotExist:
-                return Response({"error": "User not found"}, status=404)
+                return Response({"message": "User not found"}, status=404)
     except Exception as e:
-        return Response({"error": str(e)}, status=500)
+        return Response({"message": str(e)}, status=500)
     
 
 @api_view(["POST"])

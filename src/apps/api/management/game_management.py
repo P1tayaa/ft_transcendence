@@ -13,11 +13,10 @@ from apps.users.models import Chat
 
 # added by sam
 @login_required
-@require_http_methods(["POST"])
+@require_http_methods(["GET"])
 def get_config_game_room(request):
     try:
-        data = json.loads(request.body)
-        game_name = data.get('roomName')
+        game_name = request.GET.get('name')
         if not game_name:
             return JsonResponse({
                 'status': 'error',
@@ -33,28 +32,13 @@ def get_config_game_room(request):
                 'message': 'Game room not found'
             }, status=404)
 
-        # Get the game configuration
-        game_config = game_room.config
-
-        return JsonResponse({
-            'status': 'success',
-            'room_id': game_room.id,
-            'room_name': game_room.room_name,
-            'config': game_config.to_dict(),
-            'available_sides': game_room.get_available_sides(),
-        })
-    
-    except json.JSONDecodeError:
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Invalid JSON data'
-        }, status=400)
+        return JsonResponse(game_room.get_room_status())
 
     except Exception as e:
         return JsonResponse({
             'status': 'error',
             'message': str(e),
-        }, status=500)   
+        }, status=500)
 
 
 @login_required
@@ -97,7 +81,7 @@ def create_game_room(request):
                 "room": room_data,
             }
         )
-    
+
         return JsonResponse({
             'status': 'success',
             'room_id': game_room.id,
@@ -134,49 +118,13 @@ def clear_chat_data(request):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': f'Failed to clear game rooms: {str(e)}'}, status=500)
 
-
-@login_required
-@require_http_methods(["POST"])
-def clear_game_rooms(request):
-    try:
-        with transaction.atomic():
-            # Get counts before deletion for reporting
-            player_states_count = PlayerState.objects.count()
-            game_rooms_count = GameRoom.objects.count()
-            game_configs_count = GameConfig.objects.count()
-            
-            # Delete all player states first (due to foreign key relationships)
-            PlayerState.objects.all().delete()
-            
-            # Delete all game rooms
-            GameRoom.objects.all().delete()
-            
-            # Optionally, delete all game configs if you want to start completely fresh
-            GameConfig.objects.all().delete()
-
-
-            return JsonResponse({
-                'status': 'success',
-                'message': 'All game rooms cleared successfully',
-                'deleted': {
-                    'player_states': player_states_count,
-                    'game_rooms': game_rooms_count,
-                    'game_configs': game_configs_count
-                }
-            })
-    except Exception as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': f'Failed to clear game rooms: {str(e)}'
-        }, status=500)
-
 @login_required
 @require_http_methods(["POST"])
 def reset_dev_game_database(request):
     try:
         with transaction.atomic():
             deleted_counts = {}
-            
+
             # Order matters - delete dependent models first
             models_to_delete = [
                 PlayerState,
@@ -187,13 +135,13 @@ def reset_dev_game_database(request):
                 GameRoom,
                 GameConfig
             ]
-            
+
             for model in models_to_delete:
                 count = model.objects.count()
                 model_name = model.__name__
                 model.objects.all().delete()
                 deleted_counts[model_name] = count
-            
+
             return JsonResponse({
                 'success': True,
                 'message': 'Dev database reset successfully',

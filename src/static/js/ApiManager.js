@@ -1,33 +1,37 @@
 export class ApiManager {
 	constructor() {
 		// API base URL
-		this.baseUrl = window.location.origin;
+		this.baseUrl = window.location.origin + '/api/';
 
 		// API endpoints
 		this.endpoints = {
-			me: '/api/me',
-			user: '/api/user/',
-			search: '/api/search/',
+			me: 'me/',
+			search: 'search/',
 
-			friends: '/api/follow/following',
-			addFriend: '/api/follow/',
-			removeFriend: '/api/follow/unfollow',
+			register: 'register/',
+			login: 'login/',
+			logout: 'logout/',
 
-			matchHistory: '/api/score/',
+			friends: 'follow/following',
+			addFriend: 'follow/',
+			removeFriend: 'follow/unfollow',
 
-			chat: '/api/chats/',
-			sendMessage: '/api/chats/message/',
+			matchHistory: 'score/',
 
-			createTournament: '/api/tournament/create/',
-			getTournamentList: '/api/tournament/list/',
-			getTournamentInfo: '/api/tournament/get_data/',
-			joinTournament: '/api/tournament/join/',
-			leaveTournament: '/api/tournament/leave/',
-			updateTournament: '/api/tournament/update_score/',
+			chat: 'chats/',
+			sendMessage: 'chats/message/',
 
-			createGame: '/api/create_game/',
+			createTournament: 'tournament/create/',
+			getTournamentList: 'tournament/list/',
+			getTournamentInfo: 'tournament/get/',
+			joinTournament: 'tournament/join/',
+			leaveTournament: 'tournament/leave/',
+			updateTournament: 'tournament/update_score/',
 
-			resetDatabase: '/api/dev_reset/',
+			createGame: 'game/create',
+			getGameInfo: 'game/get',
+
+			resetDatabase: 'dev_reset/',
 		};
 	}
 
@@ -57,7 +61,7 @@ export class ApiManager {
 		}
 	
 		const headers = {
-			"Content-Type": "application/json",
+			"Content-Type": 'application/json',
 			"X-CSRFToken": csrfToken
 		};
 	
@@ -120,20 +124,56 @@ export class ApiManager {
 	}
 
 	/**
+	 * SPECIAL FUNCTION, BECAUSE OF THE FORM DATA
+	 * Register a new user
+	 * @param {Object} formData - The registration form data
+	 * @returns {Promise} A promise that resolves with the response data
+	 */
+	async register(formData) {
+		const csrfToken = this.getCSRFToken();
+	
+		if (!csrfToken) {
+			throw new Error('CSRF token not found');
+		}
+	
+		const options = {
+			method: 'POST',
+			headers: { 'X-CSRFToken': csrfToken },
+			credentials: 'include',
+			body: formData
+		};
+
+		try {
+			const response = await fetch(this.baseUrl + this.endpoints.register, options);
+
+			const data = await response.json();
+			
+			if (!response.ok) {
+				throw new Error(data.message || 'Registration failed');
+			}
+
+			return data;
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	/**
+	 * Log the user in
+	 * @param {string} username - The username
+	 * @param {string} password - The password
+	 * @returns {Promise} A promise that resolves with the response data
+	 */
+	async login(username, password) {
+		return this.post(this.endpoints.login, { username, password });
+	}
+
+	/**
 	 * Get the current user
 	 * @returns {Promise} A promise that resolves with the current user data
 	 */
 	async getCurrentUser() {
 		return this.get(this.endpoints.me);
-	}
-
-	/**
-	 * Get a user by ID
-	 * @param {string} userId - The user ID
-	 * @returns {Promise} A promise that resolves with the user data
-	 */
-	async getUser(userId) {
-		return this.get(this.endpoints.user, { user_id: userId });
 	}
 
 	/**
@@ -151,7 +191,7 @@ export class ApiManager {
 	 * @returns {Promise} A promise that resolves with the search results
 	 */
 	async searchUsers(username) {
-		const response = await this.get(this.endpoints.search, { username });
+		const response = await this.get(this.endpoints.search, { username: username });
 		return response.results || [];
 	}
 
@@ -205,30 +245,71 @@ export class ApiManager {
 		});
 	}
 
+	/** 
+	 * Create a game
+	 * @param {Object} config - The game configuration
+	 * @returns {Promise} A promise that resolves with the response data
+	 */
 	async createGame(config) {
 		return this.post(this.endpoints.createGame, { config: config });
 	}
 
+	/**
+	 * Get game information by name
+	 * @param {string} gameName - The game name
+	 * @returns {Promise} A promise that resolves with the game data
+	 */
+	async getGameInfo(gameName) {
+		return this.get(this.endpoints.getGameInfo, { name: gameName });
+	}
+
+	/**
+	 * Create a tournament
+	 * @param {Object} config - The tournament configuration
+	 * @returns {Promise} A promise that resolves with the response data
+	 */
 	async createTournament(config) {
 		return this.post(this.endpoints.createTournament, { config: config });
 	}
 
+	/**
+	 * Get a list of tournaments
+	 * @returns {Promise} A promise that resolves with the tournament list
+	 */
 	async getTournamentList() {
 		return this.get(this.endpoints.getTournamentList);
 	}
 
+	/**
+	 * Get tournament information by ID
+	 * @param {string} tournamentId - The tournament ID
+	 * @returns {Promise} A promise that resolves with the tournament data
+	 */
 	async getTournamentInfo(tournamentId) {
 		return this.get(this.endpoints.getTournamentInfo, { tournament_id: tournamentId });
 	}
 
+	/**
+	 * Join a tournament
+	 * @param {string} tournamentId - The tournament ID
+	 * @returns {Promise} A promise that resolves with the response data
+	 */
 	async joinTournament(tournamentId) {
 		return this.post(this.endpoints.joinTournament, { tournament_id: tournamentId });
 	}
 
+	/**
+	 * Leave a tournament
+	 * @param {string} tournamentId - The tournament ID
+	 * @returns {Promise} A promise that resolves with the response data
+	 */
 	async leaveTournament(tournamentId) {
 		return this.post(this.endpoints.leaveTournament, { tournament_id: tournamentId });
 	}
 
+	/**
+	 * DEV ONLY: Reset the database
+	 */
 	async resetDatabase() {
 		return this.post(this.endpoints.resetDatabase);
 	}

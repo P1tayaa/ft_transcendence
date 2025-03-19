@@ -13,7 +13,6 @@ class PlayerState(models.Model):
     game = models.ForeignKey('GameRoom', related_name='player_states', on_delete=models.CASCADE)
     player = models.ForeignKey(User, related_name='game_states', on_delete=models.CASCADE)
     player_number = models.IntegerField(default=0)
-    is_active = models.BooleanField(default=True)
     score = models.IntegerField(default=0)
     joined_at = models.DateTimeField(auto_now_add=True)
     final_score = models.IntegerField(null=True, blank=True)
@@ -21,7 +20,7 @@ class PlayerState(models.Model):
     is_ready = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = ['game', 'player', 'is_active']
+        unique_together = ['game', 'player']
     
 class GameConfig(models.Model):
     GAME_MODES = (
@@ -179,77 +178,111 @@ class GameRoom(BaseGameRoom):
 
     def get_room_status(self):
         with transaction.atomic():
-            return{
-                'config': self.config,
+            all_players = self.player_states.all()
+            players = [{
+                'id': player.player.id,
+                'username': player.player.username,
+                'side': player.side,
+                'player_number': player.player_number,
+                'is_ready': player.is_ready
+            } for player in all_players]
+
+            return {
+                'config': self.config.to_dict(),
+                'name': self.room_name,
                 'status': self.status,
-                'players': list(self.player_states.select_related('player')
-                            .filter(is_active=True)
-                            .values('player_id', 'player_number', 'side', 'is_ready'))
+                'players': players
             }
 
     def join_game(self, player):
-        if self.status != 'WAITING':
-            raise ValidationError("Game is not open for joining")
+        try:
+            if self.status != 'WAITING':
+                raise ValidationError("Game is not open for joining")
 
-        with transaction.atomic():
-            current_players = list(self.player_states.select_for_update().filter(is_active=True))
+            with transaction.atomic():
+                players = self.player_states.select_for_update()
 
-            if len(current_players) >= self.config.player_count:
-                raise ValidationError("Game Room is full")
+                current_player = players.filter(player=player).first()
+                if current_player:
+                    return {
+                        'side': current_player.side,
+                        'player_number': current_player.player_number,
+                        'is_host': current_player.player_number == 1
+                    }
 
-            taken_sides = {p.side for p in current_players}
-            available_sides = [s for s in self.config.player_sides if s not in taken_sides]
+                if players.count() >= self.config.player_count:
+                    raise ValidationError("Game Room is full")
 
-            if not available_sides:
-                raise ValidationError("No available sides")
+                taken_sides = {p.side for p in players}
+                available_sides = [s for s in self.config.player_sides if s not in taken_sides]
 
-            player_state = PlayerState.objects.create(
-                game = self,
-                player = player,
-                player_number = len(current_players) + 1,
-                side = available_sides[0],
-                is_active = True,
-                score = 0,
-            )
+                if not available_sides:
+                    raise ValidationError("No available sides")
 
-            return {
-                'side': player_state.side,
-                'player_number': player_state.player_number,
-                'is_host': player_state.player_number == 1
-            }
+                current_player = PlayerState.objects.create(
+                    game = self,
+                    player = player,
+                    player_number = players.count() + 1,
+                    side = available_sides[0],
+                    score = 0,
+                )
+
+                return {
+                    'side': current_player.side,
+                    'player_number': current_player.player_number,
+                    'is_host': current_player.player_number == 1
+                }
+        except Exception as e:
+            raise ValidationError(str(e))
+
+    def leave_game(self, player):
+        try:
+            with transaction.atomic():
+                # Get players
+                players = self.player_states.select_for_update()
+
+                if players.count == 0:
+                    raise ValidationError("Game room is empty")
+
+                try:
+                    current_player = players.get(player=player)
+                except PlayerState.DoesNotExist:
+                    raise ValidationError("Player not in game")
+
+                # Set player numbers
+                player_number = current_player.player_number
+
+                for p in players:
+                    if p.player_number > player_number:
+                        p.player_number -= 1
+                        p.save()
+
+                if players.count() == 0:
+                    self.is_active = False
+                    self.save()
+                elif self.status == 'IN_PROGRESS' and players.count() < self.config.player_count:
+                    self.status = 'WAITING'
+                    self.save()
+
+                # Delete player state
+                current_player.delete()
+
+        except Exception as e:
+            raise ValidationError(str(e))
 
     def set_player_ready(self, player):
         with transaction.atomic():
-            player_state = (self.player_states.select_for_update()
-            .filter(player=player, is_active=True)
-            .first())
-
-            if not player_state:
+            try:
+                player_state = self.player_states.select_for_update().get(player=player)
+            except PlayerState.DoesNotExist:
                 raise ValidationError("Player not in game")
 
             player_state.is_ready = True
             player_state.save()
 
-            active_player = self.player_states.filter(is_active=True)
-            all_ready = (active_player.count() >= self.config.player_count and all(p.is_ready for p in active_player))
+            active_players = self.player_states
+            all_ready = (active_players.count() >= self.config.player_count and all(p.is_ready for p in active_players))
             return all_ready
-
-    def leave_game(self, player):
-        with transaction.atomic():
-            player_state = (self.player_states.select_for_update()
-                .filter(player=player, is_active=True)
-                .first())
-            if player_state:
-                player_state.is_active = False
-                player_state.save()
-
-                remaining_players = self.player_states.filter(is_active=True).count()
-                if remaining_players == 0:
-                    self.is_active = False
-                    self.save()
-                elif self.status == 'IN_PROGRESS':
-                    self.status='WAITING'
-                    self.save()
 
     def save_game_result(self, winner_id, scores):
         with transaction.atomic():
@@ -261,7 +294,7 @@ class GameRoom(BaseGameRoom):
 
             game = Game.objects.create(winner=User.objects.get(id=winner_id).profile)
 
-            active_players = self.player_states.filter(is_active=True)
+            active_players = self.player_states
             for player_state in active_players:
                 final_score = scores.get(str(player_state.player.id), 0)
                 player_state.final_score = final_score
@@ -273,6 +306,7 @@ class GameRoom(BaseGameRoom):
                     score=final_score,
                     position=player_state.side
                 )
+
 
     @classmethod
     def get_available_rooms(cls):

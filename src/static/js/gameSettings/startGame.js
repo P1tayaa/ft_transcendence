@@ -40,27 +40,9 @@ export class Config {
 	}
 }
 
-export async function startGame(config) {
-	if (config.mode === "networked") {
-		const room = await api.createGame(config);
-
-		console.log("Reponse of make_room()", room);
-		console.log('Initializing game with configuration:', config);
-
-		setTimeout(() => {
-			document.dispatchEvent(new CustomEvent("startGame", { detail: { gameConfig: config, room_name: room.room_name } }));
-		}, 3000);
-	} else {
-		setTimeout(() => {
-			document.dispatchEvent(new CustomEvent("startGame", { detail: { gameConfig: config } }));
-		}, 3000);
-	}
-}
-
 export async function startTournament(config) {
 	console.log('Starting tournament with configuration:', config);
 
-	const room = await api.createTournament(config);
 
 	console.log("Reponse of create tournament", room);
 
@@ -72,7 +54,6 @@ export async function startTournament(config) {
 
 	console.log("Info of tournament", info);
 
-	window.location.href = `/tournament/${room.tournament_id}`;
 
 	// setTimeout(() => {
 	// 	document.dispatchEvent(new CustomEvent("startGame", { detail: { gameConfig: config, room_name: room.room_name } }));

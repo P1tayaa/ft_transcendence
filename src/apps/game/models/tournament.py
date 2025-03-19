@@ -319,5 +319,3 @@ class TournamentScore(models.Model):
 
     class Meta:
         unique_together = ['tournament', 'player']
-
-

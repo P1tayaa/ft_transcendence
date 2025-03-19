@@ -65,8 +65,8 @@ def serve_frontend(request, filename="index.html"):
 # this pattern to serve single page application
 urlpatterns = [
     path("api/", include("apps.api.urls")),  # API endpoints
+
     path("", home, name="home"),
-    path("game/", game, name="game"),
     path("profile/", profile, name="profile"),
     path("social/", social, name="social"),
     path("lobby/", lobby, name="lobby"),
@@ -74,13 +74,15 @@ urlpatterns = [
     path("friendlist/", friendlist, name="friendlist"),
     path("dashboard/", dashboard, name="dashboard"),
     path("register/", register, name="register"),
-    path("configGame/", configGame, name="configGame"),
     path("gameStarting/", gameStarting, name="gameStarting"),
 
-    path("gameSpectate/",gameSpectate, name="gameSpectate"),
+    path("game/", game, name="game"),
+    path("game/<str:name>/", game, name="game"),
+    path("configGame/", configGame, name="configGame"),
+    path("gameSpectate/", gameSpectate, name="gameSpectate"),
+    path("gameOver/", gameOver, name="gameOver"),
+    path("joinGame/", joinGame, name="joinGame"),
 
-    path("gameOver/",gameOver, name="gameOver"),
-    path("joinGame/",joinGame, name="joinGame"),
     path("tournament/", tournament, name="tournament"),
     path("tournament/<int:id>/", tournament, name="tournament"),
     # ... other paths

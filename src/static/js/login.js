@@ -1,8 +1,4 @@
-import { getURL, getRequest, postRequest } from './utils.js';
-
-// API endpoints
-const LOGIN_URL = getURL() + '/api/login/';
-const REGISTER_URL = getURL() + '/api/register/';
+import { api } from './ApiManager.js';
 
 document.addEventListener('DOMContentLoaded', function() {
 	// Tab switching functionality
@@ -20,6 +16,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	const registerPassword = document.getElementById('register-password');
 	const confirmPassword = document.getElementById('confirm-password');
 	const profileImage = document.getElementById('profile-image');
+	const uploadIcon = document.getElementById('upload-icon');
+	const imagePreviewContainer = document.getElementById('image-preview-container');
 	const imagePreview = document.getElementById('image-preview');
 
 	// Initialize tab switching
@@ -42,24 +40,33 @@ document.addEventListener('DOMContentLoaded', function() {
 	});
 
 	// Profile image upload handling
-	imagePreview.addEventListener('click', function() {
+	imagePreviewContainer.addEventListener('click', function() {
 		profileImage.click();
 	});
 
 	profileImage.addEventListener('change', function() {
 		const image = this.files[0];
 		if (image) {
+			// Validate file size
 			if (image.size > 1024 * 1024) {
 				alert('File size exceeds 1MB');
 				this.value = '';
 				return;
 			}
-
+	
+			// Create preview
 			const reader = new FileReader();
-			reader.onload = function(e) {
-				imagePreview.src = e.target.result;
+			reader.onload = function(event) {
+				// Hide the icon and show the image
+				uploadIcon.style.display = 'none';
+				imagePreview.style.display = 'block';
+				imagePreview.src = event.target.result;
 			};
 			reader.readAsDataURL(image);
+		} else if (!imagePreview.src) {
+			// If no file selected (user cancelled), show icon again
+			uploadIcon.style.display = 'block';
+			imagePreview.style.display = 'none';
 		}
 	});
 
@@ -76,10 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 
 		try {
-			const response = await postRequest(LOGIN_URL, {
-				username: username,
-				password: password
-			});
+			await api.login(username, password);
 
 			// Redirect to lobby or game
 			window.location.href = '/';
@@ -110,15 +114,18 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 
 		try {
-			const response = await postRequest(REGISTER_URL, {
-				username: username,
-				email: null,
-				password: password
-			});
+			const formData = new FormData();
+			formData.append('username', username);
+			formData.append('password', password);
+			if (image) {
+				formData.append('profile_picture', image);
+			}
 
-			tabButtons[0].click();
+			const data = await api.register(formData);
+			console.log('Registration successful:', data);
+			window.location.href = '/';
 		} catch (error) {
-			console.error('Registration error:', error);
+			console.error('Registration error:', error.message);
 			alert(error.message);
 		}
 	});

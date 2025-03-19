@@ -75,7 +75,6 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('player_number', models.IntegerField(default=0)),
-                ('is_active', models.BooleanField(default=True)),
                 ('score', models.IntegerField(default=0)),
                 ('joined_at', models.DateTimeField(auto_now_add=True)),
                 ('final_score', models.IntegerField(blank=True, null=True)),
@@ -85,7 +84,7 @@ class Migration(migrations.Migration):
                 ('player', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='game_states', to=settings.AUTH_USER_MODEL)),
             ],
             options={
-                'unique_together': {('game', 'player', 'is_active')},
+                'unique_together': {('game', 'player')},
             },
         ),
         migrations.CreateModel(

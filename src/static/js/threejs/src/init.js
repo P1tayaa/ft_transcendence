@@ -114,36 +114,52 @@ export default class Init {
     return intervalId;
   }
 
-
   async initialize(settings, roomName) {
+    // Show loading screen and initialize settings
     showLoadingScreen();
     this.settings = new Setting(settings);
-    if (this.settings.powerup)
+
+    // Initialize power-ups if enabled in settings
+    if (this.settings.powerup) {
       this.allPower = new AllPowerUp();
+    }
+
+    // Calculate how many assets need to be loaded
     this.countAssetToLoad();
+
+    // Initialize the Pong game logic
     await this.pongLogic.initialize(this.settings, roomName);
+
+    // Start the loading screen update loop
     this.startUpdateLoadingLoop();
+
+    // Initialize controls
     this.controlHandler = new ControlHandler(this.settings);
-    this.startUpdateLoadingLoop();
     await this.controlHandler.Init(this.pongLogic.socket);
+
+    // Setup lights and score display
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new Score(this.gameScene.getScene(), this.settings.playerSide);
+
+    // Load all game assets
     this.loadAssets(() => {
-      console.log("assets finsihed loading ?")
+      console.log("Assets finished loading");
       this.doneLoadingAssets = true;
+
       if (this.settings.mode === Mode.NETWORKED) {
         this.pongLogic.socket.player_ready();
       } else {
         hideLoadingScreen();
       }
+
       this.lightManager.setupLights();
     });
 
+    // For network mode, wait until all players are ready
     if (this.settings.mode === Mode.NETWORKED) {
       await this.waitForGameStart();
       hideLoadingScreen();
     }
-
   }
 }
 

@@ -6,7 +6,7 @@
 
 import { intToPlayerSide, strToPlayerSide, PlayerSide } from './setting.js'
 
-class MyWebSocket {
+export class MyWebSocket {
   constructor(settings) {
     this.socket = null;
     this.host;

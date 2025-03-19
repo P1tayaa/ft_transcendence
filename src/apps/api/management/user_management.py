@@ -55,7 +55,7 @@ def register_user(request):
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
     try:
-        data = json.loads(request.body)
+        data = request.POST
         username = data.get("username")
         password = data.get("password")
         email = data.get("email")
@@ -105,13 +105,11 @@ def register_user(request):
                 "username": username
             })
         else:
-            return JsonResponse(
-                {
+            return JsonResponse({
                     "success": True,
                     "message": "User registered successfully.",
                     "username": user.username,
-                }
-            )
+                })
 
     except json.JSONDecodeError:
         return JsonResponse(
@@ -210,7 +208,7 @@ def fetch_matching_usernames(request):
         if not search:
             return Response({"success": False, "error": "Username search term is required"}, status=400)
 
-        matching_users = User.objects.filter(username__icontains=search).select_related('profile')
+        matching_users = User.objects.filter(username__icontains=search).exclude(id=request.user.id).select_related('profile')
         results = [serialize_user(matching_user ,request.user) for matching_user in matching_users]
 
         return Response({
@@ -503,4 +501,4 @@ def get_blocked(request):
         
     except Exception as e:
         return Response({'message': str(e)}, status=500)
-        
+

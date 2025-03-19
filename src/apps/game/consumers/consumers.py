@@ -20,21 +20,21 @@ def remap_player_data_by_position(game_state):
     # Create mapping of position to player data
     for player_id, player_data in game_state['players'].items():
         position = player_data['position']
-    
+
         # Map scores
         if player_id in game_state['score']:
             position_mapped['score'][position] = game_state['score'][player_id]
-        
+
         # Map player info
         position_mapped['players'][position] = {
             'username': player_data['username'],
             'is_host': player_data['is_host']
         }
-    
+
         # Map paddle settings
         if player_id in game_state['settings']['paddleSize']:
             position_mapped['settings']['paddleSize'][position] = game_state['settings']['paddleSize'][player_id]
-        
+
         if player_id in game_state['settings']['paddleLoc']:
             position_mapped['settings']['paddleLoc'][position] = game_state['settings']['paddleLoc'][player_id]
 
@@ -49,7 +49,7 @@ class BaseConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = f'room_{self.room_name}'
-    
+
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
@@ -200,7 +200,7 @@ class GameConsumer(BaseConsumer):
                 }
             )
             await self.broadcast_game_state()
-        
+
 
     async def handle_update_score(self, data):
         scoring_position = data.get('scoring_position')
@@ -259,7 +259,7 @@ class GameConsumer(BaseConsumer):
                  'type': 'error',
                  'message': str(e)
              }))
-    
+
     async def handle_start_game(self):
         player_id = str(self.scope['user'].id)
         player = self.game_state['players'].get(player_id)
@@ -287,24 +287,24 @@ class GameConsumer(BaseConsumer):
     async def handle_game_over(self, data):
         if not self.game_state['is_playing']:
             return
-        
+
         highest_score = -1
         winner_id = None
-    
+
         for player_id, score in self.game_state['score'].items():
             if score > highest_score:
                 highest_score = score
                 winner_id = player_id
         self.game_state['is_playing'] = False
-        
+
         try:
             # First, update most_recent_score for all players in the game
             for player_id, score in self.game_state['score'].items():
                 await database_sync_to_async(self.update_player_recent_score)(player_id, score)
-            
+
             # Then save the game result as before
             await database_sync_to_async(self.game_room.save_game_result)(winner_id, self.game_state['score'])
-            
+
             await self.broadcast_game_state(extra={
                 'game_over': True,
                 'winner': winner_id
@@ -314,7 +314,7 @@ class GameConsumer(BaseConsumer):
                 'type': 'error',
                 'message': str(e)
             }))
-    
+
     def update_player_recent_score(self, player_id, score):
         try:
             user = User.objects.get(id=player_id)
@@ -324,7 +324,7 @@ class GameConsumer(BaseConsumer):
             return True
         except User.DoesNotExist:
             return False
-        
+
 
     async def disconnect(self, close_code):
         if hasattr(self, 'game_room'):
@@ -363,7 +363,7 @@ class GameConsumer(BaseConsumer):
             self.game_state['pongLogic']['ballPos']['y'] += (self.game_state['pongLogic']['ballSpeed']['y'])
             await self.broadcast_game_state()
             await asyncio.sleep(1/60)
-        
+
 
     async def game_state_update(self, event):
         if 'state' in event:
@@ -392,7 +392,7 @@ class GameConsumer(BaseConsumer):
                'type': 'which_paddle',
                'position': event['position']
            }))
-        
+
     async def started_game(self, event):
         await self.send(text_data = json.dumps(event))
     async def failed_to_start_game(self, event):
@@ -406,7 +406,7 @@ class GameConsumer(BaseConsumer):
         await self.send(text_data = json.dumps(event))
     async def player_disconnected(self, event):
         await self.send(text_data = json.dumps(event))
-        
+
 
 
 class SpectatorConsumer(BaseConsumer):
@@ -420,7 +420,7 @@ class SpectatorConsumer(BaseConsumer):
                 'username': self.scope['user'].username
             }
         )
-    
+
     async def receive(self, text_data):
         data = json.loads(text_data)
         message_type = data.get('type')
@@ -447,5 +447,5 @@ class SpectatorConsumer(BaseConsumer):
 
     async def spectator_join(self, event):
         await self.send(text_data = json.dumps(event))
-    
+
 

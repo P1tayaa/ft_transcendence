@@ -1,5 +1,5 @@
 import { getWebsocketHost } from './utils.js';
-import { startGame, startTournament, Config } from './gameSettings/startGame.js';
+import { Config } from './gameSettings/startGame.js';
 import { api } from './ApiManager.js';
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -80,26 +80,8 @@ document.addEventListener('DOMContentLoaded', function() {
 				const roomElement = createRoomElement(room);
 				roomsContainer.appendChild(roomElement);
 			});
-		} else if (data.type === 'match_found') {
-			console.log('Match found:', data);
-
-			window.location.href = '/game/' + data.room_name;
 		}
 	});
-
-	async function joinGame(room) {
-		console.log('Joining room:', room);
-		if (!room.config) {
-			console.error("Failed to get config, cannot start game.");
-			return;
-		}
-	
-		setTimeout(() => {
-			document.dispatchEvent(new CustomEvent("startGame", {
-				detail: { gameConfig: room.config, room_name: room.room_name }
-			}));
-		}, 3000);
-	}
 
 	// Create a room element from the template
 	function createRoomElement(room) {
@@ -147,17 +129,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		// Handle join button click
 		const joinBtn = roomElement.querySelector('.join-btn');
-		joinBtn.addEventListener('click', () => joinGame(room));
-
-		// Disable join button if room is full
-		// if (room.current_players >= room.max_players) {
-		// 	joinBtn.disabled = true;
-		// 	joinBtn.textContent = 'Full';
-		// 	joinBtn.classList.add('disabled');
-		// }
+		joinBtn.addEventListener('click', () => {
+			console.log(room.config);
+			setTimeout(3000);
+			sessionStorage.setItem('config', JSON.stringify(room.config));
+			// window.location.href = '/game/' + room.room_name;
+		});
 
 		// Store room ID as data attribute for easier access
-		roomElement.dataset.roomId = room.id;
+		roomElement.dataset.roomName = room.room_name;
 
 		return roomElement;
 	}
@@ -264,12 +244,26 @@ document.addEventListener('DOMContentLoaded', function() {
 			confirmationModal.classList.add('hidden');
 		});
 
-		startGameBtn.addEventListener('click', function() {
+		startGameBtn.addEventListener('click', async function() {
 			const config = new Config(selection);
+			sessionStorage.setItem('config', JSON.stringify(config.get()));
+
 			if (selection.tournament) {
-				startTournament(config, api);
-			} else {
-				startGame(config, api);
+				const room = await api.createTournament(config);
+				window.location.href = `/tournament/${room.tournament_id}`;
+			}
+			else if (selection.mode === "networked") {
+				const room = await api.createGame(config);
+
+				if (!room) {
+					console.error("Failed to create game room.");
+					return;
+				}
+
+				window.location.href = '/game/' + room.room_name;
+			}
+			else {
+				window.location.href = '/game';
 			}
 			modals.forEach(modal => modal.classList.add('hidden'));
 		});
@@ -284,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			showConfirmationModal();
 		}
 	}
-	
+
 	// Go to previous step
 	function prev() {
 		if (currentStep > 0) {

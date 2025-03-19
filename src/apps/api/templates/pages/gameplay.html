@@ -1,50 +1,98 @@
-<!-- Gameplay Page -->
-
-<main>
-
-<style>
-  .hidden {
-  display: none;
-}
-</style>
+{% load static %}
 
 <script type="module">
-	import { getUserName } from '../static/js/utils.js';
-	getUserName();
+    import { getUserName } from "{% static 'js/utils.js' %}";
+    getUserName();
 </script>
 
+<title>Pong Game Match</title>
+
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+<link rel="stylesheet" href="{% static 'css/game.css' %}">
+
+<body>
+    <div class="container">
+        <div class="match-card">
+            <div class="match-header">
+                <h1>Game Match</h1>
+                <span id="match-status" class="match-status status-waiting">WAITING</span>
+            </div>
+
+            <div class="match-info">
+                <p><strong>Match Name:</strong> <span id="match-name">Loading...</span></p>
+                <p><strong>Created by:</strong> <span id="match-creator">Loading...</span></p>
+                <p><strong>Players:</strong> <span id="match-players">0/2</span></p>
+                <p><strong>ID:</strong> <span id="match-id">Loading...</span></p>
+            </div>
+
+            <h2>Players</h2>
+            <div class="players-list" id="players-list">
+                <!-- Player items will be added here by JavaScript -->
+                <p class="no-players-message" id="no-players-message">No players have joined yet.</p>
+            </div>
+
+            <div class="game-stats" id="game-stats">
+                <h2>Game Stats</h2>
+                <p class="no-stats-message" id="no-stats-message">Match hasn't started yet.</p>
+                <!-- Game stats will be added here by JavaScript -->
+            </div>
 
 
-<div id="matchmaking"">
+            <div class="action-buttons">
+                <button id="back-btn" class="action-btn secondary">Back to Lobby</button>
+                <button id="join-btn" class="action-btn join">Join Match</button>
+                <button id="ready-btn" class="action-btn ready">Ready</button>
+                <button id="start-btn" class="action-btn start">Start Match</button>
+            </div>
 
-<h2>Available Matches</h2>
-<table border="1">
-    <thead>
-        <tr>
-            <th>Room Name</th>
-            <th>Players</th>
-            <th>Mode</th>
-            <th>Map Style</th>
-            <th>Powerups</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody id="roomsTableBody">
-        <!-- Dynamic rows will be inserted here -->
-    </tbody>
-</table>
+            <p class="refresh-info">Refreshing automatically every 5 seconds...</p>
+        </div>
+    </div>
 
-<button id="clearRooms"> clear all rooms</button>
- 
- <script type="module" src="../static/js/gameSettings/joinGame.js"></script> 
+    <!-- Player template (for cloning) - Hidden -->
+    <template id="player-template">
+        <div class="player-item">
+            <div class="player-info">
+                <div class="player-name"></div>
+                <!-- Ready indicator or bot indicator will be added here by JavaScript -->
+            </div>
+            <div class="player-stats">
+                <div class="stat">
+                    <div class="stat-value score">0</div>
+                    <div class="stat-label">Score</div>
+                </div>
+            </div>
+        </div>
+    </template>
 
-</div>
- 
+    <!-- Game stats template (for cloning) - Hidden -->
+    <template id="game-stats-template">
+        <div class="game-stats-item">
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-title">Player 1</div>
+                    <div class="stat-value player1-name">Player 1</div>
+                    <div class="stat-value player1-score">0</div>
+                </div>
+                <div class="stat-box vs">VS</div>
+                <div class="stat-box">
+                    <div class="stat-title">Player 2</div>
+                    <div class="stat-value player2-name">Player 2</div>
+                    <div class="stat-value player2-score">0</div>
+                </div>
+            </div>
+            <div class="game-time">
+                <span class="time-label">Game Time:</span>
+                <span class="time-value" id="game-time">00:00</span>
+            </div>
+        </div>
+    </template>
 
+    <script type="module" src="{% static 'js/game.js' %}"></script>
 
-
-  <div id="gameplay">
+    <div id="gameplay">
         <canvas id="pong-game" width="960" height="720">Your browser does not support the canvas element.</canvas>
-  </div>
-  <script type="module" src="../static/js/threejs/main.js"> </script>
-</main>
+    </div>
+    <script type="module" src="{% static 'js/threejs/main.js' %}"></script>
+</body>
+</html>

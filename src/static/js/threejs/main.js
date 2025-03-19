@@ -1,50 +1,5 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
-/******/ 	// The require scope
-/******/ 	var __webpack_require__ = {};
-/******/ 	
-/************************************************************************/
-/******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__webpack_require__.d = (exports, definition) => {
-/******/ 			for(var key in definition) {
-/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
-/******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
-/******/ 		// define __esModule on exports
-/******/ 		__webpack_require__.r = (exports) => {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/************************************************************************/
-
-// NAMESPACE OBJECT: ./src/pongLogic/setting.js
-var setting_namespaceObject = {};
-__webpack_require__.r(setting_namespaceObject);
-__webpack_require__.d(setting_namespaceObject, {
-  Gj: () => (MapStyle),
-  Kt: () => (Mode),
-  ry: () => (setting_PlayerSide),
-  B5: () => (Setting),
-  fD: () => (intToPlayerSide),
-  fm: () => (strToPlayerSide)
-});
 
 ;// ./node_modules/three/build/three.core.js
 /**
@@ -61688,10 +61643,9 @@ class MyWebSocket {
     console.log("finished with connecting to websocket ");
   }
 }
-/* harmony default export */ const websocket = (MyWebSocket);
+/* harmony default export */ const websocket = ((/* unused pure expression or super */ null && (MyWebSocket)));
 ;// ./src/pongLogic/pong.js
 // src/pongLogic/pong.js
-
 
 
 
@@ -61725,7 +61679,7 @@ class Pong {
     this.playerSide = setting_PlayerSide.LEFT;
 
     // WebSocket
-    this.socket = new websocket();
+    this.socket = new MyWebSocket();
     this.lastContact;
     this.lastLoser;
   }
@@ -61990,7 +61944,7 @@ class Pong {
       this.socket.resetRound(this);
       this.socket.updateScore(this);
     } else {
-      init.score.incrementScore((0,setting_namespaceObject["default"])(this.lastWinner));
+      init.score.incrementScore(intToPlayerSide(this.lastWinner));
     }
     // Ball_Reset = true;
     if (this.settings.mode === Mode.NETWORKED) {
@@ -106265,19 +106219,35 @@ class Init {
     return intervalId;
   }
   async initialize(settings, roomName) {
+    // Show loading screen and initialize settings
     showLoadingScreen();
     this.settings = new Setting(settings);
-    if (this.settings.powerup) this.allPower = new AllPowerUp();
+
+    // Initialize power-ups if enabled in settings
+    if (this.settings.powerup) {
+      this.allPower = new AllPowerUp();
+    }
+
+    // Calculate how many assets need to be loaded
     this.countAssetToLoad();
+
+    // Initialize the Pong game logic
     await this.pongLogic.initialize(this.settings, roomName);
+
+    // Start the loading screen update loop
     this.startUpdateLoadingLoop();
+
+    // Initialize controls
     this.controlHandler = new ControlHandler(this.settings);
-    this.startUpdateLoadingLoop();
     await this.controlHandler.Init(this.pongLogic.socket);
+
+    // Setup lights and score display
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
     this.score = new score(this.gameScene.getScene(), this.settings.playerSide);
+
+    // Load all game assets
     this.loadAssets(() => {
-      console.log("assets finsihed loading ?");
+      console.log("Assets finished loading");
       this.doneLoadingAssets = true;
       if (this.settings.mode === Mode.NETWORKED) {
         this.pongLogic.socket.player_ready();
@@ -106286,6 +106256,8 @@ class Init {
       }
       this.lightManager.setupLights();
     });
+
+    // For network mode, wait until all players are ready
     if (this.settings.mode === Mode.NETWORKED) {
       await this.waitForGameStart();
       hideLoadingScreen();
@@ -106448,51 +106420,14 @@ class main {
     window.location.href = "../gameOver";
   }
 }
-let startInit = false;
-let config = null;
-let roomName;
-document.addEventListener("startGame", event => {
-  const detail = event.detail;
-  config = detail.gameConfig;
-  roomName = detail.room_name;
-  console.log("config received my pong game", config);
-  console.log("room_name received my pong game", roomName);
-  startInit = true;
-  console.log("Game event received! Initializing...");
-});
-document.addEventListener('DOMContentLoaded', () => {
+async function startGame(config = null, roomName = null) {
   const mainClass = new main();
-  let wait_please = false;
-  // Create a promise that resolves when initialization is complete
-  const waitForInit = new Promise((resolve, reject) => {
-    const interval = setInterval(async () => {
-      if (startInit) {
-        clearInterval(interval);
-        try {
-          await mainClass.init.initialize(config, roomName);
-          wait_please = true;
-          resolve(); // Resolve the promise once initialization is complete
-        } catch (error) {
-          reject(error); // Reject the promise if an error occurs during initialization
-        }
-      }
-    }, 100);
-  });
-
-  // Use the promise to wait for initialization to complete
-  waitForInit.then(() => {
-    console.log("Initialization complete, you should not print 'please'");
-    mainClass.init_function();
-  }).catch(error => {
+  try {
+    await mainClass.init.initialize(config, roomName);
+  } catch (error) {
     console.error('Initialization failed:', error);
-  });
-
-  // const wait_please_interval = setInterval(() => {
-  //   if (wait_please) {
-  //     clearInterval(wait_please_interval)
-  //
-  //   }
-  // }, 100)
-});
+  }
+}
+window.startGame = startGame;
 /******/ })()
 ;

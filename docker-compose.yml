@@ -8,7 +8,7 @@ services:
       dockerfile: src/Dockerfile
     volumes:
       - ./src:/app/src
-      - django_media:/app/src/apps/users/media
+      - django_media:/app/src/static/media
     command: ["./src/entrypoint-dev.sh"]
     ports:
       - "8000:8000"
