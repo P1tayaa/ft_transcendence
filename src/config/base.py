@@ -18,11 +18,6 @@ from pathlib import Path
 APP_DIR = Path(__file__).resolve().parent.parent.parent # ~/app/
 BASE_DIR = APP_DIR / 'src'
 
-MEDIA_ROOT = APP_DIR / 'media/'
-MEDIA_URL = '/media/'
-
-STATIC_URL = '/static/'
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -64,6 +59,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "apps.api.middleware.CSRFMiddleware",
+    "apps.api.middleware.AjaxRedirectMiddleware"
 ]
 
 ASGI_APPLICATION = 'config.asgi.application'
@@ -165,9 +161,12 @@ STATICFILES_DIRS = [
     BASE_DIR /  "static",
 ]
 
-# STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")  # This is a new directory
+STATIC_ROOT = APP_DIR / 'static/'
 STATIC_URL = "static/"
-# STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+MEDIA_ROOT = APP_DIR / 'media/'
+MEDIA_URL = '/media/'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

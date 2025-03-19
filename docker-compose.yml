@@ -33,6 +33,7 @@ services:
     volumes:
       - source:/app/src
       - media:/app/media
+      - static:/app/static
 
     ports:
       - "8000:8000"
@@ -67,6 +68,13 @@ volumes:
       type: none
       o: bind
       device: ./src/
+
+  static:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./static/
 
 
 
