@@ -18,70 +18,19 @@ Including another URLconf
 from django.contrib import admin
 from django.conf.urls.static import static
 from django.urls import path, include
+from django.views.decorators.csrf import ensure_csrf_cookie
 import os
 from django.http import FileResponse, Http404
 from django.conf import settings
 from urllib.parse import urlparse, unquote
 from apps.api.views.pages import (
-    home,
-    game,
-    profile,
-    social,
-    lobby,
-    login,
-    friendlist,
-    dashboard,
-    register,
-    configGame,
-    gameStarting,
-    gameSpectate,
-    gameOver,
-    tournament,
-    joinGame
+    spa_entry,
 )
-
-
-def serve_frontend(request, filename="index.html"):
-    # Decode and clean the filename
-    decoded_path = unquote(urlparse(filename).path)
-
-    # Path to the frontend directory
-    frontend_path = os.path.join(settings.BASE_DIR, "frontend")
-
-    # Construct the full file path
-    file_path = os.path.normpath(os.path.join(frontend_path, decoded_path))
-
-    # Ensure the file path is within the frontend directory
-    if not file_path.startswith(frontend_path):
-        raise Http404("File not found")
-
-    # Serve the file if it exists
-    if os.path.exists(file_path) and os.path.isfile(file_path):
-        return FileResponse(open(file_path, "rb"))
-    else:
-        raise Http404("File not found")
-
 
 # this pattern to serve single page application
 urlpatterns = [
     path("api/", include("apps.api.urls")),  # API endpoints
-    path("", home, name="home"),
-    path("game/", game, name="game"),
-    path("profile/", profile, name="profile"),
-    path("social/", social, name="social"),
-    path("lobby/", lobby, name="lobby"),
-    path("login/", login, name="login"),
-    path("friendlist/", friendlist, name="friendlist"),
-    path("dashboard/", dashboard, name="dashboard"),
-    path("register/", register, name="register"),
-    path("configGame/", configGame, name="configGame"),
-    path("gameStarting/", gameStarting, name="gameStarting"),
-
-    path("gameSpectate/",gameSpectate, name="gameSpectate"),
-
-    path("gameOver/",gameOver, name="gameOver"),
-    path("joinGame/",joinGame, name="joinGame"),
-    path("tournament/", tournament, name="tournament"),
-    path("tournament/<int:id>/", tournament, name="tournament"),
-    # ... other paths
+    path('', ensure_csrf_cookie(spa_entry), name="spa_entry"),
+    #catch all
+    path('<path:path>', ensure_csrf_cookie(spa_entry), name="spa_catchall"),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

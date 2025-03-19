@@ -62,6 +62,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "apps.api.middleware.CSRFMiddleware",
+    "apps.api.middleware.AjaxRedirectMiddleware"
 ]
 
 ASGI_APPLICATION = 'config.asgi.application'
