@@ -9,4 +9,4 @@ __pycache__/
 
 # Volumes
 /media/profile_pics/*
-/static/*
+/staticfiles/*

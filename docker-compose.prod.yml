@@ -25,14 +25,14 @@ services:
     container_name: web
     build:
       dockerfile: src/Dockerfile
-    entrypoint: ["./src/entrypoint-prod.sh"]
+    entrypoint: ["./entrypoint-prod.sh"]
     depends_on:
       - db
       - redis
     networks:
       - default
     volumes:
-      - source:/app/src
+      - source:/app
       - media:/app/media
 
     ports:
@@ -46,7 +46,7 @@ services:
       watch:
         - action: sync
           path: ./src/
-          target: app/src/
+          target: app/
 
     restart: unless-stopped
 

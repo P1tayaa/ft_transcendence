@@ -1,0 +1,34 @@
+<!-- Social Side Panel -->
+<div class="social-panel" id="social-panel">
+    <!-- Current User Profile -->
+    <div class="user-profile" id="current-user-profile">
+        <div class="avatar-container">
+            <img src="" alt="Your Avatar" class="avatar" id="current-user-avatar">
+            <span class="status-indicator online"></span>
+        </div>
+        <span class="username" id="current-user-name">Username</span>
+    </div>
+    
+    <!-- Friend Search -->
+    <div class="friend-search">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="Search players..." id="friend-search-input">
+    </div>
+    
+    <!-- Friends List -->
+    <ul class="friends-list" id="friends-list">
+        <!-- Friends will be added here dynamically -->
+    </ul>
+</div>
+
+<!-- Friend Item Template -->
+<template id="friend-template">
+    <li class="friend-item">
+        <div class="friend-avatar-container">
+            <img data-field="avatar" src="" alt="Friend Avatar" class="friend-avatar">
+            <span data-field="status" class="status-indicator"></span>
+        </div>
+        <span data-field="username" class="username">Friend Name</span>
+        <div data-field="message" class="new-messages" style="display: none;">0</div>
+    </li>
+</template>

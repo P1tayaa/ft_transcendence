@@ -9,20 +9,11 @@ echo "PostgreSQL started"
 export DJANGO_SETTINGS_MODULE=config.dev
 
 # Make and apply migrations
-python src/manage.py makemigrations game
-python src/manage.py makemigrations users
-python src/manage.py makemigrations api
-python src/manage.py makemigrations
-python src/manage.py migrate
-
-# Run ThreeJS webpack
-cd /app/src/static/js/threejs/
-NODE_ENV=development
-echo "Installing npm packages for ThreeJS..."
-npm install --development || echo "npm install failed, continuing anyway..."
-echo "Building ThreeJS..."
-npm run build || echo "npm run build failed, continuing anyway..."
+python manage.py makemigrations game
+python manage.py makemigrations users
+python manage.py makemigrations api
+python manage.py makemigrations
+python manage.py migrate
 
 # Start server
-cd /app
-exec python src/manage.py runserver 0.0.0.0:8000
+exec python manage.py runserver 0.0.0.0:8000

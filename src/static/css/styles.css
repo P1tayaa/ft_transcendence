@@ -1,6 +1,9 @@
-/* Base styling */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 
+/* Import other styles */
+@import 'social/sidebar.css';
+
+/* Base styling */
 :root {
     --primary-color: #3b82f6;    /* Vivid blue */
     --secondary-color: #10b981;  /* Emerald */
@@ -27,10 +30,4 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-}
-
-.container {
-    width: 100%;
-    max-width: 800px;
-    padding: 20px;
 }

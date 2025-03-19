@@ -12,4 +12,3 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 WHITENOISE_ROOT = None  # Don't serve files from WHITENOISE_ROOT
 WHITENOISE_INDEX_FILE = False  # Don't look for index.html
-WHITENOISE_AUTOREFRESH = True  # Refresh files during development

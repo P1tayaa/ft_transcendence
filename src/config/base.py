@@ -15,8 +15,7 @@ from pathlib import Path
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-APP_DIR = Path(__file__).resolve().parent.parent.parent # ~/app/
-BASE_DIR = APP_DIR / 'src'
+BASE_DIR = Path(__file__).resolve().parent.parent # /app/
 
 
 # Quick-start development settings - unsuitable for production
@@ -161,10 +160,10 @@ STATICFILES_DIRS = [
     BASE_DIR /  "static",
 ]
 
-STATIC_ROOT = APP_DIR / 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles/'
 STATIC_URL = "static/"
 
-MEDIA_ROOT = APP_DIR / 'media/'
+MEDIA_ROOT = BASE_DIR / 'media/'
 MEDIA_URL = '/media/'
 
 

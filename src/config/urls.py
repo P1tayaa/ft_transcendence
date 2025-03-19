@@ -20,11 +20,9 @@ from django.urls import path, include
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.conf import settings
 
-from apps.api.views.pages import (
-    spa_entry,
-)
+from apps.api.views.pages import spa_entry
 
-# this pattern to serve single page application
+# URL patterns
 urlpatterns = [
     path("api/", include("apps.api.urls")),  # API endpoints
     path('', ensure_csrf_cookie(spa_entry), name="spa_entry"),

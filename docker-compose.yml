@@ -31,14 +31,11 @@ services:
     networks:
       - default
     volumes:
-      - source:/app/src
+      - source:/app
       - media:/app/media
-      - static:/app/static
 
     ports:
       - "8000:8000"
-    environment:
-      - DJANGO_SETTINGS_MODULE=config.dev
     env_file:
       - .env
 
@@ -46,7 +43,7 @@ services:
       watch:
         - action: sync
           path: ./src/
-          target: app/src/
+          target: app/
 
     restart: unless-stopped
 
@@ -68,13 +65,6 @@ volumes:
       type: none
       o: bind
       device: ./src/
-
-  static:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./static/
 
 
 

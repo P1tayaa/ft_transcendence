@@ -1,39 +1,27 @@
-FROM python:3.11-slim
-
-# Set work directory
-WORKDIR /app
+FROM	python:3.11-slim
 
 # Install system dependencies
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends \
-  build-essential \
-  libpq-dev \
-  nodejs \
-  npm \
-  netcat-traditional \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+RUN		apt-get update && \
+		apt-get install -y --no-install-recommends \
+		build-essential \
+		libpq-dev \
+		nodejs \
+		npm \
+		netcat-traditional \
+		&& apt-get clean \
+		&& rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY src/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Set work directory
+WORKDIR	/app
 
 # Copy project
-COPY . .
+COPY	./src .
 
-# Set up Webpack dependencies
-WORKDIR /app/src/static/js/threejs
-COPY src/static/js/threejs/package.json ./package.json
+# Install Python dependencies
+RUN		pip install --no-cache-dir -r requirements.txt
 
-# Install npm dependencies
-RUN npm install
+# Give permissions to entrypoint scripts
+RUN		chmod +x entrypoint-dev.sh
+RUN		chmod +x entrypoint-prod.sh
 
-# Build Webpack bundle
-RUN npm run build
-
-WORKDIR /app
-
-RUN chmod +x src/entrypoint-dev.sh
-RUN chmod +x src/entrypoint-prod.sh
-
-ENTRYPOINT ["./src/entrypoint-dev.sh"]
+ENTRYPOINT ["./entrypoint-dev.sh"]
