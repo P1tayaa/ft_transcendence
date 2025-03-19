@@ -1,7 +1,4 @@
-import * as THREE from 'three';
-import Init from "../init.js";
-import { star_path, circular_path, random_movement, bouncing_slide } from "./powerUpMovement.js";
-import { pointUV } from 'three/src/nodes/TSL.js';
+import { star_path, circular_path, bouncing_slide } from "./powerUpMovement.js";
 
 export const PowerUpType = {
   Star: "Star.glb",
@@ -11,20 +8,8 @@ export const PowerUpType = {
   Magnette: "Magnette.glb",
 };
 
-
 export const offScreen = { x: 200, y: 200, z: 200 };
 const powerUpStartPos = { x: 0, y: 0, z: 0 };
-
-
-// export const PowerUpType = {
-//   Star: "Ball.glb",
-//   Snail: "Ball.glb",
-//   SpeedUp: "Ball.glb",
-//   Grow: "Ball.glb",
-//   Magnet: "Ball.glb",
-// };
-
-
 
 // const PowerUpEffect = (paddle) => { };
 // const PowerUpDisplacement = (speed, location, scene) => { };

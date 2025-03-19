@@ -20,13 +20,19 @@ if [ ! -f /app/ssl/cert.pem ] || [ ! -f /app/ssl/key.pem ]; then
   openssl req -x509 -newkey rsa:4096 -keyout /app/ssl/key.pem -out /app/ssl/cert.pem -days 365 -nodes -subj "/CN=localhost"
 fi
 
+# Run ThreeJS webpack
+cd /app/src/static/js/threejs/
+NODE_ENV=production
+echo "Installing npm packages for ThreeJS..."
+npm install --production || { echo "npm install failed"; exit 1; }
+echo "Building ThreeJS..."
+npm run build || { echo "npm run build failed"; exit 1; }
 
+# Collect static files
+cd /app
+python src/manage.py collectstatic --noinput
 
 # Start server
-# exec python src/manage.py runserver 0.0.0.0:8000
-cd /app/src
-
-python manage.py collectstatic --noinput
 export PYTHONPATH=$PYTHONPATH:/app/src
-export DJANGO_SETTINGS_MODULE=config.settings.prod
+export DJANGO_SETTINGS_MODULE=config.prod
 exec daphne -e ssl:8000:privateKey=/app/ssl/key.pem:certKey=/app/ssl/cert.pem config.asgi:application

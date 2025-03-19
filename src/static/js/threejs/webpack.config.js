@@ -1,10 +1,11 @@
-const resolve = require("path").resolve;
+const path = require("path");
 
 module.exports = {
   entry: "./src/main.js",
   output: {
-    path: resolve(__dirname, "../../../static/js/threejs"),
-    filename: "[name].js",
+    path: path.resolve(__dirname, 'dist'),
+    filename: "bundle.js",
+    publicPath: '/static/js/threejs/dist/',
   },
   module: {
     rules: [
@@ -15,10 +16,24 @@ module.exports = {
           loader: "babel-loader",
         },
       },
+      {
+        test: /\.(glb|gltf)$/,
+        use: {
+          loader: 'file-loader',
+          options: {
+            outputPath: 'models/',
+            name: '[name].[ext]',
+          },
+        },
+      },
     ],
   },
-  optimization: {
-    minimize: false,
+  resolve: {
+    extensions: ['.js'],
   },
-  mode: "production",
+  optimization: {
+    minimize: process.env.NODE_ENV === 'production',
+  },
+  mode: process.env.NODE_ENV || "development",
+  devtool: process.env.NODE_ENV === 'production' ? false : 'source-map',
 };

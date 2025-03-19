@@ -6,8 +6,8 @@ import ControlHandler from './control.js';
 import Pong from './pongLogic/pong.js';
 import Score from './pongLogic/score.js';
 import { initPowerUp, AllPowerUp } from './powerUp/AllPowerUp.js';
-import { Mode, MapStyle, get_settings, Setting } from "./pongLogic/setting.js";
-var assetsPath = window.location.protocol + '//' + window.location.host + "/static/glfw/";
+import { Mode, MapStyle, Setting } from "./pongLogic/setting.js";
+var assetsPath = window.location.protocol + '//' + window.location.host + "/static/js/threejs/src/models/"; // add dynamic path?
 
 import { loadClassicMap, loadBathMap, loadCircleMap, loadRectangleMap } from "./init/loadMap.js";
 import { spawnPadles } from './init/loadPadle.js';

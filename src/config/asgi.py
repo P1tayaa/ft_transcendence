@@ -5,7 +5,7 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 from channels.security.websocket import AllowedHostsOriginValidator
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.dev')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.dev')
 django.setup()
 
 from apps.game.routing import websocket_urlpatterns

@@ -17,8 +17,10 @@ RUN apt-get update \
 # Install Python dependencies
 COPY src/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
 # Copy project
 COPY . .
+
 # Set up Webpack dependencies
 WORKDIR /app/src/static/js/threejs
 COPY src/static/js/threejs/package.json ./package.json
@@ -33,5 +35,5 @@ WORKDIR /app
 
 RUN chmod +x src/entrypoint-dev.sh
 RUN chmod +x src/entrypoint-prod.sh
-CMD ["./src/entrypoint-dev.sh"]
-# CMD ["python", "src/manage.py", "runserver", "0.0.0.0:8000"]
+
+ENTRYPOINT ["./src/entrypoint-dev.sh"]

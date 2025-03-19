@@ -1,5 +1,5 @@
 import { getWebsocketHost } from './utils.js';
-import { Config } from './gameSettings/startGame.js';
+import { Config } from './game/game.js';
 import { api } from './ApiManager.js';
 
 document.addEventListener('DOMContentLoaded', function() {
