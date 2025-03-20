@@ -10,6 +10,11 @@ python src/manage.py makemigrations game
 python src/manage.py makemigrations users
 python src/manage.py makemigrations api
 python src/manage.py makemigrations
+
+DJANGO_SUPERUSER_USERNAME=admin \
+DJANGO_SUPERUSER_EMAIL=admin@example.com \
+DJANGO_SUPERUSER_PASSWORD=adminpassword \
+python src/manage.py createsuperuser --noinput
 # Apply migrations
 python src/manage.py migrate
 

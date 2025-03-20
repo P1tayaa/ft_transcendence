@@ -203,6 +203,8 @@ class GameRoom(BaseGameRoom):
             if not available_sides:
                 raise ValidationError("No available sides")
 
+            self.players.add(player)
+
             player_state = PlayerState.objects.create(
                 game = self,
                 player = player,
@@ -242,6 +244,7 @@ class GameRoom(BaseGameRoom):
             if player_state:
                 player_state.is_active = False
                 player_state.save()
+                self.players.remove(player)
 
                 remaining_players = self.player_states.filter(is_active=True).count()
                 if remaining_players == 0:

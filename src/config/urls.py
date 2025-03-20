@@ -18,6 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.conf.urls.static import static
 from django.urls import path, include
+from django.contrib import admin
 from django.views.decorators.csrf import ensure_csrf_cookie
 import os
 from django.http import FileResponse, Http404
@@ -30,6 +31,7 @@ from apps.api.views.pages import (
 # this pattern to serve single page application
 urlpatterns = [
     path("api/", include("apps.api.urls")),  # API endpoints
+    path("admin/", admin.site.urls),
     path('', ensure_csrf_cookie(spa_entry), name="spa_entry"),
     path('<path:path>', ensure_csrf_cookie(spa_entry), name="spa_catchall"),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
