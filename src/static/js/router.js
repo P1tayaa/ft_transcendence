@@ -42,22 +42,34 @@ class Router {
 			return;
 		}
 
-		if (route.auth && !localStorage.getItem('token')) {
+		if (!this.isAuth() && route.path !== '/login') {
 			this.navigate('/login');
-			return;
+			return
 		}
-
-		this.rootElement.innerHTML = route.component().render();
+		if (this.isAuth() && route.path === '/login') {
+			this.navigate('/');
+			return
+		}
 
 		if (history) {
 			window.history.pushState({}, '', path);
 		}
 
-		if (route.after) {
-			route.after();
+		this.rootElement.innerHTML = route.component().render();
+
+		if (route.component().after) {
+			route.component().after();
 		}
+	}
+
+	isAuth() {
+		console.log('cookie', document.cookie);
+		const hascookie = document.cookie.includes('auth-token');
+		return hascookie;
 	}
 }
 
-export default Router;
+const router = new Router();
+
+export default router;
 

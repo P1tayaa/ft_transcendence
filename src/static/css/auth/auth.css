@@ -1,0 +1,110 @@
+/* Base styling */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+@import 'upload.css';
+
+/* Card styling */
+.auth-card {
+	background-color: var(--card-color);
+	border-radius: 10px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+	padding: 32px;
+	position: relative;
+	overflow: hidden;
+
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 24px;
+}
+
+/* Tab switcher */
+.tab-switcher {
+	width: 100%;
+	flex: 1;
+	display: flex;
+	border-radius: 10px;
+	overflow: hidden;
+	border: 2px solid var(--border-color);
+}
+
+.tab-btn {
+	flex: 1;
+	text-align: center;
+	background-color: var(--card-color);
+	color: var(--text-color);
+	border: none;
+	padding: 12px;
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+
+.tab-btn.active {
+	background-color: var(--primary-color);
+}
+
+.tab-btn:hover:not(.active) {
+	background-color: var(--hover-color);
+}
+
+/* Form styling */
+@keyframes fadeIn {
+	from { opacity: 0; transform: translateY(10px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+.auth-form {
+	display: none;
+	flex-direction: column;
+	animation: fadeIn 0.5s ease;
+	gap: 24px;
+}
+
+.auth-form.active {
+	display: flex;
+}
+
+.form-group {
+	margin-bottom: 20px;
+}
+
+label {
+	display: block;
+	margin-bottom: 8px;
+	color: var(--text-color);
+}
+
+.form-input {
+	width: 100%;
+	padding: 12px 16px;
+	background-color: var(--background-color);
+	border: 2px solid var(--border-color);
+	border-radius: 10px;
+	color: var(--text-color);
+	transition: border-color 0.2s ease;
+}
+
+.form-input:focus {
+	outline: none;
+	border-color: var(--primary-color);
+}
+
+.submit-btn {
+	width: 100%;
+	padding: 14px;
+	background-color: var(--primary-color);
+	color: var(--text-color);
+	border: none;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: transform 0.2s ease;
+}
+
+.submit-btn:hover {
+	transform: scale(1.02);
+}
+
+.submit-btn:active {
+	transform: scale(0.98);
+}
+
+

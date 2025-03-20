@@ -1,7 +1,5 @@
 from django.contrib.auth.models import User
-from rest_framework.decorators import api_view 
 from django.contrib.auth import update_session_auth_hash
-from rest_framework import status
 from django.contrib.auth import logout
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -13,7 +11,12 @@ from PIL import Image
 from io import BytesIO
 from django.http import JsonResponse
 import json
+from rest_framework.decorators import api_view 
+from rest_framework import status
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import permission_classes
 
 
 def serialize_user(user_to_serialize, viewing_user=None):
@@ -29,7 +32,7 @@ def serialize_user(user_to_serialize, viewing_user=None):
 
     if viewing_user and viewing_user != user_to_serialize:
         data["is_following"] = viewing_user.profile.is_following(user_to_serialize.profile)
-    
+
     if viewing_user and viewing_user != user_to_serialize:
         data["is_blocking"] = viewing_user.profile.is_blocking(user_to_serialize.profile)
 
@@ -50,30 +53,31 @@ def create_user(user_data):
 
 
 @ensure_csrf_cookie
+@require_http_methods(["POST"])
+@permission_classes([AllowAny])
 def register_user(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "Method not allowed"}, status=405)
-
     try:
-        data = request.POST
-        username = data.get("username")
-        password = data.get("password")
-        email = data.get("email")
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        email = request.POST.get("email")
 
         if not all([username, password]):
-            return JsonResponse(
-                {"success": False, "message": "Username and password are required."},
-                status=400,
-            )
+            return JsonResponse({"success": False, "message": "Username and password are required."},status=400)
 
         if User.objects.filter(username=username).exists():
-            return JsonResponse(
-                {"success": False, "message": "Username already exists."}, status=400
-            )
+            return JsonResponse({"success": False, "message": "Username already exists."}, status=400)
 
         user = User.objects.create_user(
-            username=username, email=email if email else "", password=password
+            username=username,
+            email=email if email else "",
+            password=password
         )
+
+        user = authenticate(request, username=username, password=password)
+        token = str(AccessToken.for_user(user))
+
+        if user is None:
+            return JsonResponse({"success": False, "message": "Invalid username or password."}, status=status.HTTP_401_UNAUTHORIZED)
 
         # !INFO form must include enctype="multipart/form-data"
         if 'profile_picture' in request.FILES:
@@ -92,72 +96,48 @@ def register_user(request):
                         save=True
                     )
                 except Exception as e:
+                    # Continue with login process even if there's an error saving the profile picture
                     print(f"Error saving profile picture: {str(e)}")
             else:
-                return JsonResponse({"success": False, "message": "File must be an image"}, status=400)
-        
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return JsonResponse({
-                'success': True,
-                "message": "Successfully registered and login successfully",
-                "username": username
-            })
-        else:
-            return JsonResponse({
-                    "success": True,
-                    "message": "User registered successfully.",
-                    "username": user.username,
-                })
+                # Continue with login process even if file is not an image
+                print("Uploaded file is not an image, skipping profile picture update")
 
-    except json.JSONDecodeError:
-        return JsonResponse(
-            {"success": False, "message": "Invalid JSON data"}, status=400
-        )
+        login(request, user)
+        return JsonResponse({
+            'success': True,
+            "message": "Successfully registered and login",
+            "username": username,
+            "token": token
+        }, status=status.HTTP_201_CREATED)
+
     except Exception as e:
         return JsonResponse({"success": False, "message": str(e)}, status=500)
 
 
 @ensure_csrf_cookie
+@require_http_methods(["POST"])
+@permission_classes([AllowAny])
 def login_user(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "Method not allowed"}, status=405)
-
     try:
-        data = json.loads(request.body)
-        username = data.get("username")
-        password = data.get("password")
-
-        if not all([username, password]):
-            return JsonResponse(
-                {"success": False, "message": "Username and password are required."},
-                status=400,
-            )
+        username = request.POST.get("username")
+        password = request.POST.get("password")
 
         user = authenticate(request, username=username, password=password)
 
-        if user is not None:
-            login(request, user)
-            return JsonResponse(
-                {
-                    "success": True,
-                    "message": "Login successful",
-                    "username": user.username,
-                }
-            )
-        else:
-            return JsonResponse(
-                {"success": False, "message": "Invalid username or password."},
-                status=401,
-            )
+        if user is None:
+            return JsonResponse({"success": False, "message": "Invalid username or password."}, status=status.HTTP_401_UNAUTHORIZED)
 
-    except json.JSONDecodeError:
-        return JsonResponse(
-            {"success": False, "message": "Invalid JSON data"}, status=400
-        )
+        login(request, user)
+        token = str(AccessToken.for_user(user))
+
+        return JsonResponse({
+            "success": True,
+            "message": "Login successful",
+            "username": user.username,
+            "token": token
+        }, status=status.HTTP_201_CREATED)
     except Exception as e:
-        return JsonResponse({"success": False, "message": str(e)}, status=500)
+        return JsonResponse({"success": False, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @ensure_csrf_cookie

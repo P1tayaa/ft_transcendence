@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 
 /* Import other styles */
-@import 'social/sidebar.css';
+@import 'auth/auth.css';
 
 /* Base styling */
 :root {
@@ -30,4 +30,29 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+}
+
+h1, h2, h3, h4 {
+    font-weight: 700;
+}
+
+h1 {
+    font-size: 2.5rem;
+}
+
+h2 {
+    font-size: 2rem;
+}
+
+h3 {
+    font-size: 1.75rem;
+}
+
+h4 {
+    font-size: 1.5rem;
+}
+
+p, a, button, label, input {
+    font-weight: 400;
+    font-size: 1rem;
 }

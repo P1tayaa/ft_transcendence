@@ -8,8 +8,8 @@ __pycache__/
 **/threejs/src/models/*
 
 # Volumes
-/media/profile_pics/*
-/staticfiles/*
+src/media/profile_pics/*
+src/staticfiles/*
 
 old/
 Makefile
