@@ -5,7 +5,7 @@ prod:
 	docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
 
 clean:
-	docker system prune -a -f --volumes
+	docker compose down -v
 
-merge:
-	git pull && git merge origin/oscar
+fclean:
+	docker system prune -a --volumes

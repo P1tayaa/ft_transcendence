@@ -10,3 +10,6 @@ __pycache__/
 # Volumes
 /media/profile_pics/*
 /staticfiles/*
+
+old/
+Makefile
