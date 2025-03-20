@@ -9,6 +9,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 import os
+import re
 from PIL import Image
 from io import BytesIO
 from django.http import JsonResponse
@@ -35,13 +36,24 @@ def serialize_user(user_to_serialize, viewing_user=None):
 
     return data
 
+def check_password_strength(password):
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters long"
+
+    if not re.search(r"\d", password):
+        return False, "Password must contain at least 1 number"
+
+    if not re.search(r"[!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?]", password):
+        return False, "Password must contain at least 1 special character"
+
+    return True, None
+
 
 # User.objects.create_user should add to database itself
 def create_user(user_data):
     try:
         user = User.objects.create_user(
             username=user_data["username"],
-            email=user_data.get("email"),
             password=user_data["password"],
         )
         return True, user
@@ -58,7 +70,6 @@ def register_user(request):
         data = json.loads(request.body)
         username = data.get("username")
         password = data.get("password")
-        email = data.get("email")
 
         if not all([username, password]):
             return JsonResponse(
@@ -66,13 +77,16 @@ def register_user(request):
                 status=400,
             )
 
+        is_valid, error_msg = check_password_strength(password)
+        if not is_valid:
+            return JsonResponse({"success": False, "message": error_msg}, status=400)
         if User.objects.filter(username=username).exists():
             return JsonResponse(
                 {"success": False, "message": "Username already exists."}, status=400
             )
 
         user = User.objects.create_user(
-            username=username, email=email if email else "", password=password
+            username=username, password=password
         )
 
         # !INFO form must include enctype="multipart/form-data"
@@ -420,6 +434,9 @@ def change_password(request):
         return JsonResponse({'success': False, 'message': 'Old password does not match'}, status=400)
     if new_password1 != new_password2:
         return JsonResponse({'success': False, 'message': 'New passwords do not match'}, status=400)
+    is_valid, error_msg =check_password_strength(new_password1)
+    if not is_valid:
+        return JsonResponse({"success": False, "message": error_msg}, status=400)
 
     try:
         user = request.user
