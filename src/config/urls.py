@@ -18,20 +18,21 @@ Including another URLconf
 from django.contrib import admin
 from django.conf.urls.static import static
 from django.urls import path, include
-from django.contrib import admin
 from django.views.decorators.csrf import ensure_csrf_cookie
 import os
-from django.http import FileResponse, Http404
 from django.conf import settings
-from urllib.parse import urlparse, unquote
-from apps.api.views.pages import (
-    spa_entry,
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
 )
+from apps.api.views.pages import spa_entry
 
 # this pattern to serve single page application
 urlpatterns = [
     path("api/", include("apps.api.urls")),  # API endpoints
     path("admin/", admin.site.urls),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('', ensure_csrf_cookie(spa_entry), name="spa_entry"),
     path('<path:path>', ensure_csrf_cookie(spa_entry), name="spa_catchall"),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

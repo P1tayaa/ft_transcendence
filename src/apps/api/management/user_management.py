@@ -6,15 +6,16 @@ from django.contrib.auth import logout
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 import os
 import re
 from PIL import Image
 from io import BytesIO
-from django.http import JsonResponse
 import json
 from rest_framework.response import Response
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 def serialize_user(user_to_serialize, viewing_user=None):
@@ -64,7 +65,7 @@ def create_user(user_data):
 @ensure_csrf_cookie
 def register_user(request):
     if request.method != "POST":
-        return JsonResponse({"error": "Method not allowed"}, status=405)
+        return Response({"error": "Method not allowed"}, status=405)
 
     try:
         data = json.loads(request.body)
@@ -72,16 +73,16 @@ def register_user(request):
         password = data.get("password")
 
         if not all([username, password]):
-            return JsonResponse(
+            return Response(
                 {"success": False, "message": "Username and password are required."},
                 status=400,
             )
 
         is_valid, error_msg = check_password_strength(password)
         if not is_valid:
-            return JsonResponse({"success": False, "message": error_msg}, status=400)
+            return Response({"success": False, "message": error_msg}, status=400)
         if User.objects.filter(username=username).exists():
-            return JsonResponse(
+            return Response(
                 {"success": False, "message": "Username already exists."}, status=400
             )
 
@@ -108,37 +109,32 @@ def register_user(request):
                 except Exception as e:
                     print(f"Error saving profile picture: {str(e)}")
             else:
-                return JsonResponse({"success": False, "message": "File must be an image"}, status=400)
+                return Response({"success": False, "message": "File must be an image"}, status=400)
         
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return JsonResponse({
-                'success': True,
-                "message": "Successfully registered and login successfully",
-                "username": username
-            })
-        else:
-            return JsonResponse(
-                {
-                    "success": True,
-                    "message": "User registered successfully.",
-                    "username": user.username,
-                }
-            )
+        # EQUIVELENT TO LOGIN(), client just wants the access and he can be logged in I don't need to call login() on backend
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'success': True,
+            'message': 'User registered successfully',
+            'username': username,
+            'tokens': {
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            }
+        }, status=201)
 
     except json.JSONDecodeError:
-        return JsonResponse(
+        return Response(
             {"success": False, "message": "Invalid JSON data"}, status=400
         )
     except Exception as e:
-        return JsonResponse({"success": False, "message": str(e)}, status=500)
+        return Response({"success": False, "message": str(e)}, status=500)
 
 
 @ensure_csrf_cookie
 def login_user(request):
     if request.method != "POST":
-        return JsonResponse({"error": "Method not allowed"}, status=405)
+        return Response({"error": "Method not allowed"}, status=405)
 
     try:
         data = json.loads(request.body)
@@ -146,7 +142,7 @@ def login_user(request):
         password = data.get("password")
 
         if not all([username, password]):
-            return JsonResponse(
+            return Response(
                 {"success": False, "message": "Username and password are required."},
                 status=400,
             )
@@ -154,47 +150,51 @@ def login_user(request):
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            login(request, user)
-            return JsonResponse(
-                {
-                    "success": True,
-                    "message": "Login successful",
-                    "username": user.username,
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                "success": True,
+                "message": "Login successful",
+                "username": user.username,
+                'tokens': {
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
                 }
-            )
+            }, status=200)
         else:
-            return JsonResponse(
+            return Response(
                 {"success": False, "message": "Invalid username or password."},
                 status=401,
             )
 
     except json.JSONDecodeError:
-        return JsonResponse(
+        return Response(
             {"success": False, "message": "Invalid JSON data"}, status=400
         )
     except Exception as e:
-        return JsonResponse({"success": False, "message": str(e)}, status=500)
+        return Response({"success": False, "message": str(e)}, status=500)
 
 
 @ensure_csrf_cookie
 @require_http_methods(["POST"])
 def logout_user(request):
     try:
-        logout(request)
-        return JsonResponse(
-            {
-                "success": True,
-                "message": "Succesfully logged out",
-            }
-        )
+        refresh = request.data.get('refresh')
+        if refresh:
+            token = RefreshToken(refresh)
+            token.blacklist()
+        return Response({
+            "success": True,
+            "message": "Succesfully logged out",
+        })
     except Exception as e:
-        return JsonResponse({"success": False, "message": str(e)}, status=500)
+        return Response({"success": False, "message": str(e)}, status=500)
 
 
 @ensure_csrf_cookie
+@api_view(["GET"])
 def check_auth_status(request):
     if request.user.is_authenticated:
-        return JsonResponse(
+        return Response(
             {
                 "isAuthenticated": True,
                 "username": request.user.username,
@@ -202,14 +202,14 @@ def check_auth_status(request):
             }
         )
     else:
-        return JsonResponse({"isAuthenticated": False})
+        return Response({"isAuthenticated": False})
 
 
 @api_view(["GET"])
-@login_required
+@permission_classes([IsAuthenticated])
 def get_current_user(request):
     user = request.user
-    return JsonResponse(
+    return Response(
         {
             "success": True,
             **serialize_user(user)
@@ -218,6 +218,7 @@ def get_current_user(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def fetch_matching_usernames(request):
     try:
         search = request.GET.get("username", "")
@@ -243,6 +244,7 @@ def fetch_matching_usernames(request):
 
 
 @api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def follow_user(request):
     try:
         user_id = request.data.get("user_id")
@@ -256,7 +258,7 @@ def follow_user(request):
         try:
             user_to_follow = User.objects.get(id=user_id)
         except User.DoesNotExist:
-            return Response({"error": f"User not found"}, status=404)
+            return Response({"error": "User not found"}, status=404)
 
         if user_id == request.user.id:
             return Response({"error": "Cannot follow yourself"}, status=400)
@@ -275,7 +277,7 @@ def follow_user(request):
         return Response({"error": str(e)}, status=400)
 
 @api_view(["GET"])
-@login_required
+@permission_classes([IsAuthenticated])
 def get_following(request):
     try:
         profile = request.user.profile
@@ -293,7 +295,7 @@ def get_following(request):
         return Response({"success": False, "error": str(e)}, status=500)
 
 @api_view(["GET"])
-@login_required
+@permission_classes([IsAuthenticated])
 def get_followers(request):
     try:
         profile = request.user.profile
@@ -311,7 +313,7 @@ def get_followers(request):
         return Response({"success": False, "message": str(e)}, status=500)
 
 @api_view(["POST"])
-@login_required
+@permission_classes([IsAuthenticated])
 def unfollow_user(request):
     try:
         user_id = request.data.get("user_id")
@@ -326,7 +328,7 @@ def unfollow_user(request):
         try:
             user_to_unfollow = User.objects.get(id=user_id)
         except User.DoesNotExist:
-            return Response({"message": f"User not found"}, status=404)
+            return Response({"message": "User not found"}, status=404)
 
         follower_profile = request.user.profile
         followed_profile = user_to_unfollow.profile
@@ -348,7 +350,7 @@ def unfollow_user(request):
 
 
 @api_view(["POST"])
-@login_required
+@permission_classes([IsAuthenticated])
 def upload_profile_picture(request):
     if 'profile_picture' not in request.FILES:
         return Response({'message': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
@@ -382,7 +384,7 @@ def upload_profile_picture(request):
         
         
 @api_view(["POST"])
-@login_required
+@permission_classes([IsAuthenticated])
 def delete_profile_picture(request):
     profile = request.user.profile
     if profile.profile_picture:
@@ -394,16 +396,16 @@ def delete_profile_picture(request):
     return Response({'message': 'Profile picture deleted successfully'})
 
 @api_view(["POST"])
-@login_required
+@permission_classes([IsAuthenticated])
 def change_username(request):
     data = json.loads(request.body)
     new_username = data.get('new_username')
     if not new_username:
-        return JsonResponse({'success': False, 'message': 'new_username is required'}, status=400)
+        return Response({'success': False, 'message': 'new_username is required'}, status=400)
     
     # check if taken
     if User.objects.filter(username=new_username).exclude(id=request.user.id).exists():
-        return JsonResponse({
+        return Response({
             'status': 'error',
             'message': 'Username already exists'
         }, status=400)
@@ -411,16 +413,16 @@ def change_username(request):
         user = request.user
         user.username = new_username
         user.save()
-        return JsonResponse({
+        return Response({
             'success': True,
             'message': 'Username updated successfully',
             'username': new_username
         }, status=200)
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        return Response({'success': False, 'error': str(e)}, status=500)
     
 @api_view(["POST"])
-@login_required
+@permission_classes([IsAuthenticated])
 def change_password(request):
     data = json.loads(request.body)
     old_password = data.get('old_password')
@@ -428,28 +430,35 @@ def change_password(request):
     new_password2 = data.get('new_password2')
 
     if not all([new_password1, new_password2, old_password]):
-        return JsonResponse({'success': False, 'message': 'old and new_password are both required'}, status=400)
+        return Response({'success': False, 'message': 'old and new_password are both required'}, status=400)
     
     if not request.user.check_password(old_password):
-        return JsonResponse({'success': False, 'message': 'Old password does not match'}, status=400)
+        return Response({'success': False, 'message': 'Old password does not match'}, status=400)
     if new_password1 != new_password2:
-        return JsonResponse({'success': False, 'message': 'New passwords do not match'}, status=400)
+        return Response({'success': False, 'message': 'New passwords do not match'}, status=400)
     is_valid, error_msg =check_password_strength(new_password1)
     if not is_valid:
-        return JsonResponse({"success": False, "message": error_msg}, status=400)
+        return Response({"success": False, "message": error_msg}, status=400)
 
     try:
         user = request.user
         user.set_password(new_password1)
         user.save()
-        update_session_auth_hash(request, user)
-        return JsonResponse({'success': True, 'message': 'Password successfully updated'})
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'success': True,
+            'message': 'Password successfully updated',
+            'tokens': {
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            }
+        }, status=200)
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        return Response({'success': False, 'error': str(e)})
 
 
 @api_view(["POST"])
-@login_required
+@permission_classes([IsAuthenticated])
 def block_user(request):
     try:
         user_id = request.data.get("user_id")
@@ -473,7 +482,7 @@ def block_user(request):
 
 
 @api_view(["POST"])
-@login_required
+@permission_classes([IsAuthenticated])
 def unblock_user(request):
     try:
         user_id = request.data.get("user_id")
@@ -483,7 +492,7 @@ def unblock_user(request):
         try:
             user_to_unblock = User.objects.get(id=user_id)
         except User.DoesNotExist:
-            return Response({"message": f"User not found"}, status=404)
+            return Response({"message": "User not found"}, status=404)
 
         unblocking_profile = request.user.profile
         unblocked_profile = user_to_unblock.profile
@@ -506,7 +515,7 @@ def unblock_user(request):
 
 
 @api_view(["GET"])
-@login_required
+@permission_classes([IsAuthenticated])
 def get_blocked(request):
     try:
         user_id = request.user.id

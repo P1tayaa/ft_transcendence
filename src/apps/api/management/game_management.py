@@ -1,7 +1,8 @@
 from django.views.decorators.http import require_http_methods
-from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-from django.http import JsonResponse
+from rest_framework.response import Response
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAuthenticated
 import json
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -12,14 +13,14 @@ from apps.users.models import Chat
 
 
 # added by sam
-@login_required
+@permission_classes([IsAuthenticated])
 @require_http_methods(["POST"])
 def get_config_game_room(request):
     try:
         data = json.loads(request.body)
         game_name = data.get('roomName')
         if not game_name:
-            return JsonResponse({
+            return Response({
                 'status': 'error',
                 'message': 'No room name provided'
             }, status=400)
@@ -28,7 +29,7 @@ def get_config_game_room(request):
         try:
             game_room = GameRoom.objects.get(room_name=game_name)
         except GameRoom.DoesNotExist:
-            return JsonResponse({
+            return Response({
                 'status': 'error',
                 'message': 'Game room not found'
             }, status=404)
@@ -36,7 +37,7 @@ def get_config_game_room(request):
         # Get the game configuration
         game_config = game_room.config
 
-        return JsonResponse({
+        return Response({
             'status': 'success',
             'room_id': game_room.id,
             'room_name': game_room.room_name,
@@ -45,19 +46,19 @@ def get_config_game_room(request):
         })
     
     except json.JSONDecodeError:
-        return JsonResponse({
+        return Response({
             'status': 'error',
             'message': 'Invalid JSON data'
         }, status=400)
 
     except Exception as e:
-        return JsonResponse({
+        return Response({
             'status': 'error',
             'message': str(e),
         }, status=500)   
 
 
-@login_required
+@permission_classes([IsAuthenticated])
 @require_http_methods(["POST"])
 def create_game_room(request):
     try:
@@ -65,14 +66,14 @@ def create_game_room(request):
         config_data = data.get('config')
 
         if not config_data:
-            return JsonResponse({'status': 'error', 'message': 'No configuration provided'}, status=400)
+            return Response({'status': 'error', 'message': 'No configuration provided'}, status=400)
 
         try:
             game_config = GameConfig.create_from_frontend(config_data)
             game_config.clean()
             game_config.save()
         except ValidationError as e:
-            return JsonResponse({
+            return Response({
                 'status': 'error',
                 'message': 'Invalid configuration',
                 'errors': e.message_dict,
@@ -98,25 +99,25 @@ def create_game_room(request):
             }
         )
     
-        return JsonResponse({
+        return Response({
             'status': 'success',
             'room_id': game_room.id,
             'room_name': game_room.room_name,
             'config': game_config.to_dict()
         })
     except json.JSONDecodeError:
-        return JsonResponse({
+        return Response({
              'status': 'error',
              'message': 'Invalid JSON data',
          }, status=400)
     except Exception as e:
-        return JsonResponse({
+        return Response({
              'status': 'error',
              'message': str(e),
          }, status=500)
 
 
-@login_required
+@permission_classes([IsAuthenticated])
 @require_http_methods(["POST"])
 def clear_chat_data(request):
     try:
@@ -124,7 +125,7 @@ def clear_chat_data(request):
             chat_count = Chat.objects.count()
 
             Chat.objects.all().delete()
-            return JsonResponse({
+            return Response({
                 'status': 'success',
                 'message': 'All chats cleared successfully',
                 'deleted': {
@@ -132,10 +133,10 @@ def clear_chat_data(request):
                 }
             })
     except Exception as e:
-        return JsonResponse({'status': 'error', 'message': f'Failed to clear game rooms: {str(e)}'}, status=500)
+        return Response({'status': 'error', 'message': f'Failed to clear game rooms: {str(e)}'}, status=500)
 
 
-@login_required
+@permission_classes([IsAuthenticated])
 @require_http_methods(["POST"])
 def clear_game_rooms(request):
     try:
@@ -155,7 +156,7 @@ def clear_game_rooms(request):
             GameConfig.objects.all().delete()
 
 
-            return JsonResponse({
+            return Response({
                 'status': 'success',
                 'message': 'All game rooms cleared successfully',
                 'deleted': {
@@ -165,12 +166,12 @@ def clear_game_rooms(request):
                 }
             })
     except Exception as e:
-        return JsonResponse({
+        return Response({
             'status': 'error',
             'message': f'Failed to clear game rooms: {str(e)}'
         }, status=500)
 
-@login_required
+@permission_classes([IsAuthenticated])
 @require_http_methods(["POST"])
 def reset_dev_game_database(request):
     try:
@@ -194,13 +195,13 @@ def reset_dev_game_database(request):
                 model.objects.all().delete()
                 deleted_counts[model_name] = count
             
-            return JsonResponse({
+            return Response({
                 'success': True,
                 'message': 'Dev database reset successfully',
                 'deleted': deleted_counts
             }, status=200)
     except Exception as e:
-        return JsonResponse({
+        return Response({
             'success': False,
             'message': f'Reset failed: {str(e)}'
         }, status=500)

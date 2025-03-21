@@ -1,16 +1,16 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
-from ..serializers import ChatSerializer, MessageSerializer
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from django.contrib.auth.decorators import login_required
 from apps.users.models import Chat, Message
 from django.db import transaction
 
 
 @api_view(["POST"])
-@login_required
+@permission_classes([IsAuthenticated])
 def add_message(request):
     try:
         content = request.data.get("content")
@@ -79,7 +79,7 @@ def add_message(request):
 
 
 @api_view(["GET"])
-@login_required
+@permission_classes([IsAuthenticated])
 def get_chats(request):
     try:
         chat_id = request.GET.get("chat_id")
@@ -96,7 +96,7 @@ def get_chats(request):
         return Response({"error": str(e)}, status=500)
 
 @api_view(["GET"])
-@login_required
+@permission_classes([IsAuthenticated])
 def get_chat_history(request):
     try:
         user_id = request.GET.get("user_id")
@@ -116,7 +116,7 @@ def get_chat_history(request):
     
 
 @api_view(["POST"])
-@login_required
+@permission_classes([IsAuthenticated])
 def mark_messages_read(request):
     try:
         chat_id = request.data.get("chat_id")    
@@ -132,7 +132,7 @@ def mark_messages_read(request):
 
 
 @api_view(["POST"])
-@login_required
+@permission_classes([IsAuthenticated])
 def update_typing_status(request):
     try:
         chat_id = request.data.get("chat_id")

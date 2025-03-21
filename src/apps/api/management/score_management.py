@@ -1,13 +1,14 @@
 from django.contrib.auth.models import User
-from django.contrib.auth.decorators import login_required
-from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view
 from django.db import transaction
 from apps.users.models import Game
 
 
 @api_view(["POST"])
-@login_required
+@permission_classes([IsAuthenticated])
 def add_score(request):
     try:
         score = request.data.get("score")
@@ -47,7 +48,7 @@ def add_score(request):
 
 
 @api_view(["GET"])
-@login_required
+@permission_classes([IsAuthenticated])
 def get_score_history(request):
     try:
         user_id = request.GET.get("user_id")
@@ -97,7 +98,7 @@ def get_score_history(request):
 
 
 @api_view(["GET"])
-@login_required
+@permission_classes([IsAuthenticated])
 def get_recent_score(request):
     try:
         user_id = request.GET.get("user_id")
@@ -115,7 +116,7 @@ def get_recent_score(request):
 
 
 @api_view(["GET"])
-@login_required
+@permission_classes([IsAuthenticated])
 def get_highscore(request):
     try:
         user_id = request.GET.get("user_id")

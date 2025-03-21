@@ -1,8 +1,7 @@
-from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
-from django.views.decorators.csrf import csrf_exempt
+from rest_framework.response import Response
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ValidationError
 from django.db import transaction
 import json
@@ -10,7 +9,7 @@ from rest_framework.decorators import api_view
 from apps.game.models.tournament import TournamentRoom, TournamentParticipant, TournamentMatch, TournamentScore
 from apps.game.models.game import GameConfig
 
-@login_required
+@permission_classes([IsAuthenticated])
 @api_view(["POST"])
 def create_tournament(request):
     try:
@@ -18,14 +17,14 @@ def create_tournament(request):
         config_data = data.get('config')
 
         if not config_data:
-            return JsonResponse({'status': 'error', 'message': 'No configuration provided'}, status=400)
+            return Response({'status': 'error', 'message': 'No configuration provided'}, status=400)
 
         try:
             game_config = GameConfig.create_from_frontend(config_data)
             game_config.clean()
             game_config.save()
         except ValidationError as e:
-            return JsonResponse({
+            return Response({
                 'status': 'error',
                 'message': 'Invalid configuration',
                 'errors': e.message_dict,
@@ -38,16 +37,16 @@ def create_tournament(request):
             config = game_config
         )
         tournament.join_tournament(request.user) # creator joints tournament automatically
-        return JsonResponse({
+        return Response({
             'tournament_id': tournament.id,
             'tournament_name': tournament.tournament_name,
             'status': tournament.status
         })
     except Exception as e:
-        return JsonResponse({'message': str(e)}, status=400)
+        return Response({'message': str(e)}, status=400)
 
 
-@login_required
+@permission_classes([IsAuthenticated])
 @api_view(["POST"])
 def join_tournament(request):
     try:
@@ -55,11 +54,11 @@ def join_tournament(request):
         tournament = get_object_or_404(TournamentRoom, id=tournament_id)
 
         tournament.join_tournament(request.user)
-        return JsonResponse({'status': 'success'})
+        return Response({'status': 'success'})
     except ValidationError as e:
-        return JsonResponse({'message': str(e)}, status=400)
+        return Response({'message': str(e)}, status=400)
 
-@login_required
+@permission_classes([IsAuthenticated])
 @api_view(["GET"])
 def get_tournament_data(request):
     tournament_id = request.query_params.get('tournament_id')
@@ -68,16 +67,16 @@ def get_tournament_data(request):
 
     response = tournament.get_tournament_data()
 
-    return JsonResponse(response)
+    return Response(response)
 
-@login_required
+@permission_classes([IsAuthenticated])
 @api_view(["POST"])
 def update_match_score(request):
     match_id = request.query_params.get('match_id')
     match = get_object_or_404(TournamentMatch, id=match_id)
     
     if not match.player_states.filter(player=request.user).exists():
-        return JsonResponse({'message': 'Not authorized'}, status=403)
+        return Response({'message': 'Not authorized'}, status=403)
     
 
     data = json.loads(request.body)
@@ -86,7 +85,7 @@ def update_match_score(request):
             player_scores = data.get('player_scores', {})
 
             if len(player_scores) != match.player_states.count():
-                return JsonResponse({'error': 'Invalid score data: must provide scores for all players'}, status=400)
+                return Response({'error': 'Invalid score data: must provide scores for all players'}, status=400)
             
             for player_id, score in player_scores.items():
                 player_state = match.player_states.get(player=player_id)
@@ -98,11 +97,11 @@ def update_match_score(request):
                 scores = {str(ps.player.id): ps.score for ps in match.player_states.all()}
                 match.complete_game(winner_state.player.id, scores)
 
-        return JsonResponse({'status': 'success'})
+        return Response({'status': 'success'})
     except Exception as e:
-        return JsonResponse({'message': str(e)}, status=400)
+        return Response({'message': str(e)}, status=400)
 
-@login_required
+@permission_classes([IsAuthenticated])
 @api_view(["GET"])
 def list_tournaments(request):
     available_tournaments = TournamentRoom.get_available_tournaments()
@@ -121,22 +120,22 @@ def list_tournaments(request):
         }
     } for t in available_tournaments]
 
-    return JsonResponse({
+    return Response({
         'tournaments': tournament_list
     })
 
-@login_required
+@permission_classes([IsAuthenticated])
 @api_view(["POST"])
 def leave_tournament(request):
     data = request.data
     tournament_id = data.get('tournament_id')
     if not tournament_id:
-        return JsonResponse({'success': False, 'message': "tournament_id is required"})
+        return Response({'success': False, 'message': "tournament_id is required"})
 
     try:
         tournament = TournamentRoom.objects.get(id=tournament_id)
         tournament.leave_tournament(request.user)
-        return JsonResponse({'success': True, 'message': 'succesfully left tournament'})
+        return Response({'success': True, 'message': 'succesfully left tournament'})
     except Exception as e:
-        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+        return Response({'success': False, 'message': str(e)}, status=500)
 
