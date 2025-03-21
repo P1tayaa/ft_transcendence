@@ -18,8 +18,12 @@ python manage.py migrate
 npm install --prefix /app/build
 npm run build --prefix /app/build
 
-# Collect static files
 python manage.py collectstatic --noinput
+
+DJANGO_SUPERUSER_USERNAME=admin \
+DJANGO_SUPERUSER_EMAIL=admin@example.com \
+DJANGO_SUPERUSER_PASSWORD=adminpassword \
+python src/manage.py createsuperuser --noinput
 
 # Start server
 exec python manage.py runserver 0.0.0.0:8000

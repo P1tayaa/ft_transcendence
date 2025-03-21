@@ -1,7 +1,6 @@
 from django.shortcuts import render
 from django.middleware.csrf import get_token
 
-
 # pattern for single page application
 def spa_entry(request, path=None):
     context = {

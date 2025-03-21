@@ -85,6 +85,7 @@ class TournamentRoom(models.Model):
 
                 active_matches = TournamentMatch.objects.filter(tournament=self, player_states__player=player, status="IN_PROGRESS")
                 for match in active_matches:
+                    match.players.remove(player)
                     opponent_state = match.player_states.exclude(player=player).first()
                     if opponent_state:
                         scores = {

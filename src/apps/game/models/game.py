@@ -218,6 +218,7 @@ class GameRoom(BaseGameRoom):
 
                 if not available_sides:
                     raise ValidationError("No available sides")
+                self.players.add(player)
 
                 current_player = PlayerState.objects.create(
                     game = self,
@@ -266,6 +267,7 @@ class GameRoom(BaseGameRoom):
 
                 # Delete player state
                 current_player.delete()
+                self.players.remove(player)
 
         except Exception as e:
             raise ValidationError(str(e))
