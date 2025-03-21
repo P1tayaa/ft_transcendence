@@ -32,7 +32,6 @@ services:
       - default
     volumes:
       - source:/app
-      - media:/app/media
 
     ports:
       - "8000:8000"
@@ -51,14 +50,6 @@ services:
 
 volumes:
   postgres_data:
-
-  media:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./media
-
   source:
     driver: local
     driver_opts:

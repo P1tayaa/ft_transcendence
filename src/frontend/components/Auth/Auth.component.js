@@ -1,4 +1,5 @@
-import afterRender from './after.js';
+import AuthOnLoad from './Auth.onLoad.js';
+import './Auth.css';
 
 const Authenticate = () => {
 	const render = () => {
@@ -58,9 +59,9 @@ const Authenticate = () => {
 		`;
 	}
 
-	const after = afterRender;
+	const onLoad = AuthOnLoad;
 
-	return { render, after };
+	return { render, onLoad };
 }
 
 export default Authenticate;

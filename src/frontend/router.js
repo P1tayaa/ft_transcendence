@@ -57,8 +57,8 @@ class Router {
 
 		this.rootElement.innerHTML = route.component().render();
 
-		if (route.component().after) {
-			route.component().after();
+		if (route.component().onLoad) {
+			route.component().onLoad();
 		}
 	}
 

@@ -1,8 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 
-/* Import other styles */
-@import 'auth/auth.css';
-
 /* Base styling */
 :root {
     --primary-color: #3b82f6;    /* Vivid blue */

@@ -7,5 +7,7 @@ prod:
 clean:
 	docker compose down -v
 
+re: clean all
+
 fclean:
 	docker system prune -a --volumes

@@ -1,6 +1,6 @@
 
-import Home from './components/Home.js';
-import Authenticate from './components/auth/component.js';
+// import Home from './components/Home/Home.component.js';
+import Authenticate from './components/Auth/Auth.component.js';
 
 /**
  * Route object
@@ -20,10 +20,10 @@ class Route {
 }
 
 const routes = [
-	new Route({
-		path: '/',
-		component: Home,
-	}),
+	// new Route({
+	// 	path: '/',
+	// 	component: Home,
+	// }),
 
 	new Route({
 		path: '/login',

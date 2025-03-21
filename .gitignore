@@ -7,9 +7,11 @@ __pycache__/
 **/threejs/dist/*
 **/threejs/src/models/*
 
-# Volumes
 src/media/profile_pics/*
 src/staticfiles/*
+src/build/node_modules/*
+src/build/dist/*
+src/ssl
 
 old/
 Makefile

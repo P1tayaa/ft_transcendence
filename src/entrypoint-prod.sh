@@ -20,6 +20,10 @@ if [ ! -f /app/ssl/cert.pem ] || [ ! -f /app/ssl/key.pem ]; then
   openssl req -x509 -newkey rsa:4096 -keyout /app/ssl/key.pem -out /app/ssl/cert.pem -days 365 -nodes -subj "/CN=localhost"
 fi
 
+# Run Webpack
+npm install --prefix /app/build
+npm run build --prefix /app/build
+
 # Collect static files
 python manage.py collectstatic --noinput
 

@@ -1,7 +1,7 @@
 import api from '../../api.js';
 import router from '../../router.js';
 
-const after = () => {
+const onLoad = () => {
 	// Tab switching functionality
 	const tabButtons = document.querySelectorAll('.tab-btn');
 	const authForms = document.querySelectorAll('.auth-form');
@@ -131,4 +131,4 @@ const after = () => {
 	});
 }
 
-export default after;
+export default onLoad;
