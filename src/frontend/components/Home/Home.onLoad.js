@@ -1,6 +1,46 @@
-import { getWebsocketHost } from './utils.js';
-import { Config } from './game/game.js';
-import { api } from './ApiManager.js';
+
+import api from '../../api.js';
+import WebSocket from '../../socket.js';
+
+class Config {
+	constructor(selection) {
+		this.mode = selection.mode;
+		this.playerCount = selection.players;
+		this.map_style = selection.map;
+		this.powerup = (selection.powerups.length > 0);
+		this.poweruplist = selection.powerups;
+		this.bots = (selection.mode === "localsolo");
+		this.playerside = [];
+		this.botsSide = [];
+		this.host = true;
+		this.Spectator = false;
+
+		const sides = this.playerCount === 2 ? ["left", "right"] : ["left", "right", "top", "bottom"];
+
+		if (this.bots) {
+			const playerIndex = Math.floor(Math.random() * sides.length);
+			this.playerside = sides.splice(playerIndex, 1);
+			this.botsSide = sides;
+		} else {
+			this.playerside = sides;
+		}
+	}
+
+	get() {
+		return {
+			mode: this.mode,
+			powerup: this.powerup,
+			poweruplist: this.poweruplist,
+			playerCount: this.playerCount,
+			map_style: this.map_style,
+			playerside: this.playerside,
+			bots: this.bots,
+			botsSide: this.botsSide,
+			host: this.host,
+			Spectator: this.Spectator
+		}
+	}
+}
 
 const onLoad = () => {
 	const selection = {
@@ -49,19 +89,13 @@ const onLoad = () => {
 	// Room list elements
 	const createGameBtn = document.getElementById('create-game-btn');
 	const createGameModal = document.getElementById('create-game-modal');
-	const closeSetupBtn = document.getElementById('close-setup-btn');
 	const roomsContainer = document.getElementById('rooms-container');
 	const noRoomsMessage = document.getElementById('no-rooms-message');
 	const roomTemplate = document.getElementById('room-template');
 
-	const SOCKET_URL = getWebsocketHost() + "/ws/matchmaking/"
-	const socket = new WebSocket(SOCKET_URL);
+	const socket = new WebSocket('ws/matchmaking');
 
-	socket.addEventListener('open', function() {
-		socket.send(JSON.stringify({ type: 'list_rooms' }));
-	});
-
-	socket.addEventListener('message', function(event) {
+	socket.handleMessage = (event) => {
 		const data = JSON.parse(event.data);
 
 		console.log("event:", data);
@@ -81,7 +115,7 @@ const onLoad = () => {
 				roomsContainer.appendChild(roomElement);
 			});
 		}
-	});
+	};
 
 	// Create a room element from the template
 	function createRoomElement(room) {
@@ -140,18 +174,13 @@ const onLoad = () => {
 		roomElement.dataset.roomName = room.room_name;
 
 		return roomElement;
-	}
+	};
 
 	// Initialize the setup wizard
 	function init() {
 		// Open setup modal
 		createGameBtn.addEventListener('click', function() {
 			createGameModal.classList.remove('hidden');
-		});
-
-		// Close button for setup modal
-		closeSetupBtn.addEventListener('click', function() {
-			createGameModal.classList.add('hidden');
 		});
 
 		// Set up event listeners for mode selection

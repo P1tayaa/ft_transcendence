@@ -1,5 +1,5 @@
 from django.middleware.csrf import get_token
-from rest_framework.response import Response
+from django.http import JsonResponse
 
 class CSRFMiddleware:
     def __init__(self, get_response):
@@ -23,8 +23,6 @@ class AjaxRedirectMiddleware:
         is_login_redirect = response.status_code == 302 and response.url.startswith("login/") # LOGIN_URL
 
         if is_ajax and is_login_redirect:
-            Response({
-                 'error': 'Authentication required'
-             }, status=401)
+            JsonResponse({'message': 'Authentication required'}, status=401)
 
         return response

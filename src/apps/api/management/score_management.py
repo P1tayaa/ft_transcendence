@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from rest_framework.response import Response
+from django.http import JsonResponse
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view
@@ -13,12 +13,12 @@ def add_score(request):
     try:
         score = request.data.get("score")
         if score is None:
-            return Response({"success": False, "error": "Score is required"}, status=400)
+            return JsonResponse({"success": False, "error": "Score is required"}, status=400)
 
         try:
             score = int(score)
         except ValueError:
-            return Response({"success": False, "error": "Score must be a number"}, status=400)
+            return JsonResponse({"success": False, "error": "Score must be a number"}, status=400)
 
         profile = request.user.profile
 
@@ -31,7 +31,7 @@ def add_score(request):
 
             profile.save()
 
-        return Response(
+        return JsonResponse(
             {
                 "success": True,
                 "score": {
@@ -44,7 +44,7 @@ def add_score(request):
             }
         )
     except Exception as e:
-        return Response({"success": True, "error": str(e)}, status=500)
+        return JsonResponse({"success": True, "error": str(e)}, status=500)
 
 
 @api_view(["GET"])
@@ -56,7 +56,7 @@ def get_score_history(request):
             try:
                 profile = User.objects.get(id=user_id).profile
             except User.DoesNotExist:
-                return Response({"success": False, "error": "User not found"}, status=404)
+                return JsonResponse({"success": False, "error": "User not found"}, status=404)
         else:
             profile = request.user.profile
 
@@ -89,12 +89,12 @@ def get_score_history(request):
             }
             game_history.append(game_data)
 
-        return Response({
+        return JsonResponse({
             "success": True,
             "games": game_history
         })
     except Exception as e:
-        return Response({"success": False, "error": str(e)}, status=500)
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 
 @api_view(["GET"])
@@ -106,13 +106,13 @@ def get_recent_score(request):
             try:
                 profile = User.objects.get(id=user_id).profile
             except User.DoesNotExist:
-                return Response({"success": False, "error": "User not found"}, status=404)
+                return JsonResponse({"success": False, "error": "User not found"}, status=404)
         else:
             profile = request.user.profile
 
-        return Response({"success": True, "score": profile.most_recent_game_score})
+        return JsonResponse({"success": True, "score": profile.most_recent_game_score})
     except Exception as e:
-        return Response({"success": False, "error": str(e)}, status=500)
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 
 @api_view(["GET"])
@@ -124,10 +124,10 @@ def get_highscore(request):
             try:
                 profile = User.objects.get(id=user_id).profile
             except User.DoesNotExist:
-                return Response({"success": False, "error": "User not found"}, status=404)
+                return JsonResponse({"success": False, "error": "User not found"}, status=404)
         else:
             profile = request.user.profile
 
-        return Response({"success": True, "score": profile.highscore})
+        return JsonResponse({"success": True, "score": profile.highscore})
     except Exception as e:
-        return Response({"success": False, "error": str(e)}, status=500)
+        return JsonResponse({"success": False, "error": str(e)}, status=500)

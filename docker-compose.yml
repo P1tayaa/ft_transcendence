@@ -31,7 +31,7 @@ services:
     networks:
       - default
     volumes:
-      - source:/app
+      - source:/ap
 
     ports:
       - "8000:8000"

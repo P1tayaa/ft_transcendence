@@ -20,11 +20,6 @@ const Home = () => {
 		<!-- Create game modal (original setup form) -->
 		<div class="modal hidden" id="create-game-modal">
 			<div class="modal-content setup-modal">
-				<div class="modal-header">
-					<h2>Create New Game</h2>
-					<button class="close-btn" id="close-setup-btn">&times;</button>
-				</div>
-				
 				<div class="setup-card">
 					<!-- Progress indicator -->
 					<div class="progress-bar">

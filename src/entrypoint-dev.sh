@@ -23,7 +23,7 @@ python manage.py collectstatic --noinput
 DJANGO_SUPERUSER_USERNAME=admin \
 DJANGO_SUPERUSER_EMAIL=admin@example.com \
 DJANGO_SUPERUSER_PASSWORD=adminpassword \
-python src/manage.py createsuperuser --noinput
+python manage.py createsuperuser --noinput
 
 # Start server
 exec python manage.py runserver 0.0.0.0:8000

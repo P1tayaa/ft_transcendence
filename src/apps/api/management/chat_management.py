@@ -1,5 +1,5 @@
 from rest_framework.decorators import api_view
-from rest_framework.response import Response
+from django.http import JsonResponse
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
@@ -17,11 +17,11 @@ def add_message(request):
         recipient_id = request.data.get("recipient_id")
 
         if not content:
-            return Response({"success": False, "error": "Message content is required"}, status=400)
+            return JsonResponse({"success": False, "error": "Message content is required"}, status=400)
         if not recipient_id:
-            return Response({"success": False, "error": "recipient_id is required"}, status=400)
+            return JsonResponse({"success": False, "error": "recipient_id is required"}, status=400)
         if recipient_id == request.user.id:
-            return Response({"success": False, "error": "Can't chat to yourself"}, status=400)
+            return JsonResponse({"success": False, "error": "Can't chat to yourself"}, status=400)
             
 
         with transaction.atomic():
@@ -30,7 +30,7 @@ def add_message(request):
                 chat = request.user.profile.get_or_create_chat_with(recipient)
 
             except User.DoesNotExist:
-                return Response({"success": False, "error": "Recipient not found"}, status=404)
+                return JsonResponse({"success": False, "error": "Recipient not found"}, status=404)
 
             message = chat.messages.create(
                 sender = request.user,
@@ -67,14 +67,14 @@ def add_message(request):
                     }
                 )
 
-            return Response({
+            return JsonResponse({
                 "success": True,
                 "message": message_data,
                 "chat": chat_data
             })
 
     except Exception as e:
-        return Response({"success": False, "error": str(e)}, status=500)
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -87,11 +87,11 @@ def get_chat_history(request):
                 chat = request.user.profile.get_or_create_chat_with(other_participant)
 
                 chat_data = request.user.profile.get_chat_history(chat.id)
-                return Response(chat_data)
+                return JsonResponse(chat_data)
             except User.DoesNotExist:
-                return Response({"message": "User not found"}, status=404)
+                return JsonResponse({"message": "User not found"}, status=404)
     except Exception as e:
-        return Response({"message": str(e)}, status=500)
+        return JsonResponse({"message": str(e)}, status=500)
     
 
 @api_view(["POST"])
@@ -100,14 +100,14 @@ def mark_messages_read(request):
     try:
         chat_id = request.data.get("chat_id")    
         if not chat_id:
-            return Response({"success": False, "error": "Chat ID required"}, status=400)
+            return JsonResponse({"success": False, "error": "Chat ID required"}, status=400)
 
         updated = request.user.profile.mark_messages_read(chat_id)
-        return Response({"success": True, "messages_marked_read": updated})
+        return JsonResponse({"success": True, "messages_marked_read": updated})
     except Chat.DoesNotExist:
-        return Response({"success": False, "error": "Chat not found"}, status=404)
+        return JsonResponse({"success": False, "error": "Chat not found"}, status=404)
     except Exception as e:
-        return Response({"success": False, "error": str(e)}, status=500)
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 
 @api_view(["POST"])
@@ -118,7 +118,7 @@ def update_typing_status(request):
         is_typing = request.data.get("is_typing", False)
 
         if not chat_id:
-            return Response({"success": False, "error": "Chat ID required"}, status=400)
+            return JsonResponse({"success": False, "error": "Chat ID required"}, status=400)
 
         chat = Chat.objects.get(id=chat_id, participants=request.user)
 
@@ -136,11 +136,11 @@ def update_typing_status(request):
                     "is_typing": is_typing
                 }
             )
-        return Response({"success": True})
+        return JsonResponse({"success": True})
     except Chat.DoesNotExist:
-        return Response({"success": False, "error": "Chat not found"}, status=404)
+        return JsonResponse({"success": False, "error": "Chat not found"}, status=404)
     except Exception as e:
-        return Response({"success": False, "error": str(e)}, status=500)
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
             
 
     
