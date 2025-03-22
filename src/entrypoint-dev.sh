@@ -14,6 +14,7 @@ python manage.py makemigrations api
 python manage.py makemigrations
 python manage.py migrate
 
+
 # Run Webpack
 npm install --prefix /app/build
 npm run build --prefix /app/build

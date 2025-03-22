@@ -14,6 +14,8 @@ RUN		apt-get update && \
 # Set work directory
 WORKDIR	/app
 
+RUN mkdir -p build/dist
+
 # Copy project
 COPY	./src .
 
