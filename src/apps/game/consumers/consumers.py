@@ -3,7 +3,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 import asyncio
 from django.core.exceptions import ValidationError
 from channels.db import database_sync_to_async
-from apps.game.models.game import GameRoom, GameConfig
+from apps.game.models import GameRoom, GameConfig, TournamentMatch
 from django.contrib.auth.models import User
 
 
@@ -326,8 +326,11 @@ class GameConsumer(BaseConsumer):
             player_id = str(self.scope['user'].id)
             in_progress = self.game_state.get('is_playing', False)
             has_players = len(self.game_state['players']) > 1
+            is_tournament_game = getattr(self.game_room, 'is_tournament_game', False)
 
             if in_progress and has_players and player_id in self.game_state['players']:
+                if is_tournament_game:
+                    await self.handle_tournament_disconnect(player_id)
                 highest_score = -1
                 winner_id = None
 
@@ -343,24 +346,7 @@ class GameConsumer(BaseConsumer):
                         winner_id = remaining_players[0]
 
                 if winner_id:
-                    self.game_state['is_playing'] = False
-
-                    #update database
-                    try:
-                        for pid, score in self.game_state['score'].items():
-                            await database_sync_to_async(self.update_player_recent_score)(pid, score)
-                        await database_sync_to_async(self.game_room.save_game_result)(winner_id, self.game_state['score'])
-                        await self.channel_layer.group_send(
-                            self.room_group_name,
-                            {
-                                'type': 'player_disconnected_game_over',
-                                'disconnected_player': self.scope['user'].username,
-                                'winner_id': winner_id
-                            }
-                        )
-
-                    except ValidationError as e:
-                        await self.send(json.dumps({'type': 'error', 'message': str(e)}))
+                    await self.end_game_with_winner(winner_id)
 
             if player_id in self.game_state['players']:
                 del self.game_state['players'][player_id]
@@ -376,6 +362,72 @@ class GameConsumer(BaseConsumer):
             await database_sync_to_async(self.game_room.leave_game)(self.scope['user'])
             await self.broadcast_game_state()
         await super().disconnect(close_code)
+
+    async def handle_tournament_disconnect(self, player_id):
+        try:
+            tournament_match = await database_sync_to_async(self.get_tournament_match)()
+            if not tournament_match:
+                return
+
+            opponent_id = await database_sync_to_async(self.get_opponent_id)(player_id)
+            if not opponent_id:
+                return
+
+            scores = {}
+            for pid in self.game_state['score'].keys():
+                if pid == str(opponent_id):
+                    scores[pid] = 1
+                else:
+                    scores[pid] = 0
+
+            self.game_state['is_playing'] = False
+            await database_sync_to_async(tournament_match.complete_game)(opponent_id, scores)
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'tournament_player_disconnected',
+                    'disconnected_player': self.scope['user'].username,
+                    'winner_id': opponent_id,
+                    'message': f"Player {self.scope['user'].username} disconnected. Match ended."
+                }
+            )
+        except Exception as e:
+            self.send(json.dumps({'type': 'error', 'message': f"Error in handle_tournament_disconnect: {str(e)}"}))
+
+    async def end_game_with_winner(self, winner_id):
+        self.game_state['is_playing'] = False
+
+        #update database
+        try:
+            for pid, score in self.game_state['score'].items():
+                await database_sync_to_async(self.update_player_recent_score)(pid, score)
+            await database_sync_to_async(self.game_room.save_game_result)(winner_id, self.game_state['score'])
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'player_disconnected_game_over',
+                    'disconnected_player': self.scope['user'].username,
+                    'winner_id': winner_id
+                }
+            )
+        except ValidationError as e:
+            await self.send(json.dumps({'type': 'error', 'message': str(e)}))
+
+    def get_tournament_match(self):
+        try:
+            return TournamentMatch.objects.get(id=self.game_room.id)
+        except Exception:
+            return None
+
+    def get_opponent_id(self, player_id):
+        try:
+            for pid in self.game_state['players'].keys():
+                if pid != player_id:
+                    return pid
+            return None
+        except Exception:
+            return None
+        
 
     async def broadcast_game_state(self, extra=None):
         state_update = {
@@ -446,6 +498,14 @@ class GameConsumer(BaseConsumer):
             'disconnected_player': event['disconnected_player'],
             'winner_id': event['winner_id'],
             'message': f"Player {event['disconnected_player']} disconnected. Game ended."
+        }))
+
+    async def tournament_player_disconnected(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'tournament_player_disconnected',
+            'disconnected_player': event['disconnected_player'],
+            'winner_id': event['winner_id'],
+            'message': event['message']
         }))
 
 
