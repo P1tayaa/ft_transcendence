@@ -23,9 +23,12 @@ from django.conf import settings
 from apps.api.views.pages import spa_entry
 
 # this pattern to serve single page application
-urlpatterns = [
+urlpatterns = \
+	static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + \
+	static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + \
+[
     path("api/", include("apps.api.urls")),  # API endpoints
     path("admin/", admin.site.urls),
     path('', ensure_csrf_cookie(spa_entry), name="spa_entry"),
     path('<path:path>', ensure_csrf_cookie(spa_entry), name="spa_catchall"),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
