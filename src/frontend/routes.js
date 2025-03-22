@@ -1,6 +1,7 @@
 
 import Home from './components/Home/Home.component.js';
 import Authenticate from './components/Auth/Auth.component.js';
+import Game from './components/Game/Game.component.js';
 
 /**
  * Route object
@@ -30,6 +31,10 @@ const routes = [
 		component: Authenticate
 	}),
 
+	new Route({
+		path: '/game',
+		component: Game
+	})
 ];
 
 export default routes;

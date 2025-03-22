@@ -12,6 +12,7 @@ src/staticfiles/*
 src/build/node_modules/*
 src/build/dist/*
 src/ssl
+src/frontend/static/*
 
 old/
 Makefile

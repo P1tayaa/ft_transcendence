@@ -10,6 +10,16 @@ module.exports = {
     // This ensures webpack understands where assets will be served from
     publicPath: '/staticfiles/'
   },
+  resolve: {
+    modules: [
+      path.resolve(__dirname, '../node_modules'),
+      'node_modules'
+    ],
+    extensions: ['.js', '.json'],
+    alias: {
+      'three': path.resolve(__dirname, 'node_modules/three')
+    }
+  },
   module: {
     rules: [
       {
@@ -25,7 +35,17 @@ module.exports = {
             presets: ['@babel/preset-env']
           }
         }
-      }
+      },
+      {
+        test: /\.(glb|gltf)$/,
+        use: {
+          loader: 'file-loader',
+          options: {
+            outputPath: 'models/',
+            name: '[name].[ext]',
+          },
+        },
+      },
     ]
   },
   optimization: {

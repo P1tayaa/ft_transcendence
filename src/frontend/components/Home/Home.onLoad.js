@@ -1,6 +1,7 @@
 
 import api from '../../api.js';
 import WebSocket from '../../socket.js';
+import router from '../../router.js';
 
 class Config {
 	constructor(selection) {
@@ -289,10 +290,10 @@ const onLoad = () => {
 					return;
 				}
 
-				window.location.href = '/game/' + room.room_name;
+				router.navigate('/game/' + room.room_name);
 			}
 			else {
-				window.location.href = '/game';
+				router.navigate('/game');
 			}
 			modals.forEach(modal => modal.classList.add('hidden'));
 		});
