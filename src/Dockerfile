@@ -15,6 +15,7 @@ RUN		apt-get update && \
 WORKDIR	/app
 
 RUN mkdir -p build/dist
+# RUN mkdir -p frontend/static
 
 # Copy project
 COPY	./src .
