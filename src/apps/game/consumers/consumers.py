@@ -17,28 +17,23 @@ def remap_player_data_by_position(game_state):
         }
     }
 
-    # Create mapping of position to player data
     for player_id, player_data in game_state['players'].items():
         position = player_data['position']
 
-        # Map scores
         if player_id in game_state['score']:
             position_mapped['score'][position] = game_state['score'][player_id]
 
-        # Map player info
         position_mapped['players'][position] = {
             'username': player_data['username'],
             'is_host': player_data['is_host']
         }
 
-        # Map paddle settings
         if player_id in game_state['settings']['paddleSize']:
             position_mapped['settings']['paddleSize'][position] = game_state['settings']['paddleSize'][player_id]
 
         if player_id in game_state['settings']['paddleLoc']:
             position_mapped['settings']['paddleLoc'][position] = game_state['settings']['paddleLoc'][player_id]
 
-    # Copy other game state data that doesn't need remapping
     position_mapped['is_playing'] = game_state['is_playing']
     position_mapped['powerUps'] = game_state['powerUps']
     position_mapped['pongLogic'] = game_state['pongLogic']
@@ -329,6 +324,44 @@ class GameConsumer(BaseConsumer):
     async def disconnect(self, close_code):
         if hasattr(self, 'game_room'):
             player_id = str(self.scope['user'].id)
+            in_progress = self.game_state.get('is_playing', False)
+            has_players = len(self.game_state['players']) > 1
+
+            if in_progress and has_players and player_id in self.game_state['players']:
+                highest_score = -1
+                winner_id = None
+
+                for pid, score in self.game_state['score'].items():
+                    if pid != player_id and score >highest_score:
+                        highest_score = score
+                        winner_id = pid
+
+                # tied
+                if winner_id is None:
+                    remaining_players = [pid for pid in self.game_state['players'].keys() if pid != player_id]
+                    if remaining_players:
+                        winner_id = remaining_players[0]
+
+                if winner_id:
+                    self.game_state['is_playing'] = False
+
+                    #update database
+                    try:
+                        for pid, score in self.game_state['score'].items():
+                            await database_sync_to_async(self.update_player_recent_score)(pid, score)
+                        await database_sync_to_async(self.game_room.save_game_result)(winner_id, self.game_state['score'])
+                        await self.channel_layer.group_send(
+                            self.room_group_name,
+                            {
+                                'type': 'player_disconnected_game_over',
+                                'disconnected_player': self.scope['user'].username,
+                                'winner_id': winner_id
+                            }
+                        )
+
+                    except ValidationError as e:
+                        await self.send(json.dumps({'type': 'error', 'message': str(e)}))
+
             if player_id in self.game_state['players']:
                 del self.game_state['players'][player_id]
                 del self.game_state['score'][player_id]
@@ -406,6 +439,14 @@ class GameConsumer(BaseConsumer):
         await self.send(text_data = json.dumps(event))
     async def player_disconnected(self, event):
         await self.send(text_data = json.dumps(event))
+
+    async def player_disconnected_game_over(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'player_disconnected_game_over',
+            'disconnected_player': event['disconnected_player'],
+            'winner_id': event['winner_id'],
+            'message': f"Player {event['disconnected_player']} disconnected. Game ended."
+        }))
 
 
 
