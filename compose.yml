@@ -1,0 +1,62 @@
+services:
+  redis:
+    container_name: redis
+    image: redis:latest
+    networks:
+      - default
+
+
+  db:
+    container_name: database
+    image: postgres:13
+    networks:
+      - default
+    env_file:
+      - .env
+
+
+  backend:
+    container_name: backend
+    depends_on:
+      - db
+      - redis
+    build: ./backend
+    networks:
+      - default
+    volumes:
+      - ./backend:/app
+    env_file:
+      - .env
+
+
+  frontend:
+    container_name: frontend
+    depends_on:
+      - backend
+    build: ./frontend
+    networks:
+      - default
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # Prevents node_modules folder overwrite
+    env_file:
+      - .env
+
+  nginx:
+    container_name: nginx
+    depends_on:
+      - frontend
+    build: ./nginx
+    networks:
+      - default
+    volumes:
+      - ./uploads:/var/www/uploads
+    ports:
+      - "80:80"
+
+
+
+networks:
+  default:
+    name: transcendence
+    driver: bridge
