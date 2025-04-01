@@ -6,5 +6,6 @@ backend/static
 frontend/dist
 frontend/node_modules
 
-old/
 Makefile
+
+transcendence_subject.pdf
