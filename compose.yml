@@ -11,6 +11,8 @@ services:
     image: postgres:13
     networks:
       - default
+    volumes:
+      - db_data:/var/lib/postgresql/data
     env_file:
       - .env
 
@@ -60,3 +62,8 @@ networks:
   default:
     name: transcendence
     driver: bridge
+
+
+
+volumes:
+  db_data:

@@ -1,7 +1,7 @@
 
-import Home from './components/Home/Home.component.js';
-import Authenticate from './components/Auth/Auth.component.js';
-import Game from './components/Game/Game.component.js';
+import Home from './views/Home/Home.component.js';
+import Auth from './views/Auth/Auth.js';
+import Game from './views/Game/Game.component.js';
 
 /**
  * Route object
@@ -28,7 +28,7 @@ const routes = [
 
 	new Route({
 		path: '/login',
-		component: Authenticate
+		component: Auth
 	}),
 
 	new Route({

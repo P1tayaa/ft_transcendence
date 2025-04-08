@@ -1,24 +1,8 @@
-function setCookie(name, value, hours = undefined, path = '/') {
-	let expires = "";
-
-	if (hours) {
-		const date = new Date();
-		date.setTime(date.getTime() + (hours * 60 * 60 * 1000));
-		expires = `; expires=${date.toGMTString()}`;
-	}
-
-	document.cookie = `${name}=${value}${expires}; path=/`;
-}
-
 function getCookie(name) {
 	const cookies = document.cookie.split(';');
 	const cookie = cookies.find(cookie => cookie.trim().startsWith(name + '='));
 
 	return cookie ? cookie.split('=')[1] : null;
-}
-
-function eraseCookie(name) {
-	createCookie(name, "" );
 }
 
 class ApiManager {
@@ -68,8 +52,6 @@ class ApiManager {
 		if (body && method !== 'GET') {
 			options.body = JSON.stringify(body);
 		}
-
-		console.log(method, ' Request to url:', url);
 	
 		const response = await fetch(url, options);
 		const data = await response.json();
@@ -115,12 +97,7 @@ class ApiManager {
 			url.searchParams.append(key, params[key]);
 		});
 
-		try {
-			return this.request(url, this.getHeaders());
-		} catch (error) {
-			console.error('GET request failed', error);
-			throw error;
-		}
+		return this.request(url, this.getHeaders());
 	}
 
 	/**
@@ -130,12 +107,7 @@ class ApiManager {
 	 * @returns {Promise} A promise that resolves with the response data
 	 */
 	async post(endpoint, data = {}) {
-		try {
-			return this.request(this.baseUrl + endpoint, this.getHeaders(), 'POST', data);
-		} catch (error) {
-			console.error('POST request failed', error);
-			throw error;
-		}
+		return this.request(this.baseUrl + endpoint, this.getHeaders(), 'POST', data);
 	}
 
 	/**
@@ -149,27 +121,21 @@ class ApiManager {
 			"X-CSRFToken": getCookie('csrftoken'),
 		}
 
-		try {
-			const response = await fetch(this.baseUrl + this.endpoints.register, {
-				method: 'POST',
-				headers: headers,
-				credentials: 'include',
-				body: data
-			});
+		const response = await fetch(this.baseUrl + this.endpoints.register, {
+			method: 'POST',
+			headers: headers,
+			credentials: 'include',
+			body: data
+		});
 
-			if (!response.ok) {
-				const data = await response.json();
-				throw new Error(data.message || 'Registration failed');
-			}
-
-			const reponseJSON = await response.json();
-
-			setCookie('auth-token', reponseJSON.token, 1);
-			return reponseJSON;
-		} catch (error) {
-			console.error('Register request failed', error);
-			throw error;
+		if (!response.ok) {
+			const data = await response.json();
+			throw new Error(data.message || 'Registration failed');
 		}
+
+		const reponseJSON = await response.json();
+
+		return reponseJSON;
 	}
 
 	/**
@@ -189,14 +155,9 @@ class ApiManager {
 			password: password
 		};
 
-		try {
-			const response = await this.request(this.baseUrl + this.endpoints.login, headers, 'POST', data);
-			setCookie('auth-token', response.token, 1);
-			return response;
-		} catch (error) {
-			console.error('Login request failed', error);
-			throw error;
-		}
+		const response = await this.request(this.baseUrl + this.endpoints.login, headers, 'POST', data);
+
+		return response;
 	}
 
 	/**

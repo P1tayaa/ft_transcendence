@@ -6,8 +6,10 @@ prod:
 
 clean:
 	docker compose down -v
+	docker volume prune -af
+	docker network prune -f
 
 re: clean all
 
-fclean:
+fclean: clean
 	docker system prune -a --volumes

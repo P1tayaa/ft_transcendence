@@ -152,6 +152,7 @@ async function startGame(config = null, roomName = null) {
 
 	try {
 		await mainClass.init.initialize(config, roomName);
+		mainClass.init_function();
 	} catch (error) {
 		console.error('Initialization failed:', error);
 	}

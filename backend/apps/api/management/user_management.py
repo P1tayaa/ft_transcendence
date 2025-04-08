@@ -15,22 +15,22 @@ import os
 import json
 
 
-def serialize_user(user_to_serialize, viewing_user=None):
+def serialize_user(user_to_serialize, viewing_user):
     data = {
         "id": user_to_serialize.id,
         "username": user_to_serialize.username,
-        "stats": {
-            "highscore": user_to_serialize.profile.highscore,
-            "most_recent_game_score": user_to_serialize.profile.most_recent_game_score,
-        },
         "avatar": user_to_serialize.profile.get_profile_picture_url(),
     }
 
-    if viewing_user and viewing_user != user_to_serialize:
+    if viewing_user != user_to_serialize:
         data["is_following"] = viewing_user.profile.is_following(user_to_serialize.profile)
-
-    if viewing_user and viewing_user != user_to_serialize:
         data["is_blocking"] = viewing_user.profile.is_blocking(user_to_serialize.profile)
+    else:
+        following = viewing_user.profile.get_following()
+        data["following"] = [serialize_user(follow.followed.user, viewing_user) for follow in following]
+
+        followers = viewing_user.profile.get_followers()
+        data["followers"] = [serialize_user(follow.followed.user, viewing_user) for follow in followers]
 
     return data
 
@@ -102,7 +102,7 @@ def register_user(request):
         return JsonResponse({
             'success': True,
             "message": "Successfully registered and login",
-            "username": username,
+            "user": serialize_user(user, user),
             "token": token
         }, status=status.HTTP_201_CREATED)
 
@@ -115,20 +115,20 @@ def register_user(request):
 @permission_classes([AllowAny])
 def login_user(request):
     try:
-        username = request.POST.get("username")
-        password = request.POST.get("password")
+        username = request.data.get("username")
+        password = request.data.get("password")
 
         user = authenticate(request, username=username, password=password)
 
         if user is None:
-            return JsonResponse({"success": False, "message": "Invalid username or password."}, status=status.HTTP_401_UNAUTHORIZED)
+            return JsonResponse({"success": False, "message": "Invalid username or password.", "Provided": {"username": username, "password": password}}, status=status.HTTP_401_UNAUTHORIZED)
 
         token = str(AccessToken.for_user(user))
 
         return JsonResponse({
             "success": True,
             "message": "Login successful",
-            "username": user.username,
+            "user": serialize_user(user, user),
             "token": token
         }, status=status.HTTP_201_CREATED)
     except Exception as e:
@@ -153,7 +153,7 @@ def get_current_user(request):
     return JsonResponse(
         {
             "success": True,
-            **serialize_user(user)
+            "user": serialize_user(user, request.user),
         }
     )
 
@@ -223,7 +223,7 @@ def get_following(request):
         following_list = []
 
         for follow in following:
-            following_list.append({**serialize_user(follow.followed.user, request.user)})
+            following_list.append(serialize_user(follow.followed.user, request.user))
 
         return JsonResponse({
             "success": True,
@@ -240,7 +240,7 @@ def get_followers(request):
         followers_list = []
 
         for follow in followers:
-            followers_list.append({**serialize_user(follow.followed.user)})
+            followers_list.append(serialize_user(follow.followed.user, request.user))
 
         return JsonResponse({
             "success": True,
@@ -444,15 +444,17 @@ def unblock_user(request):
 @api_view(["GET"])
 def get_blocked(request):
     try:
-        user_id = request.user.id
-        if not user_id:
-            return JsonResponse({"success": False, "message": "user_id is required"}, status=400)
-        
-        user = User.objects.get(id=user_id)
-        profile = user.profile
+        profile = request.user.profile
+        blocked = profile.get_blocked()
+        blocked_list = []
 
-        profile.get_blocking()
-        
+        for user in blocked:
+            blocked_list.append(serialize_user(user.blocked.user, request.user))
+
+        return JsonResponse({
+            "success": True,
+            "blocked": blocked_list
+        })
     except Exception as e:
         return JsonResponse({'message': str(e)}, status=500)
 

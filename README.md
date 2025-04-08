@@ -86,9 +86,10 @@ ft_transcendence is a web application centered around the classic game of Pong, 
 
 - **Database**: PostgreSQL
 - **Backend**: Django (Python)
+- **Real-time Communication**: WebSockets with redis
 - **Frontend**: JavaScript with vanilla JS
+- **Webserver**: Nginx
 - **3D Graphics**: ThreeJS/WebGL
-- **Real-time Communication**: WebSockets
 - **Containerization**: Docker
 
 ## 🚀 Getting Started

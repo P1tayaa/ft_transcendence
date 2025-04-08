@@ -1,5 +1,9 @@
 import routes from './routes.js';
 
+import user from './User.js';
+
+// import sidebar from './components/Sidebar/Sidebar.js';
+
 /**
  * Router class
  * @param {Array} routes - array of Route objects
@@ -13,19 +17,8 @@ class Router {
 
 		console.log('Router initialized, routes:', this.routes);
 
-		window.addEventListener('DOMContentLoaded', () => {
-			this.navigate(window.location.pathname);
-		});
-
 		window.addEventListener('popstate', () => {
 			this.navigate(window.location.pathname);
-		});
-
-		window.addEventListener('click', (e) => {
-			if (e.target.matches('[data-link]')) { // any navigation element should have data-link attribute
-				e.preventDefault();
-				this.navigate(e.target.href);
-			}
 		});
 	}
 
@@ -42,11 +35,11 @@ class Router {
 			return;
 		}
 
-		if (!this.isAuth() && route.path !== '/login') {
+		if (!user.authenticated && route.path !== '/login') {
 			this.navigate('/login');
 			return
 		}
-		if (this.isAuth() && route.path === '/login') {
+		if (user.authenticated && route.path === '/login') {
 			this.navigate('/');
 			return
 		}
@@ -61,15 +54,8 @@ class Router {
 			route.component().onLoad();
 		}
 	}
-
-	isAuth() {
-		console.log('cookie', document.cookie);
-		const hascookie = document.cookie.includes('auth-token');
-		return hascookie;
-	}
 }
 
 const router = new Router();
 
 export default router;
-
