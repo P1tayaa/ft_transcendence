@@ -106,23 +106,9 @@ def update_match_score(request):
 def list_tournaments(request):
     available_tournaments = TournamentRoom.get_available_tournaments()
 
-    tournament_list = [{
-        'id': t.id,
-        'name': t.tournament_name,
-        'creator': t.creator.username,
-        'participants': t.participants.count(),
-        'max_participants': t.max_participants,
-        'created_at': t.created_at,
-        'config': {
-            'mode': t.config.mode,
-            'map_style': t.config.map_style,
-            'powerups_enabled': t.config.powerups_enabled
-        }
-    } for t in available_tournaments]
+    tournament_list = [tournament.get_tournament_data() for tournament in available_tournaments]
 
-    return JsonResponse({
-        'tournaments': tournament_list
-    })
+    return JsonResponse({'tournaments': tournament_list})
 
 @permission_classes([IsAuthenticated])
 @api_view(["POST"])

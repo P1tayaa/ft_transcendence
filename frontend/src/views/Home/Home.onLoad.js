@@ -94,11 +94,9 @@ const onLoad = () => {
 	const noRoomsMessage = document.getElementById('no-rooms-message');
 	const roomTemplate = document.getElementById('room-template');
 
-	const socket = new WebSocket('ws/matchmaking');
+	const socket = new WebSocket('/ws/matchmaking/');
 
-	socket.handleMessage = (event) => {
-		const data = JSON.parse(event.data);
-
+	socket.handleMessage = (data) => {
 		console.log("event:", data);
 
 		if (data.type === 'room_list') {
@@ -118,6 +116,8 @@ const onLoad = () => {
 		}
 	};
 
+	socket.connect();
+
 	// Create a room element from the template
 	function createRoomElement(room) {
 		console.log('Creating room element:', room);
@@ -126,10 +126,10 @@ const onLoad = () => {
 		const roomElement = roomTemplate.content.cloneNode(true).querySelector('.room-item');
 
 		// Fill in room details
-		roomElement.querySelector('.room-name').textContent = room.room_name;
+		roomElement.querySelector('.room-name').textContent = room.name;
 
 		// Display current/max players
-		const playerInfo = `?/${room.config.playerCount}`;
+		const playerInfo = `${room.players.length}/${room.config.playerCount}`;
 		roomElement.querySelector('.room-players').textContent = "Players: " + playerInfo;
 
 		// Map name
@@ -166,13 +166,15 @@ const onLoad = () => {
 		const joinBtn = roomElement.querySelector('.join-btn');
 		joinBtn.addEventListener('click', () => {
 			console.log(room.config);
-			setTimeout(3000);
 			sessionStorage.setItem('config', JSON.stringify(room.config));
-			// window.location.href = '/game/' + room.room_name;
+			socket.disconnect();
+
+			// Join the game room
+			router.navigate('/game/' + room.name);
 		});
 
 		// Store room ID as data attribute for easier access
-		roomElement.dataset.roomName = room.room_name;
+		roomElement.dataset.roomName = room.name;
 
 		return roomElement;
 	};
@@ -285,6 +287,9 @@ const onLoad = () => {
 			else if (selection.mode === "networked") {
 				const room = await api.createGame(config);
 
+				const rooms = await api.getGameList();
+				console.log(rooms);
+
 				if (!room) {
 					console.error("Failed to create game room.");
 					return;
@@ -293,7 +298,7 @@ const onLoad = () => {
 				router.navigate('/game/' + room.room_name);
 			}
 			else {
-				router.navigate('/game');
+				router.navigate('/game/local');
 			}
 			modals.forEach(modal => modal.classList.add('hidden'));
 		});

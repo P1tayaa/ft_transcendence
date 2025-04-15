@@ -1,9 +1,10 @@
 
 import startGame from './src/main.js';
 
-const gameOnLoad = () => {
+const gameOnLoad = async () => {
 	// Get match ID from URL parameter
-	// const roomName = window.location.pathname.split('/')[2];
+	const roomName = window.location.pathname.split('/').pop();
+	console.log("roomName", roomName);
 	let config = null;
 	
 	// Try to load game configuration from sessionStorage
@@ -13,12 +14,15 @@ const gameOnLoad = () => {
 			console.log("Stored Config", storedConfig);
 			config = JSON.parse(storedConfig);
 			console.log('Loaded game config from sessionStorage:', config);
+		} else {
+			console.log('No game config found in sessionStorage.');
+			return false;
 		}
 	} catch (error) {
 		console.error('Error loading game config from sessionStorage:', error);
 	}
 
-	startGame(config);
+	startGame(config, roomName);
 };
 
 export default gameOnLoad;

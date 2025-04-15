@@ -18,8 +18,23 @@ class Router {
 		console.log('Router initialized, routes:', this.routes);
 
 		window.addEventListener('popstate', () => {
-			this.navigate(window.location.pathname);
+			this.navigate(window.location.pathname, false);
 		});
+	}
+
+	/**
+	 * Match the route with the path
+	 * @param {string} path - path of the route
+	 * @return {object} - Route object
+	 */
+	matchRoute(path) {
+		for (const route of this.routes) {
+			const regex = new RegExp(`^${route.path.replace(/:[^\s/]+/g, '([\\w-]+)')}$`);
+			if (regex.test(path)) {
+				return route;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -28,7 +43,8 @@ class Router {
 	 */
 	navigate(path, history = true) {
 		console.log('Navigating to:', path);
-		const route = this.routes.find(route => route.path === path);
+		const route = this.matchRoute(path);
+		console.log('Matched route:', route);
 
 		if (!route) {
 			this.rootElement.innerHTML = `<h1>404 Not Found</h1>`;
@@ -44,7 +60,7 @@ class Router {
 			return
 		}
 
-		if (history) {
+		if (history && path !== window.location.pathname) {
 			window.history.pushState({}, '', path);
 		}
 

@@ -5,17 +5,14 @@ from django.core.exceptions import ValidationError
 from channels.db import database_sync_to_async
 from apps.game.models.game import GameRoom, GameConfig
 from django.contrib.auth.models import User
+from django.conf import settings
+import jwt
+
 
 
 def remap_player_data_by_position(game_state):
-    position_mapped = {
-        'score': {},
-        'players': {},
-        'settings': {
-            'paddleSize': {},
-            'paddleLoc': {},
-        }
-    }
+    import copy
+    position_mapped = copy.deepcopy(game_state)
 
     # Create mapping of position to player data
     for player_id, player_data in game_state['players'].items():
@@ -38,17 +35,46 @@ def remap_player_data_by_position(game_state):
         if player_id in game_state['settings']['paddleLoc']:
             position_mapped['settings']['paddleLoc'][position] = game_state['settings']['paddleLoc'][player_id]
 
-    # Copy other game state data that doesn't need remapping
-    position_mapped['is_playing'] = game_state['is_playing']
-    position_mapped['powerUps'] = game_state['powerUps']
-    position_mapped['pongLogic'] = game_state['pongLogic']
-
     return position_mapped
 
 class BaseConsumer(AsyncWebsocketConsumer):
+    @database_sync_to_async
+    def get_user(self):
+         # Get headers from scope
+        headers = dict(self.scope['headers'])
+        
+        # Get cookie header (it's in bytes format)
+        cookie_header = headers.get(b'cookie', b'').decode()
+        
+        # Parse cookies - simple method:
+        cookies = {}
+        if cookie_header:
+            cookie_pairs = cookie_header.split('; ')
+            for pair in cookie_pairs:
+                key, value = pair.split('=', 1)
+                cookies[key] = value
+
+        # Get your auth token from cookies
+        token = cookies.get('auth-token')
+
+        if not token:
+            return None
+
+        try:
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+            user_id = payload['user_id']
+            return User.objects.get(id=user_id)
+        except (jwt.ExpiredSignatureError, jwt.DecodeError, User.DoesNotExist):
+            return None
+
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = f'room_{self.room_name}'
+        self.user = await self.get_user()
+
+        if not self.user:
+            await self.close()
+            return
 
         await self.channel_layer.group_add(
             self.room_group_name,
@@ -86,21 +112,16 @@ class GameConsumer(BaseConsumer):
             if not self.game_room:
                 raise ValueError("Failed to create game_room")
 
-            # room_status = await database_sync_to_async(self.get_room_status)()
-
             if self.room_name not in GameConsumer.active_games:
                 GameConsumer.active_games[self.room_name] = self.create_initial_gamestate()
 
             self.game_state = GameConsumer.active_games[self.room_name]
-            # if self.game_room.config.powerups_enabled:
-            #     for powerup in self.game_room.config.powerup_list:
-            #         self.game_state['powerUps'][powerup] = False
 
-            join_result = await database_sync_to_async(self.game_room.join_game)(self.scope['user'])
+            join_result = await database_sync_to_async(self.game_room.join_game)(self.user)
 
-            player_id = str(self.scope['user'].id)
+            player_id = str(self.user.id)
             self.game_state['players'][player_id] = {
-                'username': self.scope['user'].username,
+                'username': self.user.username,
                 'position': join_result['side'],
                 'is_host': join_result['is_host'],
                 'is_ready': False
@@ -187,7 +208,7 @@ class GameConsumer(BaseConsumer):
             await self.broadcast_game_state()
 
     async def handle_reset_round(self, data):
-        player_id = str(self.scope['user'].id)
+        player_id = str(self.user.id)
         if player_id in self.game_state['players']:
             self.game_state['pongLogic']['ballPos'] = {'x': 0, 'y': 0}
             self.game_state['pongLogic']['ballSpeed'] = {'x': 0, 'y': 0}
@@ -211,8 +232,8 @@ class GameConsumer(BaseConsumer):
                 break
         await self.broadcast_game_state()
 
-    async def handle_ball_velocity(self, data):
-        player_id = str(self.scope['user'].id)
+    async def handle_ball_velocity(self, data): # AM I CRAZY OR SHOULD THIS ALL BE DONE SERVER SIDE AND NOT SENT FROM CLIENT?
+        player_id = str(self.user.id)           # ALSO THE SUBJECT DEFINITELY SAYS API POINTS RIGHT?
         if player_id in self.game_state['players']:
             self.game_state['pongLogic']['ballSpeed'] = {
                 'x': data['x'],
@@ -221,7 +242,7 @@ class GameConsumer(BaseConsumer):
             await self.broadcast_game_state()
 
     async def handle_paddle_size(self, data):
-        player_id = str(self.scope['user'].id)
+        player_id = str(self.user.id)
         if player_id in self.game_state['players']:
             self.game_state['pongLogic']['paddleSize'][player_id] = {
                 'x': data['x'],
@@ -230,7 +251,7 @@ class GameConsumer(BaseConsumer):
             await self.broadcast_game_state()
 
     async def handle_paddle_move(self, data):
-        player_id = str(self.scope['user'].id)
+        player_id = str(self.user.id)
         if player_id in self.game_state['players']:
 
             self.game_state['settings']['paddleLoc'][player_id] = {
@@ -241,8 +262,8 @@ class GameConsumer(BaseConsumer):
 
     async def handle_player_ready(self):
         try:
-            all_ready = await database_sync_to_async(self.game_room.set_player_ready)(self.scope['user'])
-            player_id = str(self.scope['user'].id)
+            all_ready = await database_sync_to_async(self.game_room.set_player_ready)(self.user)
+            player_id = str(self.user.id)
             if player_id in self.game_state['players']:
                 self.game_state['players'][player_id]['is_ready'] = True
                 await self.broadcast_game_state()
@@ -255,38 +276,56 @@ class GameConsumer(BaseConsumer):
                     }
                 )
         except Exception as e:
+            import traceback
             await self.send(text_data=json.dumps({
                  'type': 'error',
-                 'message': str(e)
+                 'message': str(e),
+                'traceback': traceback.format_exc()
              }))
 
     async def handle_start_game(self):
-        player_id = str(self.scope['user'].id)
-        player = self.game_state['players'].get(player_id)
+        player = self.game_state['players'].get(str(self.user.id))
 
         if not player or not player.get('is_host'):
             return
 
-        room_status = await database_sync_to_async(self.game_room.get_room_status)()
+        try:
+            players = list(self.game_state['players'].values())
+            
+            player_count = len(players)
+            if player_count < self.game_room.config.player_count:
+                await self.send(text_data=json.dumps({
+                    'type': 'start_game_failed',
+                    'reason': 'Not enough players'
+                }))
+                return
 
-        can_start = (
-            len(room_status['players']) >= self.game_room.config.player_count
-            and all(p['is_ready'] for p in room_status['players'])
-        )
+            all_ready = all(player.get('is_ready', False) for player in players)
+            if not all_ready:
+                await self.send(text_data=json.dumps({
+                    'type': 'start_game_failed',
+                    'reason': 'Not all players are ready'
+                }))
+                return
 
-        if can_start:
             self.game_state['is_playing'] = True
             self.game_loop = asyncio.create_task(self.run_game_loop())
             await self.broadcast_game_state()
-        else:
+        except Exception as e:
+            import traceback
             await self.send(text_data=json.dumps({
-                 'type': 'start_game_failed',
-                 'reason': 'Not all players ready or insufficient players'
-             }))
+                'type': 'error',
+                'message': str(e),
+                'traceback': traceback.format_exc()
+            }))
+
 
     async def handle_game_over(self, data):
         if not self.game_state['is_playing']:
             return
+        
+        self.game_loop.cancel()
+        self.game_state['is_playing'] = False
 
         highest_score = -1
         winner_id = None
@@ -295,7 +334,6 @@ class GameConsumer(BaseConsumer):
             if score > highest_score:
                 highest_score = score
                 winner_id = player_id
-        self.game_state['is_playing'] = False
 
         try:
             # First, update most_recent_score for all players in the game
@@ -328,7 +366,7 @@ class GameConsumer(BaseConsumer):
 
     async def disconnect(self, close_code):
         if hasattr(self, 'game_room'):
-            player_id = str(self.scope['user'].id)
+            player_id = str(self.user.id)
             if player_id in self.game_state['players']:
                 del self.game_state['players'][player_id]
                 del self.game_state['score'][player_id]
@@ -337,10 +375,17 @@ class GameConsumer(BaseConsumer):
                 if player_id in self.game_state['settings']['paddleLoc']:
                     del self.game_state['settings']['paddleLoc'][player_id]
 
+            if hasattr(self, 'game_loop') and self.game_loop is not None:
+                self.game_loop.cancel()
+                self.game_loop = None
+            
+            if self.game_state['is_playing']:
+                self.game_state['is_playing'] = False
+
             if not self.game_state['players']:
                 del GameConsumer.active_games[self.room_name]
 
-            await database_sync_to_async(self.game_room.leave_game)(self.scope['user'])
+            await database_sync_to_async(self.game_room.leave_game)(self.user)
             await self.broadcast_game_state()
         await super().disconnect(close_code)
 
@@ -368,7 +413,8 @@ class GameConsumer(BaseConsumer):
     async def game_state_update(self, event):
         if 'state' in event:
             game_state = event['state']
-            for player_id, paddle_loc in game_state['settings']['paddleLoc'].items():
+
+            for paddle_loc in game_state['settings']['paddleLoc'].values():
                 if 'position' in paddle_loc:
                     paddle_loc['position'] = float(paddle_loc['position'])
                 paddle_loc['rotation'] = float(paddle_loc.get('rotation', 0))
@@ -376,7 +422,15 @@ class GameConsumer(BaseConsumer):
             position_mapped_state = remap_player_data_by_position(game_state)
             await self.send(text_data=json.dumps({
                 'type': 'game_state_update',
-                'state': position_mapped_state
+                'state': position_mapped_state,
+                'debug': {
+                    'ballPos': game_state['pongLogic']['ballPos'],
+                    'ballSpeed': game_state['pongLogic']['ballSpeed'],
+                    'paddleSize': game_state['settings']['paddleSize'],
+                    'paddleLoc': game_state['settings']['paddleLoc'],
+                    'score': game_state['score'],
+                    'powerUps': game_state['powerUps']
+                }
             }))
         else:
             await self.send(text_data=json.dumps(event))

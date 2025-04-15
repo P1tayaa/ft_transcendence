@@ -6,4 +6,3 @@ class GameConfig(AppConfig):
     def ready(self):
         import apps.game.models.game
         import apps.game.models.tournament
-        import apps.game.models.matchmaking

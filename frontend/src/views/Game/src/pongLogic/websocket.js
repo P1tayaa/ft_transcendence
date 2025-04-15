@@ -116,40 +116,6 @@ export class MyWebSocket {
 
 
   update(pongLogic, scores, settings, powerUps) {
-    // if (this.host) {
-    //   const update = {
-    //     type: "set_ball_velocity",
-    //     x: 0,
-    //     y: 0,
-    //   }
-    //   this.socket.send(JSON.stringify(update));
-    // }
-    // if (this.host) {
-    //   // Convert maps to plain objects before sending
-    //   const gameState = {
-    //     type: 'gameState',
-    //     pongLogic: {
-    //       ballPos: pongLogic.ballPos,
-    //       ballSpeed: pongLogic.ballSpeed,
-    //       ballSize: pongLogic.ballSize,
-    //       lastWinner: pongLogic.lastWinner,
-    //       lastContact: pongLogic.lastContact,
-    //       lastLoser: pongLogic.lastLoser,
-    //     },
-    //     settings: {
-    //       paddleSize: settings.paddleSize,
-    //       paddleLoc: settings.paddleLoc,
-    //       // paddleSize: settings.paddleSize,
-    //       // paddleLoc: Object.fromEntries(settings.paddleLoc.entries),
-    //     },
-    //     // powerUps: Object.fromEntries(powerUps),
-    //     // scores: Object.fromEntries(scores.scores),
-    //     powerUps: powerUps,
-    //     scores: scores.scores.scores,
-    //   };
-    //   this.socket.send(JSON.stringify(gameState));
-    // } else {
-    // If this client is not the host, overwrite local values with server values
     if (this.serverState) {
       pongLogic.ballPos = this.serverState.pongLogic.ballPos;
       pongLogic.ballSpeed = this.serverState.pongLogic.ballSpeed;
@@ -239,8 +205,6 @@ export class MyWebSocket {
         //   this.serverState = data; // Store the received game state
         // } else
         if (data.type === "game_state_update") {
-
-          // console.log('Received:', data);
           this.serverState = data.state;
           if (data.game_over) {
             this.winner = data.winner;
@@ -250,7 +214,7 @@ export class MyWebSocket {
           console.log("assked witch paddle I was")
           this.myPos = data.position;
         } else if (data.type === "started_game") {
-          console.log("started_game")
+          console.log("started_game", data);
           this.serverState = data.state;
           this.gameStarted = true;
         } else if (data.type === "failed_to_start_game") {

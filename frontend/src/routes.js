@@ -34,7 +34,17 @@ const routes = [
 	new Route({
 		path: '/game',
 		component: Game
-	})
+	}),
+
+	new Route({
+		path: '/game/local',
+		component: Game
+	}),
+
+	new Route({
+		path: '/game/:name',
+		component: Game
+	}),
 ];
 
 export default routes;

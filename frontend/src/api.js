@@ -12,33 +12,50 @@ class ApiManager {
 
 		// API endpoints
 		this.endpoints = {
-			me: 'me/',
-			search: 'search/',
-
-			register: 'register/',
-			login: 'login/',
-			logout: 'logout/',
-
-			friends: 'follow/following/',
-			addFriend: 'follow/',
-			removeFriend: 'follow/unfollow/',
-
-			matchHistory: 'score/',
-
-			chat: 'chats/',
-			sendMessage: 'chats/message/',
-
-			createTournament: 'tournament/create/',
-			getTournamentList: 'tournament/list/',
-			getTournamentInfo: 'tournament/get/',
-			joinTournament: 'tournament/join/',
-			leaveTournament: 'tournament/leave/',
-			updateTournament: 'tournament/update_score/',
-
-			createGame: 'game/create/',
-			getGameInfo: 'game/get/',
-
-			resetDatabase: 'dev_reset/',
+			user: {
+				me: 'me/',
+				search: 'search/',
+			},
+			
+			auth: {
+				register: 'register/',
+				login: 'login/',
+				logout: 'logout/',
+			},
+			
+			social: {
+				friends: 'follow/following/',
+				addFriend: 'follow/',
+				removeFriend: 'follow/unfollow/',
+			},
+			
+			score: {
+				matchHistory: 'score/',
+			},
+			
+			chat: {
+				history: 'chats/',
+				sendMessage: 'chats/message/',
+			},
+			
+			tournament: {
+				create: 'tournament/create/',
+				list: 'tournament/list/',
+				info: 'tournament/get/',
+				join: 'tournament/join/',
+				leave: 'tournament/leave/',
+				updateScore: 'tournament/update_score/',
+			},
+			
+			game: {
+				create: 'game/create/',
+				info: 'game/get/',
+				list: 'game/list/',
+			},
+			
+			dev: {
+				resetDatabase: 'dev_reset/',
+			}
 		};
 	}
 
@@ -121,7 +138,7 @@ class ApiManager {
 			"X-CSRFToken": getCookie('csrftoken'),
 		}
 
-		const response = await fetch(this.baseUrl + this.endpoints.register, {
+		const response = await fetch(this.baseUrl + this.endpoints.auth.register, {
 			method: 'POST',
 			headers: headers,
 			credentials: 'include',
@@ -155,7 +172,7 @@ class ApiManager {
 			password: password
 		};
 
-		const response = await this.request(this.baseUrl + this.endpoints.login, headers, 'POST', data);
+		const response = await this.request(this.baseUrl + this.endpoints.auth.login, headers, 'POST', data);
 
 		return response;
 	}
@@ -165,7 +182,7 @@ class ApiManager {
 	 * @returns {Promise} A promise that resolves with the current user data
 	 */
 	async getCurrentUser() {
-		return this.get(this.endpoints.me);
+		return this.get(this.endpoints.user.me);
 	}
 
 	/**
@@ -173,7 +190,7 @@ class ApiManager {
 	 * @returns {Promise} A promise that resolves with the friends data
 	 */
 	async getFriends() {
-		const response = await this.get(this.endpoints.friends);
+		const response = await this.get(this.endpoints.social.friends);
 		return response.following || [];
 	}
 
@@ -183,7 +200,7 @@ class ApiManager {
 	 * @returns {Promise} A promise that resolves with the search results
 	 */
 	async searchUsers(username) {
-		const response = await this.get(this.endpoints.search, { username: username });
+		const response = await this.get(this.endpoints.user.search, { username: username });
 		return response.results || [];
 	}
 
@@ -193,7 +210,7 @@ class ApiManager {
 	 * @returns {Promise} A promise that resolves with the response data
 	 */
 	async addFriend(userId) {
-		return this.post(this.endpoints.addFriend, { user_id: userId });
+		return this.post(this.endpoints.social.addFriend, { user_id: userId });
 	}
 
 	/**
@@ -202,7 +219,7 @@ class ApiManager {
 	 * @returns {Promise} A promise that resolves with the response data
 	 */
 	async removeFriend(userId) {
-		return this.post(this.endpoints.removeFriend, { user_id: userId });
+		return this.post(this.endpoints.social.removeFriend, { user_id: userId });
 	}
 
 	/**
@@ -211,7 +228,7 @@ class ApiManager {
 	 * @returns {Promise} A promise that resolves with the match history data
 	 */
 	async getMatchHistory(userId) {
-		const response = await this.get(this.endpoints.matchHistory, { user_id: userId });
+		const response = await this.get(this.endpoints.score.matchHistory, { user_id: userId });
 		return response.games || [];
 	}
 
@@ -221,7 +238,7 @@ class ApiManager {
 	 * @returns {Promise} A promise that resolves with the chat history data
 	 */
 	async getChatHistory(userId) {
-		return this.get(this.endpoints.chat, { user_id: userId });
+		return this.get(this.endpoints.chat.history, { user_id: userId });
 	}
 
 	/**
@@ -231,7 +248,7 @@ class ApiManager {
 	 * @returns {Promise} A promise that resolves with the response data
 	 */
 	async sendMessage(userId, message) {
-		return this.post(this.endpoints.sendMessage, {
+		return this.post(this.endpoints.chat.sendMessage, {
 			recipient_id: userId,
 			content: message
 		});
@@ -243,7 +260,7 @@ class ApiManager {
 	 * @returns {Promise} A promise that resolves with the response data
 	 */
 	async createGame(config) {
-		return this.post(this.endpoints.createGame, { config: config });
+		return this.post(this.endpoints.game.create, { config: config });
 	}
 
 	/**
@@ -252,7 +269,15 @@ class ApiManager {
 	 * @returns {Promise} A promise that resolves with the game data
 	 */
 	async getGameInfo(gameName) {
-		return this.get(this.endpoints.getGameInfo, { name: gameName });
+		return this.get(this.endpoints.game.info, { name: gameName });
+	}
+
+	/**
+	 * Get a list of games
+	 * @returns {Promise} A promise that resolves with the game list
+	 */
+	async getGameList() {
+		return this.get(this.endpoints.game.list);
 	}
 
 	/**
@@ -261,7 +286,7 @@ class ApiManager {
 	 * @returns {Promise} A promise that resolves with the response data
 	 */
 	async createTournament(config) {
-		return this.post(this.endpoints.createTournament, { config: config });
+		return this.post(this.endpoints.tournament.create, { config: config });
 	}
 
 	/**
@@ -269,7 +294,7 @@ class ApiManager {
 	 * @returns {Promise} A promise that resolves with the tournament list
 	 */
 	async getTournamentList() {
-		return this.get(this.endpoints.getTournamentList);
+		return this.get(this.endpoints.tournament.list);
 	}
 
 	/**
@@ -278,7 +303,7 @@ class ApiManager {
 	 * @returns {Promise} A promise that resolves with the tournament data
 	 */
 	async getTournamentInfo(tournamentId) {
-		return this.get(this.endpoints.getTournamentInfo, { tournament_id: tournamentId });
+		return this.get(this.endpoints.tournament.info, { tournament_id: tournamentId });
 	}
 
 	/**
@@ -287,7 +312,7 @@ class ApiManager {
 	 * @returns {Promise} A promise that resolves with the response data
 	 */
 	async joinTournament(tournamentId) {
-		return this.post(this.endpoints.joinTournament, { tournament_id: tournamentId });
+		return this.post(this.endpoints.tournament.join, { tournament_id: tournamentId });
 	}
 
 	/**
@@ -296,14 +321,14 @@ class ApiManager {
 	 * @returns {Promise} A promise that resolves with the response data
 	 */
 	async leaveTournament(tournamentId) {
-		return this.post(this.endpoints.leaveTournament, { tournament_id: tournamentId });
+		return this.post(this.endpoints.tournament.leave, { tournament_id: tournamentId });
 	}
 
 	/**
 	 * DEV ONLY: Reset the database
 	 */
 	async resetDatabase() {
-		return this.post(this.endpoints.resetDatabase);
+		return this.post(this.endpoints.dev.resetDatabase);
 	}
 }
 

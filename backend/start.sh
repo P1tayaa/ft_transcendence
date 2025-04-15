@@ -23,5 +23,6 @@ if [ "$PRODUCTION" = "True" ]; then
     exec daphne -b 0.0.0.0 -p 8000 config.asgi:application
 else
     echo "Running in development mode"
-    exec python manage.py runserver 0.0.0.0:8000
+    # exec python manage.py runserver 0.0.0.0:8000
+    exec daphne -b 0.0.0.0 -p 8000 config.asgi:application
 fi

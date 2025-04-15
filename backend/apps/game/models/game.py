@@ -2,10 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
-from channels.db import database_sync_to_async
 from django.db import transaction
-import math
-import random
 from apps.users.models import PlayerScore, Game
 
 
@@ -74,9 +71,6 @@ class GameConfig(models.Model):
         if self.bots_enabled and not self.bot_sides:
             errors['bot_sides'] = 'Bot sides mut be specificed when bots are enabled'
 
-        # if self.mode == 'networked' and not self.server_url:
-            # errors['server_url'] = 'Server URL is required for NETWORK mode'
-
         if errors:
             raise ValidationError(errors)
 
@@ -103,9 +97,6 @@ class GameConfig(models.Model):
         if config_json.get('bots', '') == 'true':
             if 'botSide' not in config_json or not config_json['botSide']:
                 errors['botSide'] = "Bot sides must be specified when bots are enabled"
-
-        # if config_json.get('mode') == 'networked' and not config_json.get('serverurl'):
-        #     errors['serverurl'] = "Server URL is required for NETWORK mode"
 
         return (len(errors) == 0, errors)
 
@@ -270,6 +261,8 @@ class GameRoom(BaseGameRoom):
         except Exception as e:
             raise ValidationError(str(e))
 
+    # This method is called when a player is ready to start the game
+    # Return: True if all players are ready, False otherwise
     def set_player_ready(self, player):
         with transaction.atomic():
             try:
@@ -280,9 +273,15 @@ class GameRoom(BaseGameRoom):
             player_state.is_ready = True
             player_state.save()
 
-            active_players = self.player_states
-            all_ready = (active_players.count() >= self.config.player_count and all(p.is_ready for p in active_players))
-            return all_ready
+            active_players = self.player_states.all()
+            if active_players.count() < self.config.player_count:
+                return False
+
+            for player in active_players:
+                if not player.is_ready:
+                    return False
+
+            return True
 
     def save_game_result(self, winner_id, scores):
         with transaction.atomic():

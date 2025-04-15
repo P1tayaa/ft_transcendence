@@ -19,7 +19,7 @@ class Profile(models.Model):
     def get_profile_picture_url(self):
         if self.profile_picture:
             return self.profile_picture.url
-        return f"{settings.MEDIA_URL}default_profile.png"
+        return f"/default_profile.png"
 
     def follow_user(self, profile):
         return Follow.objects.create(follower=self, followed=profile)

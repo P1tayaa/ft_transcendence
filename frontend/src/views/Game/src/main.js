@@ -5,6 +5,7 @@ import Init from './init.js';
 import { Mode } from "./pongLogic/setting.js";
 import { updateLightsForActivePlayers } from "./modelLoading/light_manage.js";
 import { botControl } from './bot.js';
+import router from '../../../router.js';
 
 var gameEnded = false
 
@@ -110,7 +111,6 @@ class main {
 
 				this.pongLogic.socket.didReset = false;
 			}
-			console.log(this.score.scores)
 			this.score.playerSides.forEach(side => {
 				if (this.score.scores[side] > 11) {
 					this.game_done();
@@ -136,6 +136,9 @@ class main {
 		if (gameEnded)
 			return
 		gameEnded = true
+
+		this.renderer.setAnimationLoop(null);
+
 		if (this.pongLogic.settings === Mode.NETWORKED) {
 			await this.socket.socket_game_done()
 
@@ -143,7 +146,7 @@ class main {
 			// add a post request to send backend the score of solo
 		}
 
-		window.location.href = "../gameOver"
+		router.navigate('/');
 	}
 }
 

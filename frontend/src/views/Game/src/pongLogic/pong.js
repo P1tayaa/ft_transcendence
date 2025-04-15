@@ -270,11 +270,12 @@ class Pong {
   update(input, gameScene) {
     if (this.mode === Mode.NETWORKED) {
       if (!this.settings) {
-        return "shit"
+        throw new Error("Settings not initialized");
       }
       this.settings.playerSide.forEach(Padle => {
         if (!this.settings.paddleLoc[Padle]) {
-          return "shit"
+          console.log('settings', this.settings);
+          throw new Error(`Paddle location not found for ${Padle}`);
         }
         gameScene.moveAsset(Padle, getNewPosition(Padle, this.settings.mapStyle, this.settings.paddleLoc[Padle].position));
       });

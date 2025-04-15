@@ -1,4 +1,3 @@
-// WebSocketManager.js - Manages WebSocket connections for real-time updates
 class WebSocketManager {
 	constructor(endpoint) {
 		this.url = this.getWebsocketHost() + endpoint;
