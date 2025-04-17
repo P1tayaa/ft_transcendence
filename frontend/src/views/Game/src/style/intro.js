@@ -59,7 +59,10 @@ export function showLoadingScreen(
 
   loadingDiv.appendChild(loadingMessageElem);
   loadingDiv.appendChild(controlInfoElem);
-  document.body.appendChild(loadingDiv);
+    const appDiv = document.getElementById('app');
+    if (appDiv) {
+      appDiv.appendChild(loadingDiv);
+    }
 }
 
 
