@@ -25,7 +25,7 @@ services:
       - backend
     volumes:
       - build:/var/www/html
-      - ./uploads:/var/www/uploads
+      - uploads:/var/www/uploads
 
 
 

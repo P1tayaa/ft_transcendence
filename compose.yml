@@ -27,6 +27,7 @@ services:
       - default
     volumes:
       - ./backend:/app
+      - uploads:/app/media
     env_file:
       - .env
 
@@ -52,7 +53,7 @@ services:
     networks:
       - default
     volumes:
-      - ./uploads:/var/www/uploads
+      - uploads:/var/www/uploads
     ports:
       - "80:80"
 
@@ -67,3 +68,4 @@ networks:
 
 volumes:
   db_data:
+  uploads:

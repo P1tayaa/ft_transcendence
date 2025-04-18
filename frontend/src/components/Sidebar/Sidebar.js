@@ -3,6 +3,7 @@ import api from '../../api.js';
 
 import Friend from './Friend.js';
 import user from '../../User.js';
+import List from './List.js';
 
 class Sidebar {
 	/**
@@ -10,9 +11,8 @@ class Sidebar {
 	 */
 	constructor() {
 		this.visible = false;
-		this.friends = [];
-		this.searchResults = [];
 		this.element = null;
+		this.list = null;
 
 		// Listen for user login and logout events
 		window.addEventListener('user:login', () => {
@@ -26,7 +26,6 @@ class Sidebar {
 
 	/**
 	 * Initialize the sidebar
-	 * @returns {Promise<void>}
 	 * @throws {Error} - If the sidebar fails to initialize
 	 */
 	init() {
@@ -42,96 +41,68 @@ class Sidebar {
 			}
 
 			this.render();
+
+			this.list = new List('friends-list');
+			this.list.showFriends();
+
+			this.setupEvents();
 		} catch (error) {
 			console.error('Sidebar initialization failed:', error);
 			throw error;
 		}
 	}
 
-	/**
-	 * Destroy the sidebar
-	 * @returns {void}
-	 */
 	destroy() {
+		this.visible = false;
+
+		if (this.list) {
+			this.list.destroy();
+			this.list = null;
+		}
+
 		if (this.element) {
 			this.element.remove();
 			this.element = null;
 		}
-		this.visible = false;
-		this.friends = [];
-	}
 
+	}
+	
 	/**
 	 * Render the sidebar
 	 * @returns {string} - The HTML string for the sidebar
 	 * @throws {Error} - If the sidebar fails to render
-	 */
+	*/
 	render() {
 		const sidebarHTML = `
-			<!-- Social Side Panel -->
-			<div class="sidebar" id="sidebar">
-				<!-- Current User Profile -->
-				<div class="user-profile" id="current-user-profile">
-					<div class="avatar-container">
-						<img src="${user.avatar}" alt="Your Avatar" class="avatar" id="current-user-avatar">
-						<span class="status-indicator online"></span>
-					</div>
-					<span class="username" id="current-user-name">${user.username}</span>
-				</div>
-				
-				<!-- Friend Search -->
-				<div class="friend-search">
-					<i class="fas fa-search"></i>
-					<input type="text" placeholder="Search players..." id="friend-search-input">
-				</div>
-				
-				<!-- Friends List -->
-				<ul class="friends-list" id="friends-list">
-					<!-- Friends will be added here dynamically -->
-				</ul>
-			</div>
+		<!-- Current User Profile -->
+		<div class="user-profile" id="current-user-profile">
+		<div class="avatar-container">
+		<img src="${user.avatar}" alt="Your Avatar" class="avatar" id="current-user-avatar">
+		<span class="status-indicator online"></span>
+		</div>
+		<span class="username" id="current-user-name">${user.username}</span>
+		</div>
+		
+		<!-- Friend Search -->
+		<div class="user-search">
+		<i class="fas fa-search"></i>
+		<input type="text" placeholder="Search players..." id="user-search-input">
+		</div>
+		
+		<!-- Friends List -->
+		<ul class="friends-list" id="friends-list">
+		<!-- Friends will be added here dynamically -->
+		</ul>
 		`;
-
+		
 		this.element.innerHTML = sidebarHTML;
-		this.renderFriendsList();
 	}
-
-	/**
-	 * Render the friends list
-	 * @returns {void}
-	 * @throws {Error} - If the friends list fails to render
-	 */
-	renderFriendsList() {
-		if (!this.friends || this.friends.length === 0) {
-			document.getElementById('friends-list').innerHTML = '<li>No friends yet</li>';
-			return;
-		}
-
-		const friendsList = document.getElementById('friends-list');
-
-		friendsList.innerHTML = '';
-
-		this.friends.forEach(friend => {
-			friendItem = new Friend(friend);
-			friendsList.appendChild(friendItem.getElement());
+	
+	setupEvents() {
+		const searchInput = document.getElementById('user-search-input');
+		searchInput.addEventListener('input', (event) => {
+			this.list.search(event.target.value);
 		});
-	}
-
-	//Update friends list every minute
-	/**
-	 * Update the friends list
-	 * @returns {Promise<void>}
-	 */
-	async updateFriendsList() {
-		try {
-			const response = await api.getFriends();
-			console.log('Friends list updated:', response);
-
-			this.friends = response;
-			this.renderFriendsList();
-		} catch (error) {
-			console.error('Failed to update friends list:', error);
-		}
 	}
 }
 

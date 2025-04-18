@@ -58,7 +58,7 @@ class User {
 
 		this.id = data.id;
 		this.username = data.username;
-		this.avatar = data.avatar;
+		this.avatar = data.avatar || 'default-avatar.png';
 		this.status = data.status;
 
 		this.friends = data.following;

@@ -13,13 +13,14 @@ class Profile(models.Model):
     most_recent_game_score = models.IntegerField(default=0)
     profile_picture = models.ImageField(
         upload_to=user_profile_path,
-        default='default_profile.png'
+        null=True,
+        blank=True,
     )
 
     def get_profile_picture_url(self):
         if self.profile_picture:
             return self.profile_picture.url
-        return f"/default_profile.png"
+        return None
 
     def follow_user(self, profile):
         return Follow.objects.create(follower=self, followed=profile)

@@ -1,12 +1,13 @@
-import './FriendItem/FriendItem.css';
+import './Friend.css';
 
 export default class Friend {
 	constructor(data, onClick) {
 		this.id = data.id;
 		this.username = data.username;
-		this.avatar = data.avatar;
+		this.avatar = data.avatar || 'default-avatar.png';
 		this.status = data.status;
-		this.element = data.null;
+
+		this.element = null; // Fixed from data.null
 		this.onClick = onClick;
 	}
 
@@ -15,7 +16,7 @@ export default class Friend {
 	 */
 	getElement() {
 		if (this.element) {
-			this.remove();
+			return this.element;
 		}
 
 		this.element = document.createElement('li');
@@ -30,7 +31,9 @@ export default class Friend {
 			<span data-field="username" class="username">${this.username}</span>
 		`;
 
-		this.element.addEventListener('click', () => {
+		this.element.addEventListener('click', (event) => {
+			event.preventDefault();
+
 			if (this.onClick) {
 				this.onClick(this.id);
 			}
@@ -50,21 +53,22 @@ export default class Friend {
 		this.username = newUsername;
 		this.status = newStatus;
 
-		const avatarElement = this.element.querySelector('[data-field="avatar"]');
-		const usernameElement = this.element.querySelector('[data-field="username"]');
-		const statusElement = this.element.querySelector('[data-field="status"]');
+		if (this.element) {
+			const avatarElement = this.element.querySelector('[data-field="avatar"]');
+			if (avatarElement) {
+				avatarElement.src = newAvatar;
+				avatarElement.alt = `${newUsername}'s avatar`;
+			}
 
-		if (avatarElement) {
-			avatarElement.src = newAvatar;
-			avatarElement.alt = `${newUsername}'s avatar`;
-		}
+			const usernameElement = this.element.querySelector('[data-field="username"]');
+			if (usernameElement) {
+				usernameElement.textContent = newUsername;
+			}
 
-		if (usernameElement) {
-			usernameElement.textContent = newUsername;
-		}
-
-		if (statusElement) {
-			statusElement.className = 'status-indicator ' + newStatus;
+			const statusElement = this.element.querySelector('[data-field="status"]');
+			if (statusElement) {
+				statusElement.className = 'status-indicator ' + newStatus;
+			}
 		}
 	}
 
