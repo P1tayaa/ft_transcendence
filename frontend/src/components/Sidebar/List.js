@@ -12,6 +12,7 @@ export default class FriendList {
 		this.elementId = elementID;
 		this.element = this.getContainer();
 		this.items = [];
+		this.searchMode = false;
 	}
 
 	destroy() {
@@ -36,6 +37,28 @@ export default class FriendList {
 		return this.element;
 	}
 
+	handleEmptyState() {
+		// Create a styled empty state message with icon
+		const emptyMessage = document.createElement('li');
+		emptyMessage.className = 'empty-state';
+		
+		// Empty state message
+		if (this.searchMode) {
+			emptyMessage.innerHTML = `
+				<i class="fas fa-search"></i>
+				<span>No matching players found</span>
+			`;
+		} else {
+			emptyMessage.innerHTML = `
+				<i class="fas fa-user-friends"></i>
+				<span>No friends yet</span>
+				<small>Search to add new friends</small>
+			`;
+		}
+		
+		this.element.appendChild(emptyMessage);
+	}
+
 	/**
 	 * Render items to the container
 	 */
@@ -44,7 +67,7 @@ export default class FriendList {
 		this.element.innerHTML = '';
 
 		if (!this.items || this.items.length === 0) {
-			this.element.innerHTML = `<li class="no-results">Empty</li>`;
+			this.handleEmptyState();
 			return;
 		}
 
@@ -63,6 +86,7 @@ export default class FriendList {
 	 * Load friends from the API
 	 */
 	async showFriends() {
+		this.searchMode = false;
 		try {
 			const friends = await api.getFriends();
 			this.items = friends.map(friend => new Friend(friend));
@@ -81,6 +105,7 @@ export default class FriendList {
 			return;
 		}
 
+		this.searchMode = true;
 		try {
 			const users = await api.searchUsers(query);
 			this.items = users.map(user => new Friend(user));
@@ -89,6 +114,4 @@ export default class FriendList {
 			console.error('Failed to load users:', error);
 		}
 	}
-
-
 }
