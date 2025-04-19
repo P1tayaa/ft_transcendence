@@ -1,84 +1,54 @@
 import './Friend.css';
+import Profile from '../Profile/Profile.js';
 
 export default class Friend {
-	constructor(data, onClick) {
-		this.id = data.id;
-		this.username = data.username;
-		this.avatar = data.avatar || 'default-avatar.png';
-		this.status = data.status;
+    constructor(userData) {
+        this.id = userData.id;
+        this.username = userData.username;
+        this.avatar = userData.avatar || '/default-avatar.png';
+        this.status = userData.status || 'offline';
+        this.newMessages = userData.newMessages || 0;
+        this.element = null;
+    }
 
-		this.element = null; // Fixed from data.null
-		this.onClick = onClick;
-	}
+    getElement() {
+        if (!this.element) {
+            this.element = document.createElement('li');
+            this.element.className = 'friend-item';
+            this.render();
+            this.setupEvents();
+        }
+        return this.element;
+    }
 
-	/**
-	 * @returns {HTMLElement} - The HTML element representing the friend.
-	 */
-	getElement() {
-		if (this.element) {
-			return this.element;
-		}
+    render() {
+        if (!this.element) return;
 
-		this.element = document.createElement('li');
-		this.element.classList.add('friend-item');
-		this.element.setAttribute('data-id', this.id);
+        // Create new message indicator if there are unread messages
+        const newMessagesIndicator = this.newMessages > 0 
+            ? `<span class="new-messages">${this.newMessages}</span>` 
+            : '';
 
-		this.element.innerHTML = `
-			<div class="friend-avatar-container">
-				<img data-field="avatar" src="${this.avatar}" alt="${this.username}'s avatar" class="avatar">
-				<span data-field="status" class="status-indicator ${this.status}"></span>
-			</div>
-			<span data-field="username" class="username">${this.username}</span>
-		`;
+        this.element.innerHTML = `
+            <div class="friend-avatar-container">
+                <img src="${this.avatar}" alt="${this.username}" class="friend-avatar">
+                <span class="status-indicator ${this.status === 'online' ? 'online' : ''}"></span>
+            </div>
+            <span class="username">${this.username}</span>
+            ${newMessagesIndicator}
+        `;
+    }
 
-		this.element.addEventListener('click', (event) => {
-			event.preventDefault();
+    setupEvents() {
+        if (!this.element) return;
 
-			if (this.onClick) {
-				this.onClick(this.id);
-			}
-		});
+        this.element.addEventListener('click', () => {
+            this.openProfile();
+        });
+    }
 
-		return this.element;
-	}
-
-	/**
-	 * Updates the information of the friend.
-	 * @param {string} newAvatar - The new avatar URL.
-	 * @param {string} newUsername - The new username.
-	 * @param {string} newStatus - The new status.
-	 */
-	update(newAvatar, newUsername, newStatus) {
-		this.avatar = newAvatar;
-		this.username = newUsername;
-		this.status = newStatus;
-
-		if (this.element) {
-			const avatarElement = this.element.querySelector('[data-field="avatar"]');
-			if (avatarElement) {
-				avatarElement.src = newAvatar;
-				avatarElement.alt = `${newUsername}'s avatar`;
-			}
-
-			const usernameElement = this.element.querySelector('[data-field="username"]');
-			if (usernameElement) {
-				usernameElement.textContent = newUsername;
-			}
-
-			const statusElement = this.element.querySelector('[data-field="status"]');
-			if (statusElement) {
-				statusElement.className = 'status-indicator ' + newStatus;
-			}
-		}
-	}
-
-	/**
-	 * Removes the friend item from the sidebar.
-	 */
-	remove () {
-		if (this.element) {
-			this.element.remove();
-			this.element = null;
-		}
-	}
+    async openProfile() {
+        const profile = new Profile(this.id);
+        await profile.init();
+    }
 }

@@ -15,6 +15,7 @@ class ApiManager {
 			user: {
 				me: 'me/',
 				search: 'search/',
+				get: 'users/',
 			},
 			
 			auth: {
@@ -185,6 +186,10 @@ class ApiManager {
 		return this.get(this.endpoints.user.me);
 	}
 
+	getUser(userId) {
+		return this.get(this.endpoints.user.get + userId + '/');
+	}
+
 	/**
 	 * Get the current user's friends
 	 * @returns {Promise} A promise that resolves with the friends data
@@ -221,7 +226,7 @@ class ApiManager {
 	async removeFriend(userId) {
 		return this.post(this.endpoints.social.removeFriend, { user_id: userId });
 	}
-
+	
 	/**
 	 * Get a user's match history
 	 * @param {string} userId - The user ID

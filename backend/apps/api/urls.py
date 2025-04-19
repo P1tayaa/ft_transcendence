@@ -6,6 +6,7 @@ from .management.user_management import (
     login_user,
     logout_user,
     fetch_matching_usernames,
+	get_user,
     follow_user,
     get_following,
     get_followers,
@@ -14,7 +15,6 @@ from .management.user_management import (
     delete_profile_picture,
     block_user,
     unblock_user,
-    get_blocked,
     change_password,
     change_username
 )
@@ -55,6 +55,7 @@ urlpatterns = [
     path("me/change_username/", change_username, name="change_username"),
     path("me/change_password/", change_password, name="change_password"),
     path("search/", fetch_matching_usernames, name="search"),
+	path("users/<int:user_id>/", get_user, name="get_user"),
 
     path("follow/", follow_user, name="follow_user"),
     path("follow/followers/", get_followers, name="get_followers"),

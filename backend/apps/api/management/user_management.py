@@ -15,24 +15,26 @@ import os
 import json
 
 
-def serialize_user(user_to_serialize, viewing_user):
+
+def serialize_user(user, viewer):
     data = {
-        "id": user_to_serialize.id,
-        "username": user_to_serialize.username,
-        "avatar": user_to_serialize.profile.get_profile_picture_url(),
+        "id": user.id,
+        "username": user.username,
+        "avatar": user.profile.get_profile_picture_url(),
     }
 
-    if viewing_user != user_to_serialize:
-        data["is_following"] = viewing_user.profile.is_following(user_to_serialize.profile)
-        data["is_blocking"] = viewing_user.profile.is_blocking(user_to_serialize.profile)
+    if viewer != user:
+        data["is_following"] = viewer.profile.is_following(user.profile)
+        data["is_blocking"] = viewer.profile.is_blocking(user.profile)
     else:
-        following = viewing_user.profile.get_following()
-        data["following"] = [serialize_user(follow.followed.user, viewing_user) for follow in following]
+        following = user.profile.get_following()
+        data["following"] = [serialize_user(follow.followed.user, viewer) for follow in following]
 
-        followers = viewing_user.profile.get_followers()
-        data["followers"] = [serialize_user(follow.followed.user, viewing_user) for follow in followers]
+        followers = user.profile.get_followers()
+        data["followers"] = [serialize_user(follow.follower.user, viewer) for follow in followers]
 
     return data
+
 
 
 # User.objects.create_user should add to database itself
@@ -156,6 +158,23 @@ def get_current_user(request):
             "user": serialize_user(user, request.user),
         }
     )
+
+
+
+@api_view(["GET"])
+def get_user(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        if not user:
+            return JsonResponse({"success": False, "message": "User not found"}, status=404)
+
+        return JsonResponse({
+            "success": True,
+            "user": serialize_user(user, request.user),
+        })
+    except Exception as e:
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
+
 
 
 @api_view(["GET"])

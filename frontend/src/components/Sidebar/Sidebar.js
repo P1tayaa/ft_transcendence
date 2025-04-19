@@ -4,6 +4,7 @@ import api from '../../api.js';
 import Friend from './Friend.js';
 import user from '../../User.js';
 import List from './List.js';
+import Profile from '../Profile/Profile.js';
 
 class Sidebar {
 	/**
@@ -103,6 +104,15 @@ class Sidebar {
 		searchInput.addEventListener('input', (event) => {
 			this.list.search(event.target.value);
 		});
+
+		// Add click event to current user profile
+		const userProfile = document.getElementById('current-user-profile');
+		if (userProfile) {
+			userProfile.addEventListener('click', async () => {
+				const profile = new Profile(user.id);
+				await profile.init();
+			});
+		}
 	}
 }
 
