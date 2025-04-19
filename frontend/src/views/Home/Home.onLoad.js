@@ -94,7 +94,7 @@ const onLoad = () => {
 	const noRoomsMessage = document.getElementById('no-rooms-message');
 	const roomTemplate = document.getElementById('room-template');
 
-	const socket = new WebSocket('/ws/matchmaking/');
+	const socket = new WebSocket('matchmaking');
 
 	socket.handleMessage = (data) => {
 		console.log("event:", data);

@@ -1,6 +1,7 @@
 import './Profile.css';
 import api from '../../api.js';
 import user from '../../User.js';
+import Chat from './Chat/Chat.js';
 
 export default class Profile {
 	constructor(userId) {
@@ -9,6 +10,7 @@ export default class Profile {
 		this.element = null;
 		this.isCurrentUserProfile = false;
 		this.isFriend = false;
+		this.chat = null;
 	}
 
 	async init() {
@@ -30,18 +32,27 @@ export default class Profile {
 
 			await this.render();
 			this.setupEventListeners();
+			
+			// Initialize chat if not viewing own profile
+			if (!this.isCurrentUserProfile) {
+				this.initChat();
+			}
 		} catch (error) {
 			console.error('Failed to initialize profile:', error);
 		}
 	}
 
 	async render() {
-		if (!this.profileData) return;
+		if (!this.profileData)
+			return;
 
 		const wins = Math.floor(Math.random() * 50);
 		const totalGames = Math.floor(Math.random() * 70);
 
 		const matchHistory = await api.getMatchHistory(this.userId);
+		
+		console.log('match history:', matchHistory);
+
 		const friendshipButton = this.isCurrentUserProfile ? '' :
 			this.isFriend ?
 				'<button id="remove-friend-btn" class="profile-btn danger">Remove Friend</button>' :
@@ -84,13 +95,7 @@ export default class Profile {
 				${!this.isCurrentUserProfile ? `
 				<div class="profile-section chat-section">
 					<h3>Chat</h3>
-					<div class="chat-container">
-						<div class="chat-messages" id="chat-messages"></div>
-						<div class="chat-input-container">
-							<input type="text" id="chat-message-input" placeholder="Type a message...">
-							<button id="send-message-btn"><i class="fas fa-paper-plane"></i></button>
-						</div>
-					</div>
+						<div id="chat-container"></div>
 				</div>
 				` : ''}
 			</div>
@@ -127,45 +132,9 @@ export default class Profile {
 			});
 		}
 
-		// Add friend button
-		const addFriendBtn = document.getElementById('add-friend-btn');
-		if (addFriendBtn) {
-			addFriendBtn.addEventListener('click', async () => {
-				try {
-					await api.addFriend(this.userId);
-					this.isFriend = true;
-					this.updateFriendshipButton();
-				} catch (error) {
-					console.error('Failed to add friend:', error);
-				}
-			});
-		}
-
-		// Remove friend button
-		const removeFriendBtn = document.getElementById('remove-friend-btn');
-		if (removeFriendBtn) {
-			removeFriendBtn.addEventListener('click', async () => {
-				try {
-					await api.removeFriend(this.userId);
-					this.isFriend = false;
-					this.updateFriendshipButton();
-				} catch (error) {
-					console.error('Failed to remove friend:', error);
-				}
-			});
-		}
-
-		// Send message button
-		const sendMsgBtn = document.getElementById('send-message-btn');
-		const msgInput = document.getElementById('chat-message-input');
-		if (sendMsgBtn && msgInput) {
-			sendMsgBtn.addEventListener('click', () => this.sendMessage(msgInput.value));
-			msgInput.addEventListener('keypress', (e) => {
-				if (e.key === 'Enter') {
-					this.sendMessage(msgInput.value);
-				}
-			});
-		}
+		// Add/remove friend buttons
+		this.attachFriendButtonEvent('add-friend-btn');
+		this.attachFriendButtonEvent('remove-friend-btn');
 	}
 
 	updateFriendshipButton() {
@@ -208,45 +177,18 @@ export default class Profile {
 		}
 	}
 
-	async sendMessage(message) {
-		if (!message || message.trim() === '') return;
-
-		const msgInput = document.getElementById('chat-message-input');
-		try {
-			await api.sendMessage(this.userId, message);
-			msgInput.value = '';
-
-			// Add message to chat
-			this.addMessageToChat({
-				sender: user.id,
-				text: message,
-				timestamp: new Date().toISOString()
-			});
-		} catch (error) {
-			console.error('Failed to send message:', error);
-		}
-	}
-
-	addMessageToChat(message) {
-		const chatMessages = document.getElementById('chat-messages');
-		if (!chatMessages) return;
-
-		const isCurrentUser = message.sender === user.id;
-		const messageEl = document.createElement('div');
-		messageEl.className = `chat-message ${isCurrentUser ? 'sent' : 'received'}`;
-
-		messageEl.innerHTML = `
-			<div class="message-content">
-				<div class="message-text">${message.text}</div>
-				<div class="message-time">${new Date(message.timestamp).toLocaleTimeString()}</div>
-			</div>
-		`;
-
-		chatMessages.appendChild(messageEl);
-		chatMessages.scrollTop = chatMessages.scrollHeight;
+	initChat() {
+		if (this.isCurrentUserProfile) return;
+		
+		this.chat = new Chat(this.userId, 'chat-container');
+		this.chat.init();
 	}
 
 	close() {
+		if (this.chat) {
+			this.chat.disconnect();
+		}
+		
 		if (this.element) {
 			this.element.remove();
 		}

@@ -1,6 +1,6 @@
 class WebSocketManager {
 	constructor(endpoint) {
-		this.url = this.getWebsocketHost() + endpoint;
+		this.url = `${this.getWebsocketHost()}/ws/${endpoint}/`;
 		this.socket = null;
 
 		// Callback function
@@ -23,10 +23,11 @@ class WebSocketManager {
 	**/
 	connect() {
 		try {
+			console.log('Connecting to socket ', this.url);
 			this.socket = new WebSocket(this.url);
 
 			this.socket.addEventListener('open', () => {
-				console.log('Connected to socket');
+				console.log('Connected to socket ', this.url);
 			});
 
 			this.socket.addEventListener('message', (event) => {

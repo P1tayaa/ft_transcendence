@@ -21,14 +21,11 @@ from .management.user_management import (
 from .management.chat_management import (
     add_message,
     get_chat_history,
-    mark_messages_read,
-    update_typing_status,
 )
 from .management.score_management import (
     add_score,
     get_score_history,
     get_recent_score,
-    get_highscore,
 )
 
 from .management.tournament_management import (

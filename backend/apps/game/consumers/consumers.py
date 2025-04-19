@@ -232,8 +232,8 @@ class GameConsumer(BaseConsumer):
                 break
         await self.broadcast_game_state()
 
-    async def handle_ball_velocity(self, data): # AM I CRAZY OR SHOULD THIS ALL BE DONE SERVER SIDE AND NOT SENT FROM CLIENT?
-        player_id = str(self.user.id)           # ALSO THE SUBJECT DEFINITELY SAYS API POINTS RIGHT?
+    async def handle_ball_velocity(self, data):
+        player_id = str(self.user.id)
         if player_id in self.game_state['players']:
             self.game_state['pongLogic']['ballSpeed'] = {
                 'x': data['x'],

@@ -1,55 +1,56 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
-import asyncio
-from asgiref.sync import sync_to_async
-from django.contrib.auth.models import User
-from apps.users.models import Chat, Message
+from apps.users.models import Chat
 
 
-
+# Currently no authentication
 class ChatConsumer(AsyncJsonWebsocketConsumer):
-    async def connect(self):
-        user = self.scope['user']
-        if not user.is_authenticated:
-            await self.close()
-            return
-        
-        self.user = user
-        self.user_group = f"user_{user.id}"
+	async def connect(self):
+		self.chat_id = self.scope["url_route"]["kwargs"]["chat_id"]
+		if not self.chat_id:
+			await self.error("Chat ID is required")
+			return
 
-        await self.channel_layer.group_add(self.user_group, self.channel_name)
-        await self.accept()
+		self.chat = None 
+		self.chat = await self.get_chat()
+		if not self.chat:
+			self.error("Chat not found")
+			return
 
+		self.chat_group = f"chat_{self.chat_id}"
 
-    async def disconnect(self, close_code):
-        if hasattr(self, "user_group"):
-            await self.channel_layer.group_discard(self.user_group, self.channel_name)
-
-
-    async def new_message(self, event):
-        chat_id = event.get("chat", {}).get("id")
-        
-        if chat_id:
-            def get_user_in_chat():
-                return Chat.objects.filter(
-                    id=chat_id,
-                    participants=self.user
-            ).exists()
-
-            is_participant = await sync_to_async(get_user_in_chat)()
-            if is_participant:
-                await self.send_json({
-                    "type": "new_message",
-                    "message": event["message"],
-                    "chat": event["chat"]
-                })
+		# Join the chat group
+		await self.channel_layer.group_add(self.chat_group, self.channel_name)
+		await self.accept()
 
 
-    async def typing_status(self, event):
-        await self.send_json({
-                 "type": "typing_status",
-                 "user": event["user"],
-                 "chat_id": event["chat_id"],
-                 "is_typing": event["is_typing"]
-             })
+	async def disconnect(self, close_code = None):
+		if hasattr(self, "chat_group"):
+			await self.channel_layer.group_discard(self.chat_group, self.channel_name)
 
+
+	@database_sync_to_async
+	def get_chat(self):
+		if self.chat is not None:
+			return self.chat
+
+		try:
+			return Chat.objects.filter(id=self.chat_id).first()
+		except Chat.DoesNotExist:
+			return None
+
+
+	async def new_message(self, event):
+		await self.send_json({
+			"type": "new_message",
+			"message": event["message"],
+			"chat": event["chat"]
+		})
+
+
+	async def error(self, message):
+		await self.send_json({
+			"type": "error",
+			"message": message
+		})
+		self.close()
