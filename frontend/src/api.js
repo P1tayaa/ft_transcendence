@@ -14,7 +14,7 @@ class ApiManager {
 		this.endpoints = {
 			user: {
 				me: 'me/',
-				search: 'search/',
+				search: 'users/search',
 				get: 'users/',
 			},
 			
@@ -28,6 +28,8 @@ class ApiManager {
 				friends: 'follow/following/',
 				addFriend: 'follow/',
 				removeFriend: 'follow/unfollow/',
+				block: 'block/',
+				unblock: 'unblock/',
 			},
 			
 			score: {
@@ -225,6 +227,24 @@ class ApiManager {
 	 */
 	async removeFriend(userId) {
 		return this.post(this.endpoints.social.removeFriend, { user_id: userId });
+	}
+
+	/**
+	 * Block a user
+	 * @param {string} userId - The user ID to block
+	 * @returns {Promise} A promise that resolves with the response data
+	 * */
+	async block(userId) {
+		return this.post(this.endpoints.social.block, { user_id: userId });
+	}
+
+	/**
+	 * Unblock a user
+	 * @param {string} userId - The user ID to unblock
+	 * @returns {Promise} A promise that resolves with the response data
+	 * */
+	async unblock(userId) {
+		return this.post(this.endpoints.social.unblock, { user_id: userId });
 	}
 	
 	/**

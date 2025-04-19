@@ -18,10 +18,12 @@ from .management.user_management import (
     change_password,
     change_username
 )
+
 from .management.chat_management import (
     add_message,
     get_chat_history,
 )
+
 from .management.score_management import (
     add_score,
     get_score_history,
@@ -51,7 +53,7 @@ urlpatterns = [
     path("me/", get_current_user, name="current_user"),
     path("me/change_username/", change_username, name="change_username"),
     path("me/change_password/", change_password, name="change_password"),
-    path("search/", fetch_matching_usernames, name="search"),
+    path("users/search", fetch_matching_usernames, name="search"),
 	path("users/<int:user_id>/", get_user, name="get_user"),
 
     path("follow/", follow_user, name="follow_user"),
@@ -60,7 +62,7 @@ urlpatterns = [
     path("follow/unfollow/", unfollow_user, name="unfollow_user"),
 
     path("block/", block_user, name="block_user"),
-    path("block/unblock/", unblock_user, name="unblock_user"),
+    path("unblock/", unblock_user, name="unblock_user"),
 
     path("score/", get_score_history, name="get_score_history"),
     path("score/add/", add_score, name="add_score"),

@@ -10,6 +10,7 @@ export default class Profile {
 		this.element = null;
 		this.isCurrentUserProfile = false;
 		this.isFriend = false;
+		this.isBlocked = false;
 		this.chat = null;
 	}
 
@@ -24,6 +25,7 @@ export default class Profile {
 
 			this.isCurrentUserProfile = this.userId === user.id;
 			this.isFriend = this.profileData.is_following || false;
+			this.isBlocked = this.profileData.is_blocking || false;
 
 			// Create and render the profile page
 			this.element = document.createElement('div');
@@ -33,10 +35,18 @@ export default class Profile {
 			await this.render();
 			this.setupEventListeners();
 			
-			// Initialize chat if not viewing own profile
+			// Initialize chat if not viewing own profile and not blocked
 			if (!this.isCurrentUserProfile) {
-				this.initChat();
+				this.chat = new Chat(this.userId, 'chat-container');
+
+				if (this.isBlocked) {
+					this.chat.block();
+				} else {
+					await this.chat.init();
+				}
 			}
+
+
 		} catch (error) {
 			console.error('Failed to initialize profile:', error);
 		}
@@ -53,10 +63,19 @@ export default class Profile {
 		
 		console.log('match history:', matchHistory);
 
-		const friendshipButton = this.isCurrentUserProfile ? '' :
-			this.isFriend ?
-				'<button id="remove-friend-btn" class="profile-btn danger">Remove Friend</button>' :
-				'<button id="add-friend-btn" class="profile-btn primary">Add Friend</button>';
+		let actionButtons = '';
+		
+		if (!this.isCurrentUserProfile) {
+			const friendButton = this.isFriend 
+				? '<button id="remove-friend-btn" class="profile-btn remove-btn">Remove Friend</button>'
+				: '<button id="add-friend-btn" class="profile-btn action-btn">Add Friend</button>';
+				
+			const blockButton = this.isBlocked
+				? '<button id="unblock-user-btn" class="profile-btn unblock-btn">Unblock User</button>'
+				: '<button id="block-user-btn" class="profile-btn block-btn">Block User</button>';
+				
+			actionButtons = `${friendButton}${blockButton}`;
+		}
 
 		console.log('render match history:', matchHistory);
 		console.log('rendering profile:', this.profileData);
@@ -79,7 +98,7 @@ export default class Profile {
 						</div>
 					</div>
 					<div class="profile-actions">
-						${friendshipButton}
+						${actionButtons}
 					</div>
 				</div>
 			</div>
@@ -95,7 +114,7 @@ export default class Profile {
 				${!this.isCurrentUserProfile ? `
 				<div class="profile-section chat-section">
 					<h3>Chat</h3>
-						<div id="chat-container"></div>
+					<div id="chat-container"></div>
 				</div>
 				` : ''}
 			</div>
@@ -132,56 +151,88 @@ export default class Profile {
 			});
 		}
 
-		// Add/remove friend buttons
-		this.attachFriendButtonEvent('add-friend-btn');
-		this.attachFriendButtonEvent('remove-friend-btn');
+		 // Attach action button events
+		this.attachActionButtonEvent('add-friend-btn', this.handleAddFriend.bind(this));
+		this.attachActionButtonEvent('remove-friend-btn', this.handleRemoveFriend.bind(this));
+		this.attachActionButtonEvent('block-user-btn', this.handleBlockUser.bind(this));
+		this.attachActionButtonEvent('unblock-user-btn', this.handleUnblockUser.bind(this));
 	}
 
-	updateFriendshipButton() {
+	updateActionButtons() {
+		if (this.isCurrentUserProfile || !this.element)
+			return;
+		
 		const profileActions = this.element.querySelector('.profile-actions');
 		if (!profileActions) return;
 		
-		if (this.isCurrentUserProfile) {
-			profileActions.innerHTML = '';
-			return;
-		}
-
-		if (this.isFriend) {
-			profileActions.innerHTML = '<button id="remove-friend-btn" class="profile-btn danger">Remove Friend</button>';
-			this.attachFriendButtonEvent('remove-friend-btn');
-		} else {
-			profileActions.innerHTML = '<button id="add-friend-btn" class="profile-btn primary">Add Friend</button>';
-			this.attachFriendButtonEvent('add-friend-btn');
-		}
+		// Friend button
+		const friendButton = this.isFriend 
+			? '<button id="remove-friend-btn" class="profile-btn remove-btn">Remove Friend</button>'
+			: '<button id="add-friend-btn" class="profile-btn action-btn">Add Friend</button>';
+			
+		// Block button
+		const blockButton = this.isBlocked
+			? '<button id="unblock-user-btn" class="profile-btn unblock-btn">Unblock User</button>'
+			: '<button id="block-user-btn" class="profile-btn block-btn">Block User</button>';
+		
+		profileActions.innerHTML = `${friendButton}${blockButton}`;
+		
+		// Re-attach all button events
+		this.attachActionButtonEvent('add-friend-btn', this.handleAddFriend.bind(this));
+		this.attachActionButtonEvent('remove-friend-btn', this.handleRemoveFriend.bind(this));
+		this.attachActionButtonEvent('block-user-btn', this.handleBlockUser.bind(this));
+		this.attachActionButtonEvent('unblock-user-btn', this.handleUnblockUser.bind(this));
 	}
-
-	attachFriendButtonEvent(buttonId) {
-		const isAddButton = buttonId === 'add-friend-btn';
+	
+	attachActionButtonEvent(buttonId, handler) {
 		const button = document.getElementById(buttonId);
-		
 		if (button) {
-			button.addEventListener('click', async () => {
-				try {
-					if (isAddButton) {
-						await api.addFriend(this.userId);
-						this.isFriend = true;
-					} else {
-						await api.removeFriend(this.userId);
-						this.isFriend = false;
-					}
-					this.updateFriendshipButton();
-				} catch (error) {
-					console.error(`Failed to ${isAddButton ? 'add' : 'remove'} friend:`, error);
-				}
-			});
+			button.addEventListener('click', handler);
 		}
 	}
+	
+	async handleAddFriend() {
+		try {
+			await api.addFriend(this.userId);
+			this.isFriend = true;
+			this.updateActionButtons();
+		} catch (error) {
+			console.error('Failed to add friend:', error);
+		}
+	}
+	
+	async handleRemoveFriend() {
+		try {
+			await api.removeFriend(this.userId);
+			this.isFriend = false;
+			this.updateActionButtons();
+		} catch (error) {
+			console.error('Failed to remove friend:', error);
+		}
+	}
+	
+	async handleBlockUser() {
+		try {
+			await api.block(this.userId);
+			this.isBlocked = true;
+			this.updateActionButtons();
 
-	initChat() {
-		if (this.isCurrentUserProfile) return;
-		
-		this.chat = new Chat(this.userId, 'chat-container');
-		this.chat.init();
+			this.chat.block();
+		} catch (error) {
+			console.error('Failed to block user:', error);
+		}
+	}
+	
+	async handleUnblockUser() {
+		try {
+			await api.unblock(this.userId);
+			this.isBlocked = false;
+			this.updateActionButtons();
+
+			await this.chat.init();
+		} catch (error) {
+			console.error('Failed to unblock user:', error);
+		}
 	}
 
 	close() {

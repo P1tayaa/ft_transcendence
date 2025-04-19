@@ -2,12 +2,18 @@ import api from '../../../api.js';
 import user from '../../../User.js';
 import Socket from '../../../socket.js';
 
+import './Chat.css';
+
 export default class Chat {
 	constructor(userId, containerId) {
 		this.userId = userId;
 
 		this.containerId = containerId;
-		this.containerElement = null;
+		this.containerElement = document.getElementById(this.containerId);
+		if (!this.containerElement) {
+			console.error('Chat container not found');
+			return;
+		}
 
 		this.chatId = null;
 		this.socket = null;
@@ -15,13 +21,6 @@ export default class Chat {
 
 	async init() {
 		try {
-			// Get chat container element
-			this.containerElement = document.getElementById(this.containerId);
-			if (!this.containerElement) {
-				console.error('Chat container not found');
-				return;
-			}
-
 			// Get chat history which should include the chat ID
 			const chat = await api.getChatHistory(this.userId);
 			console.log('chat:', chat);
@@ -132,9 +131,23 @@ export default class Chat {
 		this.socket.connect();
 	}
 
+	block() {
+		// If blocked, show blocked message and disconnect
+		if (this.containerElement) {
+			this.containerElement.innerHTML = `
+				<div class="blocked-message">
+					You have blocked this user. Unblock to start chatting.
+				</div>
+			`;
+		}
+
+		this.disconnect();
+	}
+
 	disconnect() {
 		if (this.socket) {
 			this.socket.disconnect();
+			this.socket = null;
 		}
 	}
 }
