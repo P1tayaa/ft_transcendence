@@ -2,17 +2,11 @@
 .DS_Store
 __pycache__/
 
-# ThreeJS
-**/threejs/node_modules/*
-**/threejs/dist/*
-**/threejs/src/models/*
+backend/static
+frontend/dist
+frontend/public/assets
+frontend/node_modules
 
-src/media/profile_pics/*
-src/staticfiles/*
-src/build/node_modules/*
-src/build/dist/*
-src/ssl
-src/frontend/static/*
-
-old/
 Makefile
+
+transcendence_subject.pdf

@@ -1,0 +1,20 @@
+import router from './router.js';
+import './styles.css';
+
+import user from './User.js';
+import sidebar from './components/Sidebar/Sidebar.js';
+
+document.addEventListener('DOMContentLoaded', async () => {
+	console.log('DOM loaded');
+
+	await user.init();
+
+	console.log('User initialized:', user);
+
+	if (user.authenticated) {
+		router.navigate(window.location.pathname);
+	} else {
+		console.log('Token not found, redirecting to login');
+		router.navigate('/login');
+	}
+});

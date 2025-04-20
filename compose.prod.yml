@@ -1,0 +1,33 @@
+services:
+  backend:
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.prod
+      - PRODUCTION=True
+
+
+  frontend:
+    command: npm run build
+
+    ports: []
+    volumes:
+      - build:/app/dist
+    restart: no
+
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile.prod
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+    volumes:
+      - build:/var/www/html
+      - uploads:/var/www/uploads
+
+
+
+volumes:
+  build:
