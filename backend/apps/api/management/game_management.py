@@ -56,32 +56,21 @@ def create_game_room(request):
 		
 		logger.info(f"Creating game room with config: {config_data}")
 
-		try:
-			# Create GameRoom directly with parameters from config_data
-			room_name = f"game-{request.user.username}-{GameRoom.objects.count()+1}"
-			
-			game_room = GameRoom.objects.create(
-				name=room_name,
-				map=config_data.get('map'),
-				player_count=config_data.get('players'),
-			)
-		except ValidationError as e:
-			# Convert validation error dictionary to a single line message
-			error_msg = "; ".join([f"{field}: {', '.join(errors)}" for field, errors in e.message_dict.items()])
-			return JsonResponse({ 'status': 'error', 'message': error_msg}, status=400)
+		# Create GameRoom directly with parameters from config_data
+		room_name = f"game-{request.user.username}-{GameRoom.objects.count()+1}"
+		
+		game_room = GameRoom.objects.create(
+			name=room_name,
+			map=config_data.get('map'),
+			player_count=config_data.get('players'),
+		)
 
 		channel_layer = get_channel_layer()
-		room_data = {
-			'room_id': game_room.id,
-			'room_name': game_room.name,
-			'config': game_room.to_dict(),
-		}
-
 		async_to_sync(channel_layer.group_send)(
 			"matchmaking",
 			{
 				"type": "room_created",
-				"room": room_data,
+				"room": game_room.get_status(),
 			}
 		)
 
