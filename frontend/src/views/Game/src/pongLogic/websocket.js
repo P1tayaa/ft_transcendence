@@ -1,62 +1,47 @@
-//paddle_mode
-// chat_message
-// ctart_game
-// update_game
-// consumers.py is where you can find all
+import { intToPlayerSide } from './setting.js'
 
-import { intToPlayerSide, strToPlayerSide, PlayerSide } from './setting.js'
+import Socket from '../../../../socket.js';
 
 export class MyWebSocket {
-  constructor(settings) {
+  constructor() {
     this.socket = null;
-    this.host;
-    this.isSpectator;
-    this.Connected = false;
     this.didReset = true;
     this.serverState = null;
     this.winner = "";
-    this.game_over = false;
-    this.myPos = null;
-    this.myPosStruc = null;
-    this.gameStarted = false;
-    this.allPlayerReady = false;
-    this.settings = settings
-    this.endGame = false
+    this.mySide = null;
+    this.gameOver = false
   }
 
-  isPlaying() {
-    if (this.serverState) {
+  init(socket, side) {
+    console.log("Overwriting socket for side", side);
+    this.socket = socket;
+    this.mySide = side;
 
-      return true;
-    } else {
-      console.log("server state not on yet");
-      return false;
-    }
+    this.socket.handleMessage = (data) => {
+      if (data.type === "game_state_update") {
+        this.serverState = data.state;
+      } else if (data.type === "reset_round") {
+        console.log("Resetting round");
+        this.didReset = true;
+      } else if (data.type === "player_disconnected") {
+        console.log("Player disconnected:", data.user_id);
+        this.gameOver = true
+      } else if (data.type === "game_end") {
+        console.log("Game ended");
+        this.winner = data.winner;
+      } else {
+        console.log("Unknown message type received:", data.type);
+      }
+    };
+
+    socket.onclose = (event) => {
+      this.endGame = true
+      console.warn('WebSocket connection closed', event);
+    };
   }
 
-  tryStartGame() {
-    this.socket.send(JSON.stringify({ type: 'start_game' }));
-  }
-
-  async getWhichPadle(socket) {
-    await new Promise((resolve) => {
-      const intervalId = setInterval(() => {
-        if (this.myPos !== null) {
-          clearInterval(intervalId);
-          resolve(this.myPos);
-        }
-      }, 100);
-    });
-
-
-    this.myPosStruc = strToPlayerSide(this.myPos);
-    return this.myPosStruc;
-  }
-
-  async init(settings, roomName) {
-    this.host = settings.host;
-    this.isSpectator = settings.isSpectator;
-    await this.startWebSocket(roomName);
+  startGame() {
+    this.socket.send(JSON.stringify({'type': 'start_game'}));
   }
 
   getPaddlePosition() {
@@ -70,9 +55,12 @@ export class MyWebSocket {
     if (!rotation) {
       rotation = 0;
     }
+
+    console.log("moving paddle", this.mySide, paddleInput[this.mySide], settings.paddleLoc[this.mySide].position);
+
     let paddleInfo = {
       type: 'paddle_move',
-      position: paddleInput[this.myPosStruc] + settings.paddleLoc[this.myPosStruc].position,
+      position: settings.paddleLoc[this.mySide].position + paddleInput[this.mySide],
       rotation: rotation,
     }
     // console.log(paddleInfo.position);
@@ -86,6 +74,7 @@ export class MyWebSocket {
     }
     return null; // Return null if no data is available yet
   }
+
   sendBallVelocity(ballPos) {
     const ballVelocityRequest = {
       type: "set_ball_velocity",
@@ -113,9 +102,7 @@ export class MyWebSocket {
     this.socket.send(JSON.stringify(request));
   }
 
-
-
-  update(pongLogic, scores, settings, powerUps) {
+  update(pongLogic, scores, settings) {
     if (this.serverState) {
       pongLogic.ballPos = this.serverState.pongLogic.ballPos;
       pongLogic.ballSpeed = this.serverState.pongLogic.ballSpeed;
@@ -129,44 +116,16 @@ export class MyWebSocket {
         settings.paddleSize = this.serverState.settings.paddleSize;
       if (this.serverState.settings.paddleLoc)
         settings.paddleLoc = this.serverState.settings.paddleLoc;
-      // settings.paddleLoc = new Map(Object.entries(this.serverState.settings.paddleLoc));
       if (this.serverState.score) {
-        // console.log("-------- was send score")
         scores.scores = this.serverState.score;
-        // console.log(scores.scores)
       }
       if (settings.powerup)
         powerUps = this.serverState.powerUps;
-      // console.log(settings.paddleSize, settings.paddleLoc, scores.scores)
     }
-    // }
   }
 
-  async socket_game_done() {
-    const playerRequest = {
-      type: 'game_over',
-    }
-    this.socket.send(JSON.stringify(playerRequest))
-  }
-
-
-
-  async askAllReady() {
-    console.log("askAllReady")
-    const playerRequest = {
-      type: 'is_all_players_ready',
-    }
-    this.socket.send(JSON.stringify(playerRequest))
-  }
-
-
-  async player_ready() {
-    console.log("setting player ready")
-    const playerRequest = {
-      type: 'player_ready',
-    }
-    this.socket.send(JSON.stringify(playerRequest))
-
+  async endGame() {
+    this.socket.send(JSON.stringify({type: 'game_end'}));
   }
 
   async updateScore(pongLogic) {
@@ -175,85 +134,7 @@ export class MyWebSocket {
       scoring_position: intToPlayerSide(pongLogic.lastWinner)
     }
     this.socket.send(JSON.stringify(request))
-    console.log("send you this: ", request)
   }
-
-  async startWebSocket(roomName) {
-    console.log("is this called yet");
-    // const roomName = websocketData.room_name;
-    const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsPath = this.isSpectator ? 'spectate' : 'room';
-
-
-    await new Promise((resolve, reject) => {
-
-      this.socket = new WebSocket(
-        `${wsScheme}//${window.location.host}/ws/${wsPath}/${roomName}/`
-      );
-
-
-      this.socket.onopen = () => {
-        this.Connected = true;
-        console.log('Connected to WebSocket');
-        resolve();
-      };
-
-      this.socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        // console.log("message receive :", event.data)
-        // if (data.type === "gameState") {
-        //   this.serverState = data; // Store the received game state
-        // } else
-        if (data.type === "game_state_update") {
-          this.serverState = data.state;
-          if (data.game_over) {
-            this.winner = data.winner;
-            this.game_over = true;
-          }
-        } else if (data.type === "which_paddle") {
-          console.log("assked witch paddle I was")
-          this.myPos = data.position;
-        } else if (data.type === "started_game") {
-          console.log("started_game", data);
-          this.serverState = data.state;
-          this.gameStarted = true;
-        } else if (data.type === "failed_to_start_game") {
-          // console.log(data.state);
-          console.log("failed_to_start_game", data.checks);
-          // console.log(data.config_player_count);
-        } else if (data.type === 'all_players_ready') {
-
-          console.log('all_players_ready:', data.value);
-          this.allPlayerReady = data.value;
-        } else if (data.type === "error") {
-          console.error(event.data);
-        } else if (data.type === "errors") {
-          console.error(event.data);
-        } else if (data.type === "reset_round") {
-          console.log("reset_round")
-          this.didReset = true;
-        } else if (data.type === "player_disconnected") {
-          console.log("caught disconnected")
-          this.endGame = true
-        }
-
-      };
-
-      this.socket.onclose = (event) => {
-        this.endGame = true
-        console.warn('WebSocket connection closed', event);
-      };
-
-      this.socket.onerror = (error) => {
-        console.error('WebSocket Error:', error.message);
-      };
-
-    });
-
-    // this.socket.send(JSON.stringify({ type: "which_paddle" }));
-    console.log("finished with connecting to websocket ");
-  }
-
 }
 
 

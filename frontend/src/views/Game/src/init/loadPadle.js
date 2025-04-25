@@ -1,5 +1,5 @@
 
-import { PlayerSide, MapStyle, Setting } from "../pongLogic/setting.js";
+import { PlayerSide, MapStyle } from "../pongLogic/setting.js";
 
 export function posSpawn(map, position) {
   let distanceToCenter;
@@ -127,15 +127,12 @@ export function getRightRotation(name, gameScene) {
 }
 
 
-
-
-
-export function SpawnPadle(init, name, assetsPath, map, callback) {
+export function SpawnPadle(init, name, assetsPath, map) {
 
   init.gameScene.loadModel(name, `${assetsPath}padle.glb`, (model) => {
-    // console.log(name + ' model loaded.');
-    init.gameScene.moveAsset(name, posSpawn(map, name));
+    console.log(`Padle ${name} loaded.`);
 
+    init.gameScene.moveAsset(name, posSpawn(map, name));
 
     switch (name) {
       case PlayerSide.LEFT:
@@ -153,34 +150,16 @@ export function SpawnPadle(init, name, assetsPath, map, callback) {
         init.gameScene.rotateAsset(name, 'x', Math.PI / 2);
         break;
       default:
-        console.error(`Unknown plauer side: ${name}`)
+        console.error(`Unknown player side: ${name}`)
         break;
     }
 
-
-
-    // this.getRightRotation(name, init.gameScene);
-    // init.gameScene.rotateAsset(name, 'x', Math.PI / 2);
-    // init.gameScene.rotateAsset(name, 'y', Math.PI / 2);
     init.assetsLoaded++;
-    init.checkAllAssetsLoaded(callback);
   });
 }
 
-
-
-
-export function spawnPadles(settings, init, assetsPath, callback) {
-  if (settings.bots) {
-    settings.botsSide.forEach(bot => {
-      SpawnPadle(init, bot, assetsPath, settings.mapStyle, callback)
-    });
-  }
+export function spawnPadles(settings, init, assetsPath) {
   settings.playerSide.forEach(Padle => {
-    // console.log(Padle);
-    SpawnPadle(init, Padle, assetsPath, settings.mapStyle, callback);
+    SpawnPadle(init, Padle, assetsPath, settings.mapStyle);
   });
 }
-
-
-

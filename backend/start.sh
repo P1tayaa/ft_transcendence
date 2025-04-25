@@ -14,9 +14,6 @@ python manage.py makemigrations api
 python manage.py makemigrations
 python manage.py migrate
 
-# Collect static files
-python manage.py collectstatic --noinput
-
 # Start server
 if [ "$PRODUCTION" = "True" ]; then
     echo "Running in production mode"

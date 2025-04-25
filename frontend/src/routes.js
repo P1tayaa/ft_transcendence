@@ -1,14 +1,11 @@
-
-import Home from './views/Home/Home.component.js';
-import Auth from './views/Auth/Auth.js';
-import Game from './views/Game/Game.component.js';
+import home from './views/Home/Home.js';
+import auth from './views/Auth/Auth.js';
+import game from './views/Game/Game.js';
 
 /**
  * Route object
  * @param {string} path - path of the route
- * @param {object} component - component to be rendered
- * @param {boolean} auth - if the route is protected
- * @param {function} after - function to be executed after rendering the component
+ * @param {object} component - pre-instantiated component object
  */
 class Route {
 	constructor({
@@ -23,27 +20,27 @@ class Route {
 const routes = [
 	new Route({
 		path: '/',
-		component: Home,
+		component: home,
 	}),
 
 	new Route({
 		path: '/login',
-		component: Auth
+		component: auth
 	}),
 
 	new Route({
 		path: '/game',
-		component: Game
+		component: game
 	}),
 
 	new Route({
 		path: '/game/local',
-		component: Game
+		component: game
 	}),
 
 	new Route({
 		path: '/game/:name',
-		component: Game
+		component: game
 	}),
 ];
 

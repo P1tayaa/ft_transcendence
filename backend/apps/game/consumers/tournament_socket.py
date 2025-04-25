@@ -5,8 +5,7 @@ import asyncio
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 from channels.db import database_sync_to_async
-from apps.game.models.game import GameRoom, GameConfig
-from apps.game.models.tournament import TournamentRoom
+from apps.game.models.tournament import Tournament
 from django.contrib.auth.models import User
 
 class TournamentConsumer(AsyncWebsocketConsumer):
@@ -53,7 +52,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_tournament_object(self, tournament_id):
-        return get_object_or_404(TournamentRoom, id=tournament_id)
+        return get_object_or_404(Tournament, id=tournament_id)
 
 
     @database_sync_to_async

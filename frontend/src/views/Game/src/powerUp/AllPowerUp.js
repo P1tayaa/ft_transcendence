@@ -60,7 +60,6 @@ export class AllPowerUp {
 const PowerUpStartPos = { x: 0, y: 0, z: 0 };
 export function initPowerUp(assetsPath, gameScene) {
   let i = 0;
-  console.log("-----------------------------------------");
   for (const type in PowerUpType) {
     const modelFile = PowerUpType[type];
     const modelName = type;

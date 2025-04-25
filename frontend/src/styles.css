@@ -4,6 +4,7 @@
 :root {
     --primary-color: #3b82f6;    /* Vivid blue */
     --secondary-color: #10b981;  /* Emerald */
+    --red: #ef4444;              /* Red */
     --background-color: #1e1e1e; /* Very dark blue/gray */
     --card-color: #262626;       /* Dark blue/gray */
     --border-color: #595959;     /* Medium gray */
@@ -27,6 +28,13 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+}
+
+#app {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
 }
 
 h1, h2, h3, h4 {

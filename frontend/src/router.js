@@ -1,8 +1,5 @@
 import routes from './routes.js';
-
 import user from './User.js';
-
-// import sidebar from './components/Sidebar/Sidebar.js';
 
 /**
  * Router class
@@ -12,8 +9,8 @@ import user from './User.js';
 class Router {
 	constructor() {
 		this.rootElement = document.getElementById('app');
-
 		this.routes = routes;
+		this.currentRoute = null;
 
 		console.log('Router initialized, routes:', this.routes);
 
@@ -64,10 +61,19 @@ class Router {
 			window.history.pushState({}, '', path);
 		}
 
-		this.rootElement.innerHTML = route.component().render();
+		// Clean up the previous component if it exists
+		if (this.currentRoute && this.currentRoute.component.onUnload) {
+			this.currentRoute.component.onUnload();
+		}
+		
+		this.currentRoute = route;
+		
+		// Render the component
+		this.rootElement.innerHTML = route.component.render();
 
-		if (route.component().onLoad) {
-			route.component().onLoad();
+		// Call the onLoad method if it exists
+		if (route.component.onLoad) {
+			route.component.onLoad();
 		}
 	}
 }

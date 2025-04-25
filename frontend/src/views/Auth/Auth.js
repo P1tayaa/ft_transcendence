@@ -4,9 +4,12 @@ import router from '../../router.js';
 import api from '../../api.js';
 import user from '../../User.js';
 
+class Authenticate {
+	constructor() {
+			this.eventListeners = []; // Track event listeners for cleanup
+	}
 
-const Authenticate = () => {
-	const render = () => {
+	render() {
 		return `
 		<div class="auth-card">
 			<!-- Tab switcher -->
@@ -63,141 +66,167 @@ const Authenticate = () => {
 		`;
 	}
 
-	const onLoad = () => {
-		// Tab switching functionality
-		const tabButtons = document.querySelectorAll('.tab-btn');
-		const authForms = document.querySelectorAll('.auth-form');
+	onLoad() {
+			// Clear event listeners array
+			this.eventListeners = [];
 
-		// Login form elements
-		const loginForm = document.getElementById('login-form');
-		const loginUsername = document.getElementById('login-username');
-		const loginPassword = document.getElementById('login-password');
+			// Tab switching functionality
+			const tabButtons = document.querySelectorAll('.tab-btn');
+			const authForms = document.querySelectorAll('.auth-form');
 
-		// Registration form elements
-		const registerForm = document.getElementById('register-form');
-		const registerUsername = document.getElementById('register-username');
-		const registerPassword = document.getElementById('register-password');
-		const confirmPassword = document.getElementById('confirm-password');
-		const profileImage = document.getElementById('profile-image');
-		const uploadIcon = document.getElementById('upload-icon');
-		const imagePreviewContainer = document.getElementById('image-preview-container');
-		const imagePreview = document.getElementById('image-preview');
+			// Login form elements
+			const loginForm = document.getElementById('login-form');
+			const loginUsername = document.getElementById('login-username');
+			const loginPassword = document.getElementById('login-password');
 
-		// Initialize tab switching
-		tabButtons.forEach(button => {
-			button.addEventListener('click', function() {
-				// Update active tab button
-				tabButtons.forEach(btn => btn.classList.remove('active'));
-				this.classList.add('active');
+			// Registration form elements
+			const registerForm = document.getElementById('register-form');
+			const registerUsername = document.getElementById('register-username');
+			const registerPassword = document.getElementById('register-password');
+			const confirmPassword = document.getElementById('confirm-password');
+			const profileImage = document.getElementById('profile-image');
+			const uploadIcon = document.getElementById('upload-icon');
+			const imagePreviewContainer = document.getElementById('image-preview-container');
+			const imagePreview = document.getElementById('image-preview');
 
-				// Show corresponding form
-				const tabName = this.getAttribute('data-tab');
-				authForms.forEach(form => form.classList.remove('active'));
+			// Initialize tab switching
+			const tabSwitchHandler = function() {
+					// Update active tab button
+					tabButtons.forEach(btn => btn.classList.remove('active'));
+					this.classList.add('active');
 
-				if (tabName === 'login') {
-					document.getElementById('login-form').classList.add('active');
-				} else {
-					document.getElementById('register-form').classList.add('active');
-				}
+					// Show corresponding form
+					const tabName = this.getAttribute('data-tab');
+					authForms.forEach(form => form.classList.remove('active'));
+
+					if (tabName === 'login') {
+						document.getElementById('login-form').classList.add('active');
+					} else {
+						document.getElementById('register-form').classList.add('active');
+					}
+			};
+
+			tabButtons.forEach(button => {
+					button.addEventListener('click', tabSwitchHandler);
+					this.eventListeners.push({ element: button, type: 'click', handler: tabSwitchHandler });
 			});
-		});
 
-		// Profile image upload handling
-		imagePreviewContainer.addEventListener('click', function() {
-			profileImage.click();
-		});
+			// Profile image upload handling
+			const imagePreviewClickHandler = function() {
+					profileImage.click();
+			};
 
-		profileImage.addEventListener('change', function() {
-			const image = this.files[0];
-			if (image) {
-				// Validate file size
-				if (image.size > 1024 * 1024) {
-					alert('File size exceeds 1MB');
-					this.value = '';
-					return;
-				}
-		
-				// Create preview
-				const reader = new FileReader();
-				reader.onload = function(event) {
-					// Hide the icon and show the image
-					uploadIcon.style.display = 'none';
-					imagePreview.style.display = 'block';
-					imagePreview.src = event.target.result;
-				};
-				reader.readAsDataURL(image);
-			} else if (!imagePreview.src) {
-				// If no file selected (user cancelled), show icon again
-				uploadIcon.style.display = 'block';
-				imagePreview.style.display = 'none';
-			}
-		});
+			imagePreviewContainer.addEventListener('click', imagePreviewClickHandler);
+			this.eventListeners.push({ element: imagePreviewContainer, type: 'click', handler: imagePreviewClickHandler });
 
-		// Login form submission
-		loginForm.addEventListener('submit', async function(e) {
-			e.preventDefault();
+			const profileImageChangeHandler = function() {
+					const image = this.files[0];
+					if (image) {
+						// Validate file size
+						if (image.size > 1024 * 1024) {
+							alert('File size exceeds 1MB');
+							this.value = '';
+							return;
+						}
+			
+						// Create preview
+						const reader = new FileReader();
+						reader.onload = function(event) {
+							// Hide the icon and show the image
+							uploadIcon.style.display = 'none';
+							imagePreview.style.display = 'block';
+							imagePreview.src = event.target.result;
+						};
+						reader.readAsDataURL(image);
+					} else if (!imagePreview.src) {
+						// If no file selected (user cancelled), show icon again
+						uploadIcon.style.display = 'block';
+						imagePreview.style.display = 'none';
+					}
+			};
 
-			const username = loginUsername.value;
-			const password = loginPassword.value;
+			profileImage.addEventListener('change', profileImageChangeHandler);
+			this.eventListeners.push({ element: profileImage, type: 'change', handler: profileImageChangeHandler });
 
-			if (!username || !password) {
-				alert('Please enter both username and password');
-				return;
-			}
+			// Login form submission
+			const loginSubmitHandler = async (e) => {
+					e.preventDefault();
 
-			try {
-				const response = await api.login(username, password);
+					const username = loginUsername.value;
+					const password = loginPassword.value;
 
-				user.login(response.user, response.token);
+					if (!username || !password) {
+						alert('Please enter both username and password');
+						return;
+					}
 
-				router.navigate('/');
-			} catch (error) {
-				console.error('Login error:', error.message);
-				alert(error.message);
-			}
-		});
+					try {
+						const response = await api.login(username, password);
 
-		// Registration form submission
-		registerForm.addEventListener('submit', async function(e) {
-			e.preventDefault();
+						user.login(response.user, response.token);
 
-			const username = registerUsername.value;
-			const password = registerPassword.value;
-			const confirm = confirmPassword.value;
-			const image = profileImage.files[0];
+						router.navigate('/');
+					} catch (error) {
+						console.error('Login error:', error.message);
+						alert(error.message);
+					}
+			};
 
-			// Validate form
-			if (!username || !password) {
-				alert('Please provide both username and password');
-				return;
-			}
+			loginForm.addEventListener('submit', loginSubmitHandler);
+			this.eventListeners.push({ element: loginForm, type: 'submit', handler: loginSubmitHandler });
 
-			if (password !== confirm) {
-				alert('Passwords do not match');
-				return;
-			}
+			// Registration form submission
+			const registerSubmitHandler = async (e) => {
+					e.preventDefault();
 
-			try {
-				const formData = new FormData();
-				formData.append('username', username);
-				formData.append('password', password);
-				if (image) {
-					formData.append('profile_picture', image);
-				}
+					const username = registerUsername.value;
+					const password = registerPassword.value;
+					const confirm = confirmPassword.value;
+					const image = profileImage.files[0];
 
-				const response = await api.register(formData);
+					// Validate form
+					if (!username || !password) {
+						alert('Please provide both username and password');
+						return;
+					}
 
-				user.login(response.user, response.token);
+					if (password !== confirm) {
+						alert('Passwords do not match');
+						return;
+					}
 
-				router.navigate('/');
-			} catch (error) {
-				console.error('Registration error:', error.message);
-				alert(error.message);
-			}
-		});
+					try {
+						const formData = new FormData();
+						formData.append('username', username);
+						formData.append('password', password);
+						if (image) {
+							formData.append('profile_picture', image);
+						}
+
+						const response = await api.register(formData);
+
+						user.login(response.user, response.token);
+
+						router.navigate('/');
+					} catch (error) {
+						console.error('Registration error:', error.message);
+						alert(error.message);
+					}
+			};
+
+			registerForm.addEventListener('submit', registerSubmitHandler);
+			this.eventListeners.push({ element: registerForm, type: 'submit', handler: registerSubmitHandler });
 	}
 
-	return { render, onLoad };
+	onUnload() {
+			// Clean up event listeners
+			this.eventListeners.forEach(({ element, type, handler }) => {
+					element.removeEventListener(type, handler);
+			});
+			this.eventListeners = [];
+	}
 }
 
-export default Authenticate;
+// Create and export a single instance
+const auth = new Authenticate();
+export default auth;

@@ -8,20 +8,6 @@
     overflow: hidden;
 }
 
-h1 {
-    font-size: 32px;
-    font-weight: 600;
-    color: var(--text-color);
-}
-
-h2 {
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 24px;
-    color: var(--text-color);
-    text-align: center;
-}
-
 /* Room List Styling */
 .room-list-card {
     padding: 24px;

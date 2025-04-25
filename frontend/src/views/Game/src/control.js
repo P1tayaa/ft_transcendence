@@ -14,30 +14,21 @@ export default class ControlHandler {
     this.settings = settings; // Get player sides from settings
     this.paddleSpeeds = {}; // Store paddle speeds dynamically
     this.acceleration = 0.2; // Default acceleration
-    this.debug = false;
 
+	this.side = null; // Initialize side to null
   }
 
   async Init(socket) {
-    console.log(this.settings.mode);
     // Initialize paddle speeds for active players
-    if (this.settings.mode === Mode.LOCAL) {
-      this.settings.playerSide.forEach(side => {
-        this.paddleSpeeds[side] = 0;
-      });
-    } else if (this.settings.mode === Mode.LOCALS_SOLO) {
-      // find the not bots and make it the justMePaddle
-      this.settings.playerSide.forEach(side => {
-        this.paddleSpeeds[side] = 0;
-      });
-    } else {
-      console.log("did send it");
-      const cur_paddle = await socket.getWhichPadle(socket);
-      console.log(cur_paddle)
-      this.settings.playerSide[cur_paddle] = cur_paddle;
-      this.paddleSpeeds[cur_paddle] = 0;
-      this.settings.justMePaddle = cur_paddle;
-    }
+	this.settings.playerSide.forEach(side => {
+	this.paddleSpeeds[side] = 0;
+	});
+
+	console.log("Socket:", socket);
+	if (socket) {
+      this.side = socket.mySide;
+	}
+
     this.setupControls();
   }
 
@@ -47,54 +38,40 @@ export default class ControlHandler {
   }
 
   onKeyDown(event) {
-    if (this.settings.justMePaddle === null) {
-      this.settings.playerSide.forEach(side => {
-        console.log(side);
-        if (event.key === inputKeys[side].up) {
-          this.paddleSpeeds[side] = this.acceleration;
-        } else if (event.key === inputKeys[side].down) {
-          this.paddleSpeeds[side] = -this.acceleration;
-        }
-      });
-    } else {
-      const side = this.settings.justMePaddle;
-      if (event.key === inputKeys[side].up) {
-        this.paddleSpeeds[side] = this.acceleration;
-      } else if (event.key === inputKeys[side].down) {
-        this.paddleSpeeds[side] = -this.acceleration;
-      }
-    }
-
-    if (event.key === 'b') {
-      this.debug = true;
-    }
+	if (this.settings.mode === Mode.NETWORKED) {
+		if (event.key === inputKeys[this.side].up) {
+			this.paddleSpeeds[this.side] = this.acceleration;
+		} else if (event.key === inputKeys[this.side].down) {
+			this.paddleSpeeds[this.side] = -this.acceleration;
+		}
+	} else {
+		for (const side of this.settings.playerSide) {
+			if (event.key === inputKeys[side].up) {
+				this.paddleSpeeds[side] = this.acceleration;
+			} else if (event.key === inputKeys[side].down) {
+				this.paddleSpeeds[side] = -this.acceleration;
+			}
+		}
+	}
   }
 
   onKeyUp(event) {
-    if (this.settings.justMePaddle === null) {
-      this.settings.playerSide.forEach(side => {
-        if (event.key === inputKeys[side].up || event.key === inputKeys[side].down) {
-          this.paddleSpeeds[side] = 0;
-        }
-      });
-    } else {
-      const side = this.settings.justMePaddle;
-      if (event.key === inputKeys[side].up || event.key === inputKeys[side].down) {
-        this.paddleSpeeds[side] = 0;
-      }
-
-    }
-    if (event.key === 'b') {
-      this.debug = false;
-    }
+	if (this.settings.mode === Mode.NETWORKED) {
+		if (event.key === inputKeys[this.side].up || event.key === inputKeys[this.side].down) {
+			this.paddleSpeeds[this.side] = 0;
+		}
+	}
+    else {
+		for (const side of this.settings.playerSide) {
+			if (event.key === inputKeys[side].up || event.key === inputKeys[side].down) {
+				this.paddleSpeeds[side] = 0;
+			}
+		}
+	}
   }
 
   getPaddleSpeeds() {
     return this.paddleSpeeds;
-  }
-
-  isDebugEnabled() {
-    return this.debug;
   }
 }
 

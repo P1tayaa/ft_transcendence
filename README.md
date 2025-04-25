@@ -49,22 +49,17 @@ ft_transcendence is a web application centered around the classic game of Pong, 
    - Tournament notifications
    - Profile access through chat interface
 
-6. **AI Opponent**:
-   - Challenge an AI player when human opponents aren't available
-   - AI simulates human-like behavior with realistic limitations
-   - Strategic decision-making for engaging gameplay
-
-7. **3D Game (ThreeJS)**:
+6. **3D Game (ThreeJS)**:
    - Enhanced visual experience using ThreeJS/WebGL
    - 3D rendering of the classic Pong game
    - Immersive gameplay with advanced graphics
    - Modern visual effects and animations
-
-8. **Server-Side Pong**:
+<!-- 
+7. **Server-Side Pong**:
    - Game logic implemented on the server
    - Reduced cheating possibilities
    - Consistent gameplay experience
-   - API for game state manipulation
+   - API for game state manipulation -->
 
 ### Minor Modules
 
