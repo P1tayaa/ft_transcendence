@@ -128,7 +128,7 @@ class Game {
 					break;
 				case 'started_game':
 					this.showGameCanvas();
-					this.game.start(this.socket, data.side);
+					this.game.start(this.socket, data.side, this.isHost);
 					break;
 				case 'player_disconnected':
 					// Handle player disconnect
@@ -153,12 +153,7 @@ class Game {
 			canvasElement.height = 720;
 			canvasElement.style.width = '100%';
 			canvasElement.style.height = '100%';
-
-			console.log('Canvas', canvasElement);
-			console.log('Display size:', canvasElement.style.display);
-			console.log('Canvas size:', canvasElement.width, canvasElement.height);
 		}
-
 	}
 
 	 // Handle leave button click
@@ -177,9 +172,7 @@ class Game {
 			return false;
 
 		const player = gameState.players[user.id];
-		if (player && player.is_host) {
-			this.isHost = true;
-		}
+		this.isHost = player && player.is_host;
 
 		return this.isHost;
 	}

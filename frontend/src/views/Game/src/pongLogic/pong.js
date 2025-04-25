@@ -20,6 +20,7 @@ class Pong {
 		this.ballPos = { x: 0, y: 0 };
 		this.settings;
 		this.mode;
+		this.isHost = false;
 
 		// WebSocket
 		this.socket = new MyWebSocket;
@@ -35,7 +36,7 @@ class Pong {
 	initialize(settings) {
 		this.settings = settings;
 		this.mode = this.settings.mode;
-		console.log(`Pong initialized in ${this.mode} mode.`);
+		console.log(`Pong object initialized in ${this.mode} mode.`);
 	}
 
 	createBoundingBox(position, size) {
@@ -57,7 +58,7 @@ class Pong {
 	checkCollisions(ballPosition3D, gameScene) {
 		if (this.mode === Mode.LOCAL) {
 			this.localCollisionDetection(ballPosition3D, gameScene);
-		} else if (this.mode === Mode.NETWORKED) {
+		} else if (this.mode === Mode.NETWORKED && this.isHost) {
 			this.networkedCollisionDetection(gameScene);
 		}
 	}

@@ -18,15 +18,14 @@ export default class ControlHandler {
 	this.side = null; // Initialize side to null
   }
 
-  async Init(socket) {
+  async Init(mySide = null) {
     // Initialize paddle speeds for active players
 	this.settings.playerSide.forEach(side => {
 	this.paddleSpeeds[side] = 0;
 	});
 
-	console.log("Socket:", socket);
-	if (socket) {
-      this.side = socket.mySide;
+	if (mySide) {
+		this.side = mySide;
 	}
 
     this.setupControls();

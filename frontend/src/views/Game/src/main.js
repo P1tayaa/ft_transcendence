@@ -19,6 +19,10 @@ export default class Game {
 		try {
 			// Initialize everything except the socket connection
 			await this.init.initialize(config);
+			this.pongLogic = this.init.pongLogic;
+			this.score = this.init.score;
+			this.gameScene = this.init.gameScene;
+
 			return true;
 		} catch (error) {
 			console.error('Initialization failed:', error);
@@ -26,12 +30,13 @@ export default class Game {
 		}
 	}
 	
-	async start(socket, side) {
+	async start(socket, side, isHost) {
 		if (this.init.settings.mode === Mode.NETWORKED && socket) {
 			this.init.pongLogic.socket.init(socket, side);
+			this.pongLogic.isHost = isHost;
 		}
 
-		this.init.controlHandler.Init(this.init.pongLogic.socket);
+		this.init.controlHandler.Init(side);
 		this.setupRenderer();
 		
 		// Start the animation loop
@@ -41,12 +46,8 @@ export default class Game {
 	}
 
 	setupRenderer() {
-		this.gameScene = this.init.gameScene;
-
 		this.scene = this.gameScene.getScene();
 		this.lightManager = this.init.lightManager;
-		this.pongLogic = this.init.pongLogic;
-		this.score = this.init.score;
 
 		const canvas = document.getElementById('pong-game');
 		if (!canvas) {
