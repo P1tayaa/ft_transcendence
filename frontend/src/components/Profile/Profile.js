@@ -148,9 +148,9 @@ export default class Profile {
 							<span class="vs">vs</span>
 							<span class="player">${opponent ? opponent.username : 'Unknown'}</span>
 						</div>
-						<div class="match-score">${currentUserPlayer ? currentUserPlayer.score : 0} - ${opponent ? opponent.score : 0}</div>
-					</div>
-					<div class="match-time">${matchDate}</div>
+						<div class="match-time">${matchDate}</div>
+						</div>
+					<h3 class="match-score">${currentUserPlayer ? currentUserPlayer.score : 0} - ${opponent ? opponent.score : 0}</h3>
 				</div>
 			`;
 		}).join('');

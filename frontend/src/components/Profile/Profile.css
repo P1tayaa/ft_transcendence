@@ -225,16 +225,23 @@
     background-color: var(--hover-color);
 }
 
+.match-item h3 {
+    margin: 0;
+    font-size: 1.75rem;
+    color: var(--text-color);
+    border: none;
+    padding: 0;
+}
+
 .match-item.win {
     border-left-color: var(--secondary-color);
 }
 
 .match-item.loss {
-    border-left-color: #e74c3c;
+    border-left-color: var(--red);
 }
 
 .match-result {
-    font-weight: 600;
     width: 60px;
 }
 
@@ -243,7 +250,7 @@
 }
 
 .match-item.loss .match-result {
-    color: #e74c3c;
+    color: var(--red);
 }
 
 .match-details {
@@ -261,15 +268,10 @@
     font-size: 12px;
 }
 
-.match-score {
+.match-time {
     font-size: 14px;
     color: var(--border-color);
     margin-top: 4px;
-}
-
-.match-time {
-    color: var(--border-color);
-    font-size: 14px;
 }
 
 /* Blocked user message */
