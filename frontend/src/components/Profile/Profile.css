@@ -139,12 +139,16 @@
     display: flex;
     flex-direction: column;
     gap: 30px;
+    flex: 1;
+    overflow: hidden;
 }
 
 .profile-section {
     background-color: var(--card-color);
     border-radius: 8px;
     padding: 20px;
+    display: flex;
+    flex-direction: column;
 }
 
 .profile-section h3 {
@@ -159,6 +163,8 @@
 .match-history-list {
     display: flex;
     flex-direction: column;
+    max-height: 100vh;
+    overflow-y: auto;
     gap: 12px;
 }
 
