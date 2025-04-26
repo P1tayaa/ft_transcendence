@@ -14,8 +14,9 @@ class ApiManager {
 		this.endpoints = {
 			user: {
 				me: 'me/',
-				search: 'users/search',
+				search: 'users/search/',
 				get: 'users/',
+				matches: 'users/matches/',
 			},
 			
 			auth: {
@@ -30,10 +31,6 @@ class ApiManager {
 				removeFriend: 'follow/unfollow/',
 				block: 'block/',
 				unblock: 'unblock/',
-			},
-			
-			score: {
-				matchHistory: 'score/',
 			},
 			
 			chat: {
@@ -253,7 +250,7 @@ class ApiManager {
 	 * @returns {Promise} A promise that resolves with the match history data
 	 */
 	async getMatchHistory(userId) {
-		const response = await this.get(this.endpoints.score.matchHistory, { user_id: userId });
+		const response = await this.get(this.endpoints.user.matches, { user_id: userId });
 		return response.games || [];
 	}
 

@@ -7,6 +7,7 @@ from .management.user_management import (
     logout_user,
     fetch_matching_usernames,
 	get_user,
+	get_match_history,
     follow_user,
     get_following,
     get_followers,
@@ -46,8 +47,9 @@ urlpatterns = [
     path("me/", get_current_user, name="current_user"),
     path("me/change_username/", change_username, name="change_username"),
     path("me/change_password/", change_password, name="change_password"),
-    path("users/search", fetch_matching_usernames, name="search"),
+    path("users/search/", fetch_matching_usernames, name="search"),
 	path("users/<int:user_id>/", get_user, name="get_user"),
+	path("users/matches/", get_match_history, name="get_match_history"),
 
     path("follow/", follow_user, name="follow_user"),
     path("follow/followers/", get_followers, name="get_followers"),

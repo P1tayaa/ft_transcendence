@@ -119,6 +119,11 @@ class Profile(models.Model):
 			}
 		except Chat.DoesNotExist:
 			return None
+		
+	def get_match_history(self):
+		scores = self.user.game_results.all().select_related('game').order_by('-game__date')
+		return [score.game.get_results() for score in scores]
+		
 
 	def mark_messages_read(self, chat_id):
 		chat = Chat.objects.get(id=chat_id, participants=self.user)

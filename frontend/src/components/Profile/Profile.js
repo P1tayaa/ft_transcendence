@@ -46,7 +46,6 @@ export default class Profile {
 				}
 			}
 
-
 		} catch (error) {
 			console.error('Failed to initialize profile:', error);
 		}
@@ -126,20 +125,32 @@ export default class Profile {
 			return '<div class="empty-matches">No match history available</div>';
 		}
 
-		return matches.map(match => `
-			<div class="match-item ${match.winner === this.userId ? 'win' : 'loss'}">
-				<div class="match-result">${match.winner === this.userId ? 'Win' : 'Loss'}</div>
-				<div class="match-details">
-					<div class="match-players">
-						<span class="player">${match.player1.username}</span>
-						<span class="vs">vs</span>
-						<span class="player">${match.player2.username}</span>
+		return matches.map(match => {
+			// Find current user in the players array
+			const currentUserPlayer = match.players.find(player => player.user_id === this.userId);
+			const opponent = match.players.find(player => player.user_id !== this.userId);
+			
+			// Determine if current user won
+			const isWin = currentUserPlayer && currentUserPlayer.is_winner;
+			
+			// Format the date
+			const matchDate = new Date(match.date).toLocaleDateString();
+			
+			return `
+				<div class="match-item ${isWin ? 'win' : 'loss'}">
+					<div class="match-result">${isWin ? 'Win' : 'Loss'}</div>
+					<div class="match-details">
+						<div class="match-players">
+							<span class="player">${currentUserPlayer ? currentUserPlayer.username : 'Unknown'}</span>
+							<span class="vs">vs</span>
+							<span class="player">${opponent ? opponent.username : 'Unknown'}</span>
+						</div>
+						<div class="match-score">${currentUserPlayer ? currentUserPlayer.score : 0} - ${opponent ? opponent.score : 0}</div>
 					</div>
-					<div class="match-score">${match.score1} - ${match.score2}</div>
+					<div class="match-time">${matchDate}</div>
 				</div>
-				<div class="match-time">${new Date(match.timestamp).toLocaleDateString()}</div>
-			</div>
-		`).join('');
+			`;
+		}).join('');
 	}
 
 	setupEventListeners() {

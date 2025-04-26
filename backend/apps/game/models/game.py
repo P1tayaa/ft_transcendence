@@ -7,6 +7,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class Room(models.Model):
 	"""
 	Abstract base class for all room types (game rooms, tournament rooms)
@@ -27,7 +28,6 @@ class Room(models.Model):
 	STATUS_CHOICES = (
 		('waiting', 'Waiting for Players'),
 		('in_progress', 'In Progress'),
-		('completed', 'Completed'),
 	)
 
 	status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='waiting')
@@ -161,52 +161,50 @@ class GameRoom(Room):
 
 	def end(self, scores):
 		"""Save game results and create a permanent record"""
-		with transaction.atomic():
-			# Don't re-end a completed game
-			if self.status == 'completed':
-				return None
+		try:
+			with transaction.atomic():
+				# Make sure game was in progress
+				if self.status != 'in_progress':
+					raise ValidationError("Game not in progress")
 
-			# Make sure game was in progress
-			if self.status != 'in_progress':
-				self.is_active = False # Delete the room in production
-				return None
+				if not scores:
+					raise ValidationError("No scores provided")
 
-			if not scores:
-				raise ValidationError("No scores provided")
+				# Get the winner based on highest score
+				try:
+					winner_id = max(scores.items(), key=lambda x: x[1])[0]
+				except (ValueError, AttributeError):
+					raise ValidationError("No winners found, cannot save results")
 
-			# Get the winner based on highest score
-			try:
-				winner_id = max(scores.items(), key=lambda x: x[1])[0]
-			except (ValueError, AttributeError):
-				raise ValidationError("No winners found, cannot save results")
+				# Create the permanent game record
+				game_record = GameResult.objects.create()
 
-			# Create the permanent game record
-			game_record = GameResult.objects.create()
+				# Save player scores
+				for player in self.players.all():
+					player_id = str(player.user.id)
+					score = scores.get(player_id, 0)
+					PlayerResult.objects.create(
+						game=game_record,
+						user=player.user,
+						score=score,
+						is_winner=player_id == winner_id
+					)
 
-			# Save player scores
-			for player in self.players.all():
-				player_id = str(player.user.id)
-				score = scores.get(player_id, 0)
-				PlayerResult.objects.create(
-					game=game_record,
-					user=player.user,
-					score=score,
-					is_winner=player_id == winner_id
-				)
-
-			# Update room status
-			self.status = 'completed'
-			self.is_active = False
-			self.save()
-
-			# If this is a tournament game, notify the tournament
-			if self.tournament:
-				self.tournament.game_completed(self, game_record)
-			
-			# Delete the game room after saving results
-			self.delete()
+				# If this is a tournament game, notify the tournament
+				if self.tournament:
+					self.tournament.game_completed(self, game_record)
 				
-			return game_record
+				# Delete the game room after saving results
+				self.delete()
+
+				logger.info(f"Game ended successfully: {game_record.get_results()}")
+				logger.info(f"Total number of games in database: {GameResult.objects.count()}")
+				logger.info(f"All game results: {GameResult.objects.all().values('id')}")
+
+				return game_record
+		except ValidationError as e:
+			logger.error(f"Error ending game: {e}")
+			return None
 
 	def handle_disconnect(self, user):
 		"""Handle player disconnect by removing them from the game"""
