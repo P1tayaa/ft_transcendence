@@ -128,7 +128,7 @@
     border: none;
     color: var(--text-color);
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.2s;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -141,34 +141,34 @@
 }
 
 .profile-btn.action-btn:hover {
-    background-color: #2563eb; /* Slightly darker primary color */
+    transform: scale(1.05);
 }
 
 .profile-btn.remove-btn {
-    background-color: #e74c3c;
+    background-color: var(--red);
     color: white;
 }
 
 .profile-btn.remove-btn:hover {
-    background-color: #c0392b;
+    transform: scale(1.05);
 }
 
 .profile-btn.block-btn {
-    background-color: #7f1d1d;
+    background-color: var(--red);
     color: white;
 }
 
 .profile-btn.block-btn:hover {
-    background-color: #991b1b;
+    transform: scale(1.05);
 }
 
 .profile-btn.unblock-btn {
-    background-color: var(--card-color);
+    background-color: var(--primary-color);
     border: 1px solid var(--border-color);
 }
 
 .profile-btn.unblock-btn:hover {
-    background-color: var(--hover-color);
+    transform: scale(1.05);
 }
 
 .profile-content {

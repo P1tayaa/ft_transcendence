@@ -42,13 +42,9 @@ export default class Friend {
     setupEvents() {
         if (!this.element) return;
 
-        this.element.addEventListener('click', () => {
-            this.openProfile();
+        this.element.addEventListener('click', async () => {
+            const profile = new Profile(this.id);
+            await profile.init();
         });
-    }
-
-    async openProfile() {
-        const profile = new Profile(this.id);
-        await profile.init();
     }
 }
