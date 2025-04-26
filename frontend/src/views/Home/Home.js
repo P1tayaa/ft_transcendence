@@ -117,17 +117,19 @@ class Home {
 		<!-- Room template (for cloning) - Hidden -->
 		<template id="room-template">
 			<div class="room-item">
+				<div class="game-icon-container">
+					<i class="fas fa-gamepad game-icon"></i>
+				</div>
 				<div class="room-info">
 					<div class="room-header">
 						<h3 class="room-name"></h3>
-						<span class="room-players"></span>
 					</div>
 					<div class="room-details">
 						<span class="room-map"></span>
 						<span class="room-powerups"></span>
 					</div>
 				</div>
-				<button class="join-btn">Join Game</button>
+				<span class="room-players"></span>
 			</div>
 		</template>
 		`;
@@ -216,9 +218,9 @@ class Home {
 			// Fill in room details
 			roomElement.querySelector('.room-name').textContent = room.name;
 
-			// Display current/max players
-			const playerInfo = `${room.players.length}/${room.settings.playerCount}`;
-			roomElement.querySelector('.room-players').textContent = "Players: " + playerInfo;
+			// Display current/max players as simple text format
+			const playerInfo = `${room.players.length}/${room.settings.player_count}`;
+			roomElement.querySelector('.room-players').textContent = playerInfo;
 
 			// Map name
 			const mapNames = {
@@ -230,9 +232,8 @@ class Home {
 			const mapText = "Map: " + mapNames[room.settings.map_style] || room.settings.map_style;
 			roomElement.querySelector('.room-map').textContent = mapText;
 
-			// Handle join button click
-			const joinBtn = roomElement.querySelector('.join-btn');
-			joinBtn.addEventListener('click', () => {
+			 // Make the entire room item clickable to join the game
+			roomElement.addEventListener('click', () => {
 				console.log(room.settings);
 				sessionStorage.setItem('config', JSON.stringify(room.settings));
 				socket.disconnect();
