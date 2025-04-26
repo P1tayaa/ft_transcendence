@@ -44,101 +44,72 @@ class Home {
 			</div>
 		</div>
 
-		<!-- Create game modal (original setup form) -->
+		<!-- Create game modal (simplified setup form) -->
 		<div class="modal hidden" id="create-game-modal">
-			<div class="modal-content setup-modal">
-				<div class="setup-card">
-					<!-- Progress indicator -->
-					<div class="progress-bar">
-						<div class="progress-line active"></div>
-						<div class="progress-line"></div>
-						<div class="progress-line"></div>
-					</div>
+			<div class="setup-card">
+				<!-- Progress indicator -->
+				<div class="progress-bar">
+					<div class="progress-line active"></div>
+					<div class="progress-line"></div>
+					<div class="progress-line"></div>
+				</div>
 
-					<!-- Step 1: Game Mode Selection -->
-					<div class="setup-step active" id="step-1">
-						<h2>Select Game Mode</h2>
-						<div class="options-container">
-							<button class="option-btn" data-mode="networked">
-								<span>Online</span>
-							</button>
-							<button class="option-btn" data-mode="local">
-								<span>Local Multiplayer</span>
-							</button>
-						</div>
-					</div>
-
-					<!-- Step 2: Player Count Selection -->
-					<div class="setup-step" id="step-2">
-						<h2>Select Players</h2>
-						<div class="options-container">
-							<button class="option-btn" data-players="2">
-								<span class="player-count">2</span>
-								<span>Players</span>
-							</button>
-							<button class="option-btn" data-players="4">
-								<span class="player-count">4</span>
-								<span>Players</span>
-							</button>
-							<button id="tournament-btn" class="option-btn" data-players="8">
-								<span>Tournament</span>
-							</button>
-						</div>
-					</div>
-
-					<!-- Step 3: Map Selection -->
-					<div class="setup-step" id="step-3">
-						<h2>Select Map</h2>
-						<!-- 2-player maps -->
-						<div class="map-container" id="maps-2-player">
-							<div class="map-option" data-map="classic">
-								<div class="map-preview" id="classic-preview"></div>
-								<div class="map-name">Classic</div>
-							</div>
-							<div class="map-option" data-map="arena">
-								<div class="map-preview" id="arena-preview"></div>
-								<div class="map-name">Arena</div>
-							</div>
-						</div>
-						<!-- 4-player maps -->
-						<div class="map-container hidden" id="maps-4-player">
-							<div class="map-option" data-map="classic4p">
-								<div class="map-preview" id="classic4p-preview"></div>
-								<div class="map-name">Classic 4 player</div>
-							</div>
-							<div class="map-option" data-map="battle">
-								<div class="map-preview" id="battle-preview"></div>
-								<div class="map-name">Battle Arena</div>
-							</div>
-							<div class="map-option" data-map="maze">
-								<div class="map-preview" id="maze-preview"></div>
-								<div class="map-name">Maze</div>
-							</div>
-						</div>
-					</div>
-
-					<!-- Navigation buttons -->
-					<div class="navigation-buttons">
-						<button id="prev-btn" class="nav-btn" disabled>Back</button>
-						<button id="next-btn" class="nav-btn" disabled>Next</button>
+				<!-- Step 1: Game Mode Selection -->
+				<div class="setup-step active" id="step-1">
+					<h2>Select Game Mode</h2>
+					<div class="options-container">
+						<button class="option-btn" data-mode="networked">
+							<span>Online</span>
+						</button>
+						<button class="option-btn" data-mode="local">
+							<span>Local Multiplayer</span>
+						</button>
 					</div>
 				</div>
-			</div>
-		</div>
 
-		<!-- Final confirmation modal -->
-		<div class="modal hidden" id="confirmation-modal">
-			<div class="modal-content">
-				<h2>Game Setup Complete</h2>
-				<div class="setup-summary">
-					<p><strong>Mode:</strong> <span id="summary-mode"></span></p>
-					<p><strong>Players:</strong> <span id="summary-players"></span></p>
-					<p><strong>Map:</strong> <span id="summary-map"></span></p>
-					<p><strong>Powerups:</strong> <span id="summary-powerups"></span></p>
+				<!-- Step 2: Player Count Selection -->
+				<div class="setup-step" id="step-2">
+					<h2>Select Players</h2>
+					<div class="options-container">
+						<button class="option-btn" data-players="2">
+							<span class="player-count">2</span>
+							<span>Players</span>
+						</button>
+						<button class="option-btn" data-players="4">
+							<span class="player-count">4</span>
+							<span>Players</span>
+						</button>
+						<button id="tournament-btn" class="option-btn" data-players="8">
+							<span>Tournament</span>
+						</button>
+					</div>
 				</div>
-				<div class="modal-buttons">
-					<button id="cancel-btn">Back to Setup</button>
-					<button id="start-game-btn">Start Game</button>
+
+				<!-- Step 3: Map Selection -->
+				<div class="setup-step" id="step-3">
+					<h2>Select Map</h2>
+					<!-- 2-player maps -->
+					<div class="map-container" id="maps-2-player">
+						<div class="map-option" data-map="classic">
+							<div class="map-preview" id="classic-preview"></div>
+							<div class="map-name">Classic</div>
+						</div>
+						<div class="map-option" data-map="bath">
+							<div class="map-preview" id="bath-preview"></div>
+							<div class="map-name">Bath</div>
+						</div>
+					</div>
+					<!-- 4-player maps -->
+					<div class="map-container hidden" id="maps-4-player">
+						<div class="map-option" data-map="lava">
+							<div class="map-preview" id="lava-preview"></div>
+							<div class="map-name">Lava</div>
+						</div>
+						<div class="map-option" data-map="beach">
+							<div class="map-preview" id="beach-preview"></div>
+							<div class="map-name">Beach</div>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -171,8 +142,6 @@ class Home {
 		const modals = document.querySelectorAll('.modal');
 		const setupSteps = document.querySelectorAll('.setup-step');
 		const progressLines = document.querySelectorAll('.progress-line');
-		const prevBtn = document.getElementById('prev-btn');
-		const nextBtn = document.getElementById('next-btn');
 
 		// Step 1: Game Mode Selection
 		const modeButtons = document.querySelectorAll('[data-mode]');
@@ -186,15 +155,7 @@ class Home {
 		const maps4Player = document.getElementById('maps-4-player');
 		const mapOptions = document.querySelectorAll('.map-option');
 
-		// Confirmation Modal
-		const confirmationModal = document.getElementById('confirmation-modal');
-		const summaryMode = document.getElementById('summary-mode');
-		const summaryPlayers = document.getElementById('summary-players');
-		const summaryMap = document.getElementById('summary-map');
-		const cancelBtn = document.getElementById('cancel-btn');
-		const startGameBtn = document.getElementById('start-game-btn');
-
-		// Room list elements
+		 // Room list elements
 		const createGameBtn = document.getElementById('create-game-btn');
 		const createGameModal = document.getElementById('create-game-modal');
 		const roomsContainer = document.getElementById('rooms-container');
@@ -262,10 +223,9 @@ class Home {
 			// Map name
 			const mapNames = {
 				'classic': 'Classic',
-				'arena': 'Arena',
-				'classic4p': 'Classic 4-Player',
-				'battle': 'Arena 4-Player',
-				'maze': 'Maze'
+				'bath': 'Bath',
+				'lava': 'Lava',
+				'beach': 'Beach'
 			};
 			const mapText = "Map: " + mapNames[room.settings.map_style] || room.settings.map_style;
 			roomElement.querySelector('.room-map').textContent = mapText;
@@ -299,13 +259,13 @@ class Home {
 				button.addEventListener('click', function() {
 					modeButtons.forEach(btn => btn.classList.remove('selected'));
 					this.classList.add('selected');
-					nextBtn.disabled = false;
 
 					const mode = this.getAttribute('data-mode');
-
 					tournamentBtn.classList.toggle('hidden', mode !== 'networked');
-
 					selection.mode = mode;
+					
+					// Automatically go to next step
+					updateStep(1);
 				});
 			});
 
@@ -314,9 +274,8 @@ class Home {
 				button.addEventListener('click', function() {
 					playerButtons.forEach(player => player.classList.remove('selected'));
 					this.classList.add('selected');
-					nextBtn.disabled = false;
 
-					// Rreset map selection if player count changed
+					// Reset map selection if player count changed
 					let players = parseInt(this.getAttribute('data-players'));
 					if (selection.map !== null && selection.players !== players) {
 						selection.map = null;
@@ -325,15 +284,18 @@ class Home {
 
 					if (players === 8) {
 						selection.tournament = true;
-						players = 2
+						players = 2;
+						// For tournaments, immediately start the tournament
+						startGame();
 					} else {
 						selection.tournament = false;
+						selection.players = players;
+						maps2Player.classList.toggle('hidden', players !== 2);
+						maps4Player.classList.toggle('hidden', players !== 4);
+						
+						// Automatically go to next step
+						updateStep(2);
 					}
-
-					maps2Player.classList.toggle('hidden', players !== 2);
-					maps4Player.classList.toggle('hidden', players !== 4);
-
-					selection.players = players;
 				});
 			});
 
@@ -342,9 +304,11 @@ class Home {
 				option.addEventListener('click', function() {
 					mapOptions.forEach(map => map.classList.remove('selected'));
 					this.classList.add('selected');
-					nextBtn.disabled = false;
 
 					selection.map = this.getAttribute('data-map');
+					
+					// When map is selected, start the game
+					startGame();
 				});
 			});
 
@@ -355,62 +319,36 @@ class Home {
 					}
 				});
 			});
-
-			// Navigation buttons
-			prevBtn.addEventListener('click', prev);
-			nextBtn.addEventListener('click', next);
-
-			// Modal buttons
-			cancelBtn.addEventListener('click', function() {
-				confirmationModal.classList.add('hidden');
-			});
-
-			startGameBtn.addEventListener('click', async function() {
-				const config = new Config(selection);
-				sessionStorage.setItem('config', JSON.stringify(config.get()));
-
-				if (selection.tournament) {
-					const room = await api.createTournament(config);
-					window.location.href = `/tournament/${room.tournament_id}`;
-				}
-				else if (selection.mode === "networked") {
-					const room = await api.createGame({
-						map: selection.map,
-						players: selection.players,
-					});
-
-					const rooms = await api.getGameList();
-					console.log(rooms);
-
-					if (!room) {
-						console.error("Failed to create game room.");
-						return;
-					}
-
-					router.navigate('/game/' + room.room_name);
-				}
-				else {
-					router.navigate('/game/local');
-				}
-				modals.forEach(modal => modal.classList.add('hidden'));
-			});
 		}
 
-		// Go to next step
-		function next() {
-			if (currentStep < totalSteps - 1) {
-				updateStep(currentStep + 1);
-			} else {
-				// On final step, show confirmation modal
-				showConfirmationModal();
-			}
-		}
+		// Function to start the game with current selections
+		async function startGame() {
+			const config = new Config(selection);
+			sessionStorage.setItem('config', JSON.stringify(config.get()));
 
-		// Go to previous step
-		function prev() {
-			if (currentStep > 0) {
-				updateStep(currentStep - 1);
+			if (selection.tournament) {
+				const room = await api.createTournament(config);
+				window.location.href = `/tournament/${room.tournament_id}`;
 			}
+			else if (selection.mode === "networked") {
+				const room = await api.createGame({
+					map: selection.map,
+					players: selection.players,
+				});
+
+				if (!room) {
+					console.error("Failed to create game room.");
+					return;
+				}
+
+				router.navigate('/game/' + room.room_name);
+			}
+			else {
+				router.navigate('/game/local');
+			}
+			
+			// Hide the game creation modal
+			createGameModal.classList.add('hidden');
 		}
 
 		// Update the current step
@@ -427,56 +365,7 @@ class Home {
 				progressLines[stepNumber].classList.remove('completed');
 			}
 
-			nextBtn.disabled = true;
-
-			// Step specific logic
-			if (stepNumber === 0 && selection.mode!== null) {
-				nextBtn.disabled = false;
-			}
-
-			if (stepNumber === 1 && selection.players !== null) {
-				nextBtn.disabled = false;
-			}
-
-			if (stepNumber === 2 && selection.map !== null) {
-				nextBtn.disabled = false;
-			}
-
-			prevBtn.disabled = (stepNumber === 0);
-
-			nextBtn.innerHTML = (stepNumber === totalSteps - 1) ? 'Finish' : 'Next';
-
 			currentStep = stepNumber;
-			currentStep = currentStep; // Update the this currentStep
-		}
-
-		// Show confirmation modal with summary
-		function showConfirmationModal() {
-			// Update summary
-			const modeNames = {
-				'local': 'Local Multiplayer',
-				'networked': 'Online Multiplayer',
-			};
-			summaryMode.textContent = modeNames[selection.mode] || selection.mode;
-
-			if (selection.tournament) {
-				summaryPlayers.textContent = "8 Players (Tournament)";
-			} else {
-				summaryPlayers.textContent = selection.players + " Players";
-			}
-
-			// Map names
-			const mapNames = {
-				'classic': 'Classic',
-				'arena': 'Arena',
-				'classic4p': 'Classic 4-Player',
-				'battle': 'Arena 4-Player',
-				'maze': 'Maze'
-			};
-			summaryMap.textContent = mapNames[selection.map] || selection.map;
-
-			// Show modal
-			confirmationModal.classList.remove('hidden');
 		}
 	}
 
