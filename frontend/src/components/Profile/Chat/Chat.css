@@ -1,4 +1,3 @@
-
 /* Chat section styles */
 .chat-container {
     display: flex;
@@ -21,19 +20,24 @@
 .chat-message {
     max-width: 80%;
     display: flex;
+    flex-direction: column;
+    word-break: break-word;
 }
 
 .chat-message.sent {
     align-self: flex-end;
+    align-items: flex-end;
 }
 
 .chat-message.received {
     align-self: flex-start;
+    align-items: flex-start;
 }
 
 .message-content {
     padding: 10px 15px;
     border-radius: 18px;
+    width: fit-content;
 }
 
 .chat-message.sent .message-content {
@@ -52,7 +56,14 @@
     font-size: 11px;
     margin-top: 4px;
     opacity: 0.8;
+}
+
+.chat-message.sent .message-time {
     text-align: right;
+}
+
+.chat-message.received .message-time {
+    text-align: left;
 }
 
 .chat-input-container {
