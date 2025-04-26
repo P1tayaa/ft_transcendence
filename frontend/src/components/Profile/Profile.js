@@ -27,11 +27,12 @@ export default class Profile {
 			this.isFriend = this.profileData.is_following || false;
 			this.isBlocked = this.profileData.is_blocking || false;
 
-			// Create and render the profile page
+			// Create overlay element
 			this.element = document.createElement('div');
-			this.element.className = 'profile-page';
+			this.element.className = 'profile-overlay';
 			document.body.appendChild(this.element);
 
+			// Setup the profile page
 			await this.render();
 			this.setupEventListeners();
 			
@@ -80,6 +81,7 @@ export default class Profile {
 		console.log('rendering profile:', this.profileData);
 
 		this.element.innerHTML = `
+		<div class="profile-page">
 			<div class="profile-header">
 				<div class="back-button" id="profile-back-btn">
 					<i class="fas fa-arrow-left"></i>
@@ -103,20 +105,21 @@ export default class Profile {
 			</div>
 
 			<div class="profile-content">
-				<div class="profile-section match-history-section">
-					<h3>Match History</h3>
-					<div class="match-history-list">
-						${this.renderMatchHistory(matchHistory)}
-					</div>
-				</div>
-
 				${!this.isCurrentUserProfile ? `
 				<div class="profile-section chat-section">
 					<h3>Chat</h3>
 					<div id="chat-container"></div>
 				</div>
 				` : ''}
+
+				<div class="profile-section match-history-section">
+					<h3>Match History</h3>
+					<div class="match-history-list">
+						${this.renderMatchHistory(matchHistory)}
+					</div>
+				</div>
 			</div>
+		</div>
 		`;
 	}
 
@@ -160,9 +163,18 @@ export default class Profile {
 			backBtn.addEventListener('click', () => {
 				this.close();
 			});
+		 }
+
+		// Close when clicking on overlay, but not on the profile page
+		if (this.element) {
+			this.element.addEventListener('click', (e) => {
+				if (e.target === this.element) {
+					this.close();
+				}
+			});
 		}
 
-		 // Attach action button events
+		// Attach action button events
 		this.attachActionButtonEvent('add-friend-btn', this.handleAddFriend.bind(this));
 		this.attachActionButtonEvent('remove-friend-btn', this.handleRemoveFriend.bind(this));
 		this.attachActionButtonEvent('block-user-btn', this.handleBlockUser.bind(this));
@@ -251,6 +263,7 @@ export default class Profile {
 			this.chat.disconnect();
 		}
 		
+		// Only need to remove the overlay since it contains the profile element
 		if (this.element) {
 			this.element.remove();
 		}
