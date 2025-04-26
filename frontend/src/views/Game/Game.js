@@ -90,16 +90,6 @@ class Game {
 		this.startBtn.addEventListener('click', () => this.handleStartClick());
 	}
 
-	// Check if all players are ready to start the game
-	areAllPlayersReady(gameState) {
-		if (!gameState || !gameState.players || Object.keys(gameState.players).length < 2) {
-			return false;
-		}
-
-		// Check if all players are ready
-		return Object.values(gameState.players).every(player => player.is_ready);
-	}
-
 	// Fetch game configuration from API
 	async fetchGameConfig() {
 		try {
@@ -124,7 +114,7 @@ class Game {
 
 			switch (data.type) {
 				case 'game_state_update':
-					this.updatePlayersList(data.state);
+					this.updatePlayersList(data.state.players);
 					break;
 				case 'started_game':
 					this.showGameCanvas();
@@ -166,31 +156,27 @@ class Game {
 		router.navigate('/');
 	}
 
-	// Check if current player is host
-	checkIfHost(gameState) {
-		if (!gameState)
-			return false;
-
-		const player = gameState.players[user.id];
-		this.isHost = player && player.is_host;
-
-		return this.isHost;
-	}
-
 	// Update players list in the sidebar
-	updatePlayersList(gameState) {
-		if (!gameState || !gameState.players) return;
+	updatePlayersList(players) {
+		if (!players)
+			return;
 
 		const playerList = document.getElementById('player-list');
-		if (!playerList) return;
+		if (!playerList)
+			return;
 
 		// Clear the player list
 		playerList.innerHTML = '';
 
 		// Add each player to the list
-		Object.keys(gameState.players).forEach(playerId => {
-			const player = gameState.players[playerId];
+		for (const player of players) {
+			console.log('Player:', player);
 			const isCurrentPlayer = player.id === user.id;
+
+			if (isCurrentPlayer) {
+				this.isHost = player.is_host;
+				this.isReady = player.is_ready;
+			}
 
 			// Append player card HTML to the player list
 			playerList.innerHTML += `
@@ -205,30 +191,22 @@ class Game {
 					</div>
 				</div>
 			`;
-
-			// Update current player ready state
-			if (isCurrentPlayer) {
-				this.isReady = player.is_ready;
-			}
-		});
-
-		// Show empty state if no players
-		if (Object.keys(gameState.players).length === 0) {
-			playerList.innerHTML = '<div class="waiting-message">Waiting for players to join...</div>';
 		}
-
-		// Check if host and update start button status
-		this.checkIfHost(gameState);
 
 		// Update start button state based on all players ready
-		if (this.isHost) {
-			const allReady = this.areAllPlayersReady(gameState);
-			this.startBtn.disabled = !allReady;
-			this.startBtn.style.display = 'block';
-		} else {
-			this.startBtn.disabled = true;
-			this.startBtn.style.display = 'none';
+		this.startBtn.style.display = this.isHost ? 'block' : 'none';
+		this.startBtn.disabled = !(this.isHost && this.ready(players));
+		console.log(this.startBtn.disabled);
+	}
+
+	// Check if all players are ready to start the game
+	ready(players) {
+		if (!players || players.length < this.config.player_count) {
+			return false;
 		}
+
+		// Check if all players are ready
+		return players.every(player => player.is_ready);
 	}
 
 	// Handle start button click

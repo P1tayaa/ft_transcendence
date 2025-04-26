@@ -132,6 +132,11 @@
     color: var(--text-color);
 }
 
+.btn:disabled {
+    background-color: var(--disabled-color);
+    cursor: not-allowed;
+}
+
 .btn:hover {
     opacity: 0.9;
 }
@@ -139,11 +144,6 @@
 .btn-start {
     background-color: var(--primary-color);
     display: none;
-}
-
-.btn-disabled {
-    background-color: var(--disabled-color);
-    cursor: not-allowed;
 }
 
 .btn-leave {

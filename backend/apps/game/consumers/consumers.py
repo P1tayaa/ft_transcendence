@@ -150,10 +150,10 @@ class GameConsumer(BaseConsumer):
 		
 		# Convert position-based scores to player ID-based scores for the database
 		player_id_scores = {}
-		for player_id, player_data in self.game_state['players'].items():
-			position = player_data['position']
+		for player in self.game_state['players']:
+			position = player['position']
 			if position in self.game_state['score']:
-				player_id_scores[player_id] = self.game_state['score'][position]
+				player_id_scores[str(player['id'])] = self.game_state['score'][position]
 
 		logger.info(f"Final scores: {player_id_scores}")
 		
@@ -169,23 +169,26 @@ class GameConsumer(BaseConsumer):
 	async def leave(self):
 		"""Handle a player leaving the game"""
 		await database_sync_to_async(self.game_room.leave)(self.user)
-
-		if hasattr(self, 'player_id') and self.player_id in self.game_state['players']:
-			was_host = self.game_state['players'][self.player_id].get('is_host', False)
-			player_position = self.game_state['players'][self.player_id]['position']
-			
+		
+		player = next((p for p in self.game_state['players'] 
+					if str(p['id']) == self.player_id), None)
+					
+		if player:
 			# Clean up references to this player
-			if player_position in self.game_state['settings']['paddleLoc']:
-				del self.game_state['settings']['paddleLoc'][player_position]
-			if player_position in self.game_state['settings']['paddleSize']:
-				del self.game_state['settings']['paddleSize'][player_position]
+			if self.player_position in self.game_state['settings']['paddleLoc']:
+				del self.game_state['settings']['paddleLoc'][self.player_position]
+			if self.player_position in self.game_state['settings']['paddleSize']:
+				del self.game_state['settings']['paddleSize'][self.player_position]
 				
-			# Remove player from players and score
-			del self.game_state['players'][self.player_id]
-			if player_position in self.game_state['score']:
-				del self.game_state['score'][player_position]
+			# Remove player from players list
+			self.game_state['players'].remove(player)
+			
+			# Remove player score
+			if self.player_position in self.game_state['score']:
+				del self.game_state['score'][self.player_position]
 
 			# Check if we need to update the host
+			was_host = player.get('is_host', False)
 			if was_host and self.game_state['players']:
 				await self.reassign_host()
 
@@ -195,14 +198,16 @@ class GameConsumer(BaseConsumer):
 
 	async def reassign_host(self):
 		"""Reassign host role after the host leaves"""
-		# Find first player and make them the host
-		new_host_id = next(iter(self.game_state['players'].keys()))
-
-		# Update host in game state
-		for pid, player in self.game_state['players'].items():
-			player['is_host'] = (pid == new_host_id)
-		
-		logger.info(f"Host role reassigned to player {new_host_id}")
+		 # Only proceed if we have players
+		if self.game_state['players']:
+			# Set all players' is_host to False
+			for player in self.game_state['players']:
+				player['is_host'] = False
+			
+			# Make the first player in the list the new host
+			self.game_state['players'][0]['is_host'] = True
+			new_host_id = self.game_state['players'][0]['id']
+			logger.info(f"Host role reassigned to player {new_host_id}")
 
 	@database_sync_to_async
 	def get_player_data(self):
@@ -221,7 +226,7 @@ class GameConsumer(BaseConsumer):
 	def create_initial_game_state(self):
 		return {
 			'score': {},
-			'players': {},
+			'players': [],
 			'settings': {
 				'paddleSize': {},
 				'paddleLoc': {},
@@ -241,16 +246,16 @@ class GameConsumer(BaseConsumer):
 		player_position = player_data['side']
 
 		# Only add if not already present
-		if player_id in self.game_state['players']:
+		if any(str(p['id']) == player_id for p in self.game_state['players']):
 			return
 
-		self.game_state['players'][player_id] = {
+		self.game_state['players'].append({
 			'id': player_data['id'],
 			'username': player_data['username'],
 			'position': player_position,
-			'is_host': self.game_state['players'] == {},
+			'is_host': len(self.game_state['players']) == 0,
 			'is_ready': True
-		}
+		})
 
 		self.game_state['score'][player_position] = 0
 		self.game_state['settings']['paddleLoc'][player_position] = {'position': 0, 'rotation': 0}
@@ -279,14 +284,13 @@ class GameConsumer(BaseConsumer):
 			logger.warning(f"Unknown message type: {message_type}")
 
 	async def handle_reset_round(self, data):
-		if self.player_id in self.game_state['players']:
-			self.game_state['pongLogic']['ballPos'] = {'x': 0, 'y': 0}
-			self.game_state['pongLogic']['ballSpeed'] = {'x': 0, 'y': 0}
-			self.game_state['pongLogic']['lastWinner'] = data.get('lastWinner')
-			self.game_state['pongLogic']['lastLoser'] = data.get('lastLoser')
+		self.game_state['pongLogic']['ballPos'] = {'x': 0, 'y': 0}
+		self.game_state['pongLogic']['ballSpeed'] = {'x': 0, 'y': 0}
+		self.game_state['pongLogic']['lastWinner'] = data.get('lastWinner')
+		self.game_state['pongLogic']['lastLoser'] = data.get('lastLoser')
 
-			await self.channel_layer.group_send(self.room_group_name, {'type': 'reset_round'})
-			await self.broadcast_game_state()
+		await self.channel_layer.group_send(self.room_group_name, {'type': 'reset_round'})
+		await self.broadcast_game_state()
 
 	async def handle_update_score(self, data):
 		scoring_position = data.get('scoring_position')
@@ -295,22 +299,20 @@ class GameConsumer(BaseConsumer):
 			self.game_state['score'][scoring_position] += 1
 
 	async def handle_ball_velocity(self, data):
-		if self.player_id in self.game_state['players']:
-			self.game_state['pongLogic']['ballSpeed'] = {
-				'x': data['x'],
-				'y': data['y']
-			}
+		self.game_state['pongLogic']['ballSpeed'] = {
+			'x': data['x'],
+			'y': data['y']
+		}
 
 	async def handle_paddle_move(self, data):
-		if self.player_id in self.game_state['players'] and self.player_position:
-			self.game_state['settings']['paddleLoc'][self.player_position] = {
-				'position': float(data['position']),
-				'rotation': float(data['rotation'])
-			}
-			await self.broadcast_game_state()
+		self.game_state['settings']['paddleLoc'][self.player_position] = {
+			'position': float(data['position']),
+			'rotation': float(data['rotation'])
+		}
+		await self.broadcast_game_state()
 
 	async def handle_start_game(self):
-		player = self.game_state['players'].get(self.player_id)
+		player = next((p for p in self.game_state['players'] if str(p['id']) == self.player_id), None)
 
 		logger.info(f"Start game request from {self.user.username} (ID: {self.user.id})")
 
@@ -320,7 +322,7 @@ class GameConsumer(BaseConsumer):
 
 		try:
 			# Verify all players are ready
-			if not all(p['is_ready'] for p in self.game_state['players'].values()):
+			if not all(player['is_ready'] for player in self.game_state['players']):
 				return
 
 			# Set game status to in_progress
@@ -359,10 +361,10 @@ class GameConsumer(BaseConsumer):
 		try:
 			# Convert position-based scores to player ID-based scores for the database
 			player_id_scores = {}
-			for player_id, player_data in self.game_state['players'].items():
-				position = player_data['position']
+			for player in self.game_state['players']:
+				position = player['position']
 				if position in self.game_state['score']:
-					player_id_scores[player_id] = self.game_state['score'][position]
+					player_id_scores[str(player['id'])] = self.game_state['score'][position]
 			
 			# Save the game result using the model's end method
 			game_result = await database_sync_to_async(self.game_room.end)(player_id_scores)
@@ -381,9 +383,9 @@ class GameConsumer(BaseConsumer):
 					winner_position = position
 
 			winner_id = None
-			for player_id, player_data in self.game_state['players'].items():
-				if player_data['position'] == winner_position:
-					winner_id = player_id
+			for player in self.game_state['players']:
+				if player['position'] == winner_position:
+					winner_id = str(player['id'])
 					break
 
 			await self.channel_layer.group_send(
