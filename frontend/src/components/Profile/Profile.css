@@ -1,3 +1,25 @@
+/* Profile Page Overlay */
+.profile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    animation: overlayFadeIn 0.2s ease-out;
+}
+
+@keyframes overlayFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Profile pop up */
 .profile-page {
     position: fixed;
     top: 50%;
@@ -17,16 +39,6 @@
     animation: popupFadeIn 0.3s ease-out;
 }
 
-.profile-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 9999;
-    animation: overlayFadeIn 0.2s ease-out;
-}
 
 @keyframes popupFadeIn {
     from {
@@ -39,15 +51,7 @@
     }
 }
 
-@keyframes overlayFadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
+/* Profile header */
 .profile-header {
     display: flex;
     align-items: center;
@@ -171,12 +175,13 @@
     transform: scale(1.05);
 }
 
+/* Profile content */
 .profile-content {
     display: flex;
     flex-direction: column;
     gap: 30px;
     flex: 1;
-    overflow: auto; /* Changed from hidden to auto to allow scrolling of the entire content */
+    overflow: auto;
 }
 
 .profile-section {
@@ -185,7 +190,6 @@
     padding: 20px;
     display: flex;
     flex-direction: column;
-    max-height: 350px; /* Slightly reduced from 400px to fit better in popup */
 }
 
 .profile-section h3 {
@@ -203,7 +207,7 @@
     overflow-y: auto;
     gap: 12px;
     padding-right: 5px;
-    max-height: 250px; /* Reduced from 300px to fit better in popup */
+    max-height: 250px;
 }
 
 .empty-matches {
