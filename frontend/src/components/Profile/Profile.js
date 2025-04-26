@@ -219,6 +219,8 @@ export default class Profile {
 			await api.addFriend(this.userId);
 			this.isFriend = true;
 			this.updateActionButtons();
+			// Dispatch custom event to update friend list
+			window.dispatchEvent(new CustomEvent('friends:update'));
 		} catch (error) {
 			console.error('Failed to add friend:', error);
 		}
@@ -229,6 +231,8 @@ export default class Profile {
 			await api.removeFriend(this.userId);
 			this.isFriend = false;
 			this.updateActionButtons();
+			// Dispatch custom event to update friend list
+			window.dispatchEvent(new CustomEvent('friends:update'));
 		} catch (error) {
 			console.error('Failed to remove friend:', error);
 		}

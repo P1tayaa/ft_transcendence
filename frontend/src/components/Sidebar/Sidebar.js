@@ -23,6 +23,12 @@ class Sidebar {
 		window.addEventListener('user:logout', () => {
 			this.destroy();
 		});
+		// Add event listener for friends update
+		window.addEventListener('friends:update', () => {
+			if (this.list) {
+				this.list.showFriends();
+			}
+		});
 	}
 
 	/**
