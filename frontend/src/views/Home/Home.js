@@ -9,11 +9,6 @@ class Config {
 		this.mode = selection.mode;
 		this.playerCount = selection.players;
 		this.map_style = selection.map;
-		this.playerside = [];
-		this.host = true;
-
-		const sides = this.playerCount === 2 ? ["left", "right"] : ["left", "right", "top", "bottom"];
-		this.playerside = sides;
 	}
 
 	get() {
@@ -114,24 +109,6 @@ class Home {
 			</div>
 		</div>
 
-		<!-- Room template (for cloning) - Hidden -->
-		<template id="room-template">
-			<div class="room-item">
-				<div class="game-icon-container">
-					<i class="fas fa-gamepad game-icon"></i>
-				</div>
-				<div class="room-info">
-					<div class="room-header">
-						<h3 class="room-name"></h3>
-					</div>
-					<div class="room-details">
-						<span class="room-map"></span>
-						<span class="room-powerups"></span>
-					</div>
-				</div>
-				<span class="room-players"></span>
-			</div>
-		</template>
 		`;
 	}
 
@@ -162,7 +139,6 @@ class Home {
 		const createGameModal = document.getElementById('create-game-modal');
 		const roomsContainer = document.getElementById('rooms-container');
 		const noRoomsMessage = document.getElementById('no-rooms-message');
-		const roomTemplate = document.getElementById('room-template');
 
 		// Initialize class member variables here
 		let selection = {
@@ -179,7 +155,7 @@ class Home {
 		this.socket = socket; // Store in home instance for cleanup
 
 		socket.handleMessage = (data) => {
-			console.log("event:", data);
+			console.log("matchmaking event:", data);
 
 			if (data.type === 'room_list') {
 				console.log('Received room list:', data.rooms);
@@ -208,45 +184,56 @@ class Home {
 		socket.connect();
 		init();
 
-		// Create a room element from the template
+		// Create a room element by rendering HTML
 		function createRoomElement(room) {
 			console.log('Creating room element:', room);
 
-			// Clone the template
-			const roomElement = roomTemplate.content.cloneNode(true).querySelector('.room-item');
-
-			// Fill in room details
-			roomElement.querySelector('.room-name').textContent = room.name;
-
-			// Display current/max players as simple text format
-			const playerInfo = `${room.players.length}/${room.settings.player_count}`;
-			roomElement.querySelector('.room-players').textContent = playerInfo;
-
-			// Map name
-			const mapNames = {
-				'classic': 'Classic',
-				'bath': 'Bath',
-				'lava': 'Lava',
-				'beach': 'Beach'
-			};
-			const mapText = "Map: " + mapNames[room.settings.map_style] || room.settings.map_style;
-			roomElement.querySelector('.room-map').textContent = mapText;
-
-			 // Make the entire room item clickable to join the game
-			roomElement.addEventListener('click', () => {
-				console.log(room.settings);
-				sessionStorage.setItem('config', JSON.stringify(room.settings));
-				socket.disconnect();
-
-				// Join the game room
-				router.navigate('/game/' + room.name);
-			});
-
-			// Store room ID as data attribute for easier access
+			// Create a div element for the room
+			const roomElement = document.createElement('div');
 			roomElement.dataset.roomName = room.name;
 
+			// Fill with HTML based on room type
+			if (room.type === 'tournament') {
+				roomElement.className = 'room-item tournament';
+				roomElement.innerHTML = renderRoom(room, 'trophy');
+			} else {
+				roomElement.className = 'room-item';
+				roomElement.innerHTML = renderRoom(room, 'gamepad');
+			}
+
+			// Make the entire room item clickable to join the game
+			roomElement.addEventListener('click', () => {
+				console.log(room.settings);
+				socket.disconnect();
+
+				// Join the game room or tournament based on type
+				if (room.type === 'tournament') {
+					router.navigate('/tournament/' + room.name);
+				} else {
+					router.navigate('/game/' + room.name);
+				}
+			});
+
 			return roomElement;
-		};
+		}
+
+		// Render HTML for a regular game room
+		function renderRoom(room, type) {			
+			return `
+				<div class="game-icon-container">
+					<i class="fas fa-${type} game-icon"></i>
+				</div>
+				<div class="room-info">
+					<div class="room-header">
+						<h3 class="room-name">${room.name}</h3>
+					</div>
+					<div class="room-details">
+						<span class="room-map">${room.map}</span>
+					</div>
+				</div>
+				<span class="room-players">${room.players}/${room.max_players}</span>
+			`;
+		}
 
 		// Initialize the setup wizard
 		function init() {
@@ -286,17 +273,15 @@ class Home {
 					if (players === 8) {
 						selection.tournament = true;
 						players = 2;
-						// For tournaments, immediately start the tournament
-						startGame();
 					} else {
 						selection.tournament = false;
-						selection.players = players;
 						maps2Player.classList.toggle('hidden', players !== 2);
 						maps4Player.classList.toggle('hidden', players !== 4);
-						
-						// Automatically go to next step
-						updateStep(2);
 					}
+
+					selection.players = players;
+
+					updateStep(2);
 				});
 			});
 
@@ -307,9 +292,9 @@ class Home {
 					this.classList.add('selected');
 
 					selection.map = this.getAttribute('data-map');
-					
+
 					// When map is selected, start the game
-					startGame();
+					createGame();
 				});
 			});
 
@@ -323,19 +308,19 @@ class Home {
 		}
 
 		// Function to start the game with current selections
-		async function startGame() {
-			const config = new Config(selection);
-			sessionStorage.setItem('config', JSON.stringify(config.get()));
-
+		async function createGame() {
 			if (selection.tournament) {
-				const room = await api.createTournament(config);
-				window.location.href = `/tournament/${room.tournament_id}`;
+				const room = await api.createTournament(selection);
+
+				if (!room) {
+					console.error("Failed to create tournament room.");
+					return;
+				}
+
+				router.navigate('/tournament/' + room.name);
 			}
 			else if (selection.mode === "networked") {
-				const room = await api.createGame({
-					map: selection.map,
-					players: selection.players,
-				});
+				const room = await api.createGame(selection);
 
 				if (!room) {
 					console.error("Failed to create game room.");

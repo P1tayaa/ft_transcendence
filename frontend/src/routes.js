@@ -1,6 +1,7 @@
 import home from './views/Home/Home.js';
 import auth from './views/Auth/Auth.js';
 import game from './views/Game/Game.js';
+import tournament from './views/Tournament/Tournament.js';
 
 /**
  * Route object
@@ -41,6 +42,11 @@ const routes = [
 	new Route({
 		path: '/game/:name',
 		component: game
+	}),
+
+	new Route({
+		path: '/tournament/:name',
+		component: tournament
 	}),
 ];
 

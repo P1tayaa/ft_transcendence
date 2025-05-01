@@ -14,14 +14,14 @@ class Room(models.Model):
 	"""
 	name = models.CharField(max_length=100, unique=True)
 	created_at = models.DateTimeField(auto_now_add=True)
-	
+
 	MAPS = (
 		('classic', 'Classic'),
 		('bath', 'Bath'),
 		('lava', 'Lava'),
 		('beach', 'Beach'),
 	)
-	
+
 	map = models.CharField(max_length=20, choices=MAPS, default='classic')
 	player_count = models.IntegerField(validators=[MinValueValidator(2), MaxValueValidator(4)], default=2)
 
@@ -31,14 +31,6 @@ class Room(models.Model):
 	)
 
 	status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='waiting')
-
-	def to_dict(self):
-		"""Convert settings to a dictionary for frontend use"""
-		return {
-			'mode': 'networked',
-			'map_style': self.map,
-			'player_count': self.player_count,
-		}
 
 	class Meta:
 		abstract = True
@@ -69,7 +61,8 @@ class GameRoom(Room):
 			'id': self.id,
 			'name': self.name,
 			'status': self.status,
-			'settings': self.to_dict(),
+			'map': self.map,
+			'player_count': self.player_count,
 			'players': [
 				{
 					'id': player.user.id,
@@ -91,7 +84,6 @@ class GameRoom(Room):
 				'room': room,
 				'player': player_data,
 				'status': room.status,
-				'settings': room.to_dict()
 			}
 		except (cls.DoesNotExist, ValidationError) as e:
 			logger.error(f"Error joining game room: {e}")
@@ -149,7 +141,6 @@ class GameRoom(Room):
 			except GamePlayer.DoesNotExist:
 				raise ValidationError("Player not in this game")
 
-			# Always remove the player regardless of game state
 			player.delete()
 
 			# Update room status
@@ -193,7 +184,7 @@ class GameRoom(Room):
 				# If this is a tournament game, notify the tournament
 				if self.tournament:
 					self.tournament.game_completed(self, game_record)
-				
+
 				# Delete the game room after saving results
 				self.delete()
 

@@ -40,11 +40,6 @@ class ApiManager {
 			
 			tournament: {
 				create: 'tournament/create/',
-				list: 'tournament/list/',
-				info: 'tournament/get/',
-				join: 'tournament/join/',
-				leave: 'tournament/leave/',
-				updateScore: 'tournament/update_score/',
 			},
 			
 			game: {
@@ -52,10 +47,6 @@ class ApiManager {
 				info: 'game/get/',
 				list: 'game/list/',
 			},
-			
-			dev: {
-				resetDatabase: 'dev_reset/',
-			}
 		};
 	}
 
@@ -309,48 +300,6 @@ class ApiManager {
 	 */
 	async createTournament(config) {
 		return this.post(this.endpoints.tournament.create, { config: config });
-	}
-
-	/**
-	 * Get a list of tournaments
-	 * @returns {Promise} A promise that resolves with the tournament list
-	 */
-	async getTournamentList() {
-		return this.get(this.endpoints.tournament.list);
-	}
-
-	/**
-	 * Get tournament information by ID
-	 * @param {string} tournamentId - The tournament ID
-	 * @returns {Promise} A promise that resolves with the tournament data
-	 */
-	async getTournamentInfo(tournamentId) {
-		return this.get(this.endpoints.tournament.info, { tournament_id: tournamentId });
-	}
-
-	/**
-	 * Join a tournament
-	 * @param {string} tournamentId - The tournament ID
-	 * @returns {Promise} A promise that resolves with the response data
-	 */
-	async joinTournament(tournamentId) {
-		return this.post(this.endpoints.tournament.join, { tournament_id: tournamentId });
-	}
-
-	/**
-	 * Leave a tournament
-	 * @param {string} tournamentId - The tournament ID
-	 * @returns {Promise} A promise that resolves with the response data
-	 */
-	async leaveTournament(tournamentId) {
-		return this.post(this.endpoints.tournament.leave, { tournament_id: tournamentId });
-	}
-
-	/**
-	 * DEV ONLY: Reset the database
-	 */
-	async resetDatabase() {
-		return this.post(this.endpoints.dev.resetDatabase);
 	}
 }
 

@@ -66,7 +66,6 @@ class Game {
 		const leaveBtn = document.getElementById('leave-btn');
 		leaveBtn.addEventListener('click', () => this.handleLeaveClick());
 
-
 		// First fetch game configuration
 		const configLoaded = await this.fetchGameConfig();
 		if (!configLoaded) {

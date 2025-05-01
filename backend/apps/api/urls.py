@@ -25,13 +25,9 @@ from .management.chat_management import (
     get_chat_history,
 )
 
-# from .management.tournament_management import (
-#     create_tournament,
-#     join_tournament,
-#     get_tournament_data,
-#     list_tournaments,
-#     leave_tournament,
-# )
+from .management.tournament_management import (
+    create_tournament,
+)
 
 from .management.game_management import (
     create_game_room,
@@ -69,9 +65,5 @@ urlpatterns = [
     path("game/get/", get_config_game_room, name="get_config_game_room"),
     path("game/list/", list_game_rooms, name="list_game_rooms"),
 
-    # path('tournament/create/', create_tournament, name="create_tournament"),
-    # path('tournament/join/', join_tournament, name="join_tournament"),
-    # path('tournament/list/', list_tournaments, name="list_tournaments"),
-    # path('tournament/get/', get_tournament_data, name="get_tournament_data"),
-    # path('tournament/leave/', leave_tournament, name="leave_tournament"),
+    path('tournament/create/', create_tournament, name="create_tournament"),
 ]

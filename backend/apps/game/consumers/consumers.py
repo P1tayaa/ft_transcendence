@@ -128,12 +128,12 @@ class GameConsumer(BaseConsumer):
 	async def disconnect(self, close_code):
 		if hasattr(self, 'game_room') and hasattr(self, 'user'):
 			try:
-				# If game is in progress, end it with current scores
+				 				# If game is in progress, end it with current scores
 				if self.running:
 					await self.end_game()
 				else:
 					await self.leave()
-					
+
 			except Exception as e:
 				logger.error(f"Error handling disconnect: {str(e)}")
 
@@ -147,7 +147,7 @@ class GameConsumer(BaseConsumer):
 	async def end_game(self):
 		"""Handle ending a game when a player disconnects during gameplay"""
 		logger.info(f"Game in progress during disconnect, recording final scores")
-		
+
 		# Convert position-based scores to player ID-based scores for the database
 		player_id_scores = {}
 		for player in self.game_state['players']:
@@ -156,9 +156,9 @@ class GameConsumer(BaseConsumer):
 				player_id_scores[str(player['id'])] = self.game_state['score'][position]
 
 		logger.info(f"Final scores: {player_id_scores}")
-		
+
 		await database_sync_to_async(self.game_room.end)(player_id_scores)
-		
+
 		# Cancel game loop
 		self.running = False
 		if hasattr(self, 'game_loop') and self.game_loop:
@@ -169,20 +169,20 @@ class GameConsumer(BaseConsumer):
 	async def leave(self):
 		"""Handle a player leaving the game"""
 		await database_sync_to_async(self.game_room.leave)(self.user)
-		
-		player = next((p for p in self.game_state['players'] 
+
+		player = next((p for p in self.game_state['players']
 					if str(p['id']) == self.player_id), None)
-					
+
 		if player:
 			# Clean up references to this player
 			if self.player_position in self.game_state['settings']['paddleLoc']:
 				del self.game_state['settings']['paddleLoc'][self.player_position]
 			if self.player_position in self.game_state['settings']['paddleSize']:
 				del self.game_state['settings']['paddleSize'][self.player_position]
-				
+
 			# Remove player from players list
 			self.game_state['players'].remove(player)
-			
+
 			# Remove player score
 			if self.player_position in self.game_state['score']:
 				del self.game_state['score'][self.player_position]
@@ -203,7 +203,7 @@ class GameConsumer(BaseConsumer):
 			# Set all players' is_host to False
 			for player in self.game_state['players']:
 				player['is_host'] = False
-			
+
 			# Make the first player in the list the new host
 			self.game_state['players'][0]['is_host'] = True
 			new_host_id = self.game_state['players'][0]['id']
@@ -352,7 +352,7 @@ class GameConsumer(BaseConsumer):
 			return
 
 		logger.info(f"Game over triggered by {self.user.username} (ID: {self.user.id})")
-		
+
 		# Stop the game loop
 		self.running = False
 		if hasattr(self, 'game_loop') and self.game_loop:
@@ -365,14 +365,14 @@ class GameConsumer(BaseConsumer):
 				position = player['position']
 				if position in self.game_state['score']:
 					player_id_scores[str(player['id'])] = self.game_state['score'][position]
-			
+
 			# Save the game result using the model's end method
 			game_result = await database_sync_to_async(self.game_room.end)(player_id_scores)
-			
+
 			if not game_result:
 				logger.warning("Game end failed, no result created")
 				return
-				
+
 			logger.info(f"Game ended successfully, created result ID: {game_result.id}")
 
 			highest_score = -1
@@ -394,7 +394,8 @@ class GameConsumer(BaseConsumer):
 					'type': 'game_over',
 					'winner': winner_id,
 					'winner_position': winner_position,
-					'game_result_id': game_result.id
+					'game_result_id': game_result.id,
+					'tournament_id': self.game_room.tournament.id if self.game_room.tournament else None
 				}
 			)
 
@@ -461,7 +462,3 @@ class GameConsumer(BaseConsumer):
 
 	async def reset_round(self, event):
 		await self.send(text_data = json.dumps(event))
-
-	async def all_players_ready(self, event):
-		await self.send(text_data = json.dumps(event))
-

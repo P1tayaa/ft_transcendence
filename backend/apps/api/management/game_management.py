@@ -26,14 +26,15 @@ def get_config_game_room(request):
 		except GameRoom.DoesNotExist:
 			return JsonResponse({'status': 'error', 'message': 'Game room not found'}, status=404)
 
-		# Get the game configuration
-		game_config = game_room.to_dict()
-
 		return JsonResponse({
 			'status': 'success',
 			'room_id': game_room.id,
 			'room_name': game_room.name,
-			'config': game_config,
+			'config': {
+				'mode': 'networked',
+				'map_style': game_room.map,
+				'player_count': game_room.player_count,
+			}
 		})
 
 	except json.JSONDecodeError:
@@ -69,19 +70,21 @@ def create_game_room(request):
 			"matchmaking",
 			{
 				"type": "room_created",
-				"room": game_room.get_status(),
+				"data": {
+					"type": "game_room",
+					"id": game_room.id,
+					"name": game_room.name,
+					"map": game_room.map,
+					"players": game_room.players.count(),
+					"max_players": game_room.player_count,
+				}
 			}
 		)
-
-		# Automatically join the host to the game
-		player_data = game_room.join(request.user)
 
 		return JsonResponse({
 			'status': 'success',
 			'room_id': game_room.id,
 			'room_name': game_room.name,
-			'config': game_room.to_dict(),
-			'player': player_data
 		})
 	except json.JSONDecodeError:
 		return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
