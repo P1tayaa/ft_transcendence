@@ -16,7 +16,8 @@ def create_tournament(request):
 		map_name = data.get('map', 'classic')
 
 		 # Generate a tournament name
-		name = f"tournament-{request.user.username}-{Tournament.objects.count()+1}"
+		import uuid
+		name = f"tournament-{request.user.username}-{str(uuid.uuid4())}"
 		
 		# Use the Tournament.create class method instead of direct creation
 		tournament = Tournament.create(
