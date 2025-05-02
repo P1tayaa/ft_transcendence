@@ -1,8 +1,10 @@
 import './Profile.css';
+
 import api from '../../api.js';
 import user from '../../User.js';
 import Chat from './Chat/Chat.js';
 import router from '../../router.js';
+import Edit from './Edit/Edit.js';
 
 export default class Profile {
 	constructor(userId) {
@@ -273,9 +275,19 @@ export default class Profile {
 	}
 
 	async handleEditProfile() {
-		// TODO: Implement edit profile functionality
-		console.log('Edit profile clicked');
-		// For example, open a modal or navigate to edit profile page
+		const modal = new Edit(this.profileData, async () => {
+			// Callback function that runs after successful profile update
+
+			// Refresh profile data
+			const profile = await api.getUser(this.userId);
+			this.profileData = profile.user;
+			
+			// Update UI
+			await this.render();
+			this.setupEventListeners();
+		});
+		
+		modal.show();
 	}
 	
 	async handleLogout() {
@@ -292,8 +304,7 @@ export default class Profile {
 		if (this.chat) {
 			this.chat.disconnect();
 		}
-		
-		// Only need to remove the overlay since it contains the profile element
+
 		if (this.element) {
 			this.element.remove();
 		}

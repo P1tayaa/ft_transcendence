@@ -180,7 +180,7 @@ class Authenticate {
 			formData.append('username', username);
 			formData.append('password', password);
 			if (image) {
-				formData.append('profile_picture', image);
+				formData.append('avatar', image);
 			}
 
 			const response = await api.register(formData);

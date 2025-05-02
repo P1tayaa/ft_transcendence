@@ -14,6 +14,7 @@ class ApiManager {
 		this.endpoints = {
 			user: {
 				me: 'me/',
+				update: 'me/update/',
 				search: 'users/search/',
 				get: 'users/',
 				matches: 'users/matches/',
@@ -165,6 +166,34 @@ class ApiManager {
 		const response = await this.request(this.baseUrl + this.endpoints.auth.login, headers, 'POST', data);
 
 		return response;
+	}
+
+	/**
+	 * Update the user's profile
+	 * @param {FormData} data - The profile update form data
+	 * @returns {Promise} A promise that resolves with the response data
+	 */
+	async updateProfile(data) {
+		const headers = {
+			"X-CSRFToken": getCookie('csrftoken'),
+			"Authorization": `Bearer ${getCookie('auth-token')}`,
+		}
+
+		const response = await fetch(this.baseUrl + this.endpoints.user.update, {
+			method: 'POST',
+			headers: headers,
+			credentials: 'include',
+			body: data
+		});
+
+		if (!response.ok) {
+			const data = await response.json();
+			throw new Error(data.message || 'Profile update failed');
+		}
+
+		const reponseJSON = await response.json();
+
+		return reponseJSON;
 	}
 
 	/**

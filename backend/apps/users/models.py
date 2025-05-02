@@ -4,20 +4,20 @@ from django.conf import settings
 
 def user_profile_path(instance, filename):
 	ext = filename.split('.')[-1]
-	return f'profile_pics/user_{instance.user.id}/profile_pic.{ext}'
+	return f'avatars/user_{instance.user.id}/avatar.{ext}'
 
 
 class Profile(models.Model):
 	user = models.OneToOneField(User, on_delete=models.CASCADE)
-	profile_picture = models.ImageField(
+	avatar = models.ImageField(
 		upload_to=user_profile_path,
 		null=True,
 		blank=True,
 	)
 
-	def get_profile_picture_url(self):
-		if self.profile_picture:
-			return self.profile_picture.url
+	def get_avatar(self):
+		if self.avatar:
+			return self.avatar.url
 		return None
 
 	def follow_user(self, profile):
@@ -66,33 +66,6 @@ class Profile(models.Model):
 
 		return new_chat
 
-	def get_all_chats(self):
-		chats = self.user.chats.all()
-		chat_data = []
-
-		for chat in chats:
-			latest_message = chat.messages.last()
-			other_participant = chat.participants.exclude(id=self.user.id)
-			chat_data.append(
-				{
-					"chat_id": chat.id,
-					"participants": list(other_participant.values("id", "username")),
-					"latest_message": {
-						"content": latest_message.content if latest_message else None,
-						"timestamp": latest_message.timestamp
-						if latest_message
-						else None,
-						"sender": latest_message.sender.username
-						if latest_message
-						else None,
-					},
-					"unread_count": chat.messages.filter(is_read=False)
-					.exclude(sender=self.user)
-					.count(),
-				}
-			)
-		return chat_data
-
 	def get_chat_history(self, chat_id):
 		try:
 			chat = Chat.objects.get(id=chat_id, participants=self.user)
@@ -128,15 +101,6 @@ class Profile(models.Model):
 			"losses": scores.filter(is_winner='False').count(),
 			"results": [score.game.get_results() for score in scores],
 		}
-		
-
-	def mark_messages_read(self, chat_id):
-		chat = Chat.objects.get(id=chat_id, participants=self.user)
-		return (
-			chat.messages.filter(is_read=False)
-			.exclude(sender=self.user)
-			.update(is_read=True)
-		)
 
 
 class Follow(models.Model):

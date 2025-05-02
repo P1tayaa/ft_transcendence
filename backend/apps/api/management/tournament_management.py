@@ -35,9 +35,10 @@ def create_tournament(request):
 		return JsonResponse({
 			'id': tournament.id,
 			'name': tournament.name,
-			'players': tournament.player_count,
 			'map': tournament.map,
 			'status': tournament.status,
+			'players': tournament.players.count(),
+			'max_players': tournament.player_count,
 			'creator': {
 				'id': tournament.creator.id,
 				'username': tournament.creator.username
@@ -64,7 +65,6 @@ def notify_new_tournament(tournament):
 					'type': 'tournament',
 					'id': tournament.id,
 					'name': tournament.name,
-					'player_count': tournament.player_count,
 					'map': tournament.map,
 					'status': tournament.status,
 					'players': tournament.players.count(),
@@ -80,6 +80,3 @@ def notify_new_tournament(tournament):
 		logger.info(f"Sent tournament creation notification for tournament {tournament.id}")
 	except Exception as e:
 		logger.error(f"Failed to notify about new tournament: {str(e)}")
-
-
-
