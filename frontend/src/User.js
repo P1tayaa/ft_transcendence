@@ -1,4 +1,3 @@
-
 import api from './api.js';
 
 function setCookie(name, value, hours = undefined, path = '/') {

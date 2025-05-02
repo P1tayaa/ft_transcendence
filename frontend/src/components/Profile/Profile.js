@@ -2,6 +2,7 @@ import './Profile.css';
 import api from '../../api.js';
 import user from '../../User.js';
 import Chat from './Chat/Chat.js';
+import router from '../../router.js';
 
 export default class Profile {
 	constructor(userId) {
@@ -58,14 +59,20 @@ export default class Profile {
 
 		const matchHistory = await api.getMatchHistory(this.userId);
 
+		console.log('Match history:', matchHistory);
+
 		const wins = matchHistory.wins || 0;
 		const totalGames = matchHistory.total || 0;
-		
-		console.log('match history:', matchHistory);
 
 		let actionButtons = '';
 		
-		if (!this.isCurrentUserProfile) {
+		if (this.isCurrentUserProfile) {
+			// Add edit profile and logout buttons for own profile
+			actionButtons = `
+				<button id="edit-profile-btn" class="profile-btn action-btn">Edit Profile</button>
+				<button id="logout-btn" class="profile-btn block-btn">Logout</button>
+			`;
+		} else {
 			const friendButton = this.isFriend 
 				? '<button id="remove-friend-btn" class="profile-btn remove-btn">Remove Friend</button>'
 				: '<button id="add-friend-btn" class="profile-btn action-btn">Add Friend</button>';
@@ -77,8 +84,7 @@ export default class Profile {
 			actionButtons = `${friendButton}${blockButton}`;
 		}
 
-		console.log('render match history:', matchHistory);
-		console.log('rendering profile:', this.profileData);
+		console.log('Rendering profile:', this.profileData);
 
 		this.element.innerHTML = `
 		<div class="profile-page">
@@ -179,6 +185,10 @@ export default class Profile {
 		this.attachActionButtonEvent('remove-friend-btn', this.handleRemoveFriend.bind(this));
 		this.attachActionButtonEvent('block-user-btn', this.handleBlockUser.bind(this));
 		this.attachActionButtonEvent('unblock-user-btn', this.handleUnblockUser.bind(this));
+		
+		// Attach own profile buttons events
+		this.attachActionButtonEvent('edit-profile-btn', this.handleEditProfile.bind(this));
+		this.attachActionButtonEvent('logout-btn', this.handleLogout.bind(this));
 	}
 
 	updateActionButtons() {
@@ -259,6 +269,22 @@ export default class Profile {
 			await this.chat.init();
 		} catch (error) {
 			console.error('Failed to unblock user:', error);
+		}
+	}
+
+	async handleEditProfile() {
+		// TODO: Implement edit profile functionality
+		console.log('Edit profile clicked');
+		// For example, open a modal or navigate to edit profile page
+	}
+	
+	async handleLogout() {
+		try {
+			this.close();
+			user.logout();
+			router.navigate('/login');
+		} catch (error) {
+			console.error('Failed to logout:', error);
 		}
 	}
 

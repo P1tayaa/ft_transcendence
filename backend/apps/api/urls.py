@@ -4,7 +4,6 @@ from .management.user_management import (
     get_current_user,
     register_user,
     login_user,
-    logout_user,
     fetch_matching_usernames,
 	get_user,
 	get_match_history,
@@ -39,7 +38,6 @@ from .management.game_management import (
 urlpatterns = [
     path("register/", register_user, name="register_user"),
     path("login/", login_user, name="login_user"),
-    path("logout/", logout_user, name="logout_user"),
     path("me/", get_current_user, name="current_user"),
     path("me/change_username/", change_username, name="change_username"),
     path("me/change_password/", change_password, name="change_password"),

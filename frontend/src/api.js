@@ -22,7 +22,6 @@ class ApiManager {
 			auth: {
 				register: 'register/',
 				login: 'login/',
-				logout: 'logout/',
 			},
 			
 			social: {

@@ -137,18 +137,6 @@ def login_user(request):
 		return JsonResponse({"success": False, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@ensure_csrf_cookie
-@api_view(["POST"])
-def logout_user(request):
-	try:
-		return JsonResponse({
-			"success": True,
-			"message": "Succesfully logged out",
-		})
-	except Exception as e:
-		return JsonResponse({"success": False, "message": str(e)}, status=500)
-
-
 @api_view(["GET"])
 def get_current_user(request):
 	user = request.user
