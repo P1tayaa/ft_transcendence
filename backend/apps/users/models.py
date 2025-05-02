@@ -122,7 +122,12 @@ class Profile(models.Model):
 		
 	def get_match_history(self):
 		scores = self.user.game_results.all().select_related('game').order_by('-game__date')
-		return [score.game.get_results() for score in scores]
+		return {
+			"total": scores.count(),
+			"wins": scores.filter(is_winner='True').count(),
+			"losses": scores.filter(is_winner='False').count(),
+			"results": [score.game.get_results() for score in scores],
+		}
 		
 
 	def mark_messages_read(self, chat_id):

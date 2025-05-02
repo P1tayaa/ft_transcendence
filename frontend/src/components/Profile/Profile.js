@@ -56,10 +56,10 @@ export default class Profile {
 		if (!this.profileData)
 			return;
 
-		const wins = Math.floor(Math.random() * 50);
-		const totalGames = Math.floor(Math.random() * 70);
-
 		const matchHistory = await api.getMatchHistory(this.userId);
+
+		const wins = matchHistory.wins || 0;
+		const totalGames = matchHistory.total || 0;
 		
 		console.log('match history:', matchHistory);
 
@@ -115,7 +115,7 @@ export default class Profile {
 				<div class="profile-section match-history-section">
 					<h3>Match History</h3>
 					<div class="match-history-list">
-						${this.renderMatchHistory(matchHistory)}
+						${this.renderMatchHistory(matchHistory.results)}
 					</div>
 				</div>
 			</div>
