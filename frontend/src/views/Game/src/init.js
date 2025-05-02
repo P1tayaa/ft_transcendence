@@ -71,9 +71,9 @@ export default class Init {
     });
   }
 
-  async initialize(settings) {
+  async initialize(map, players, local) {
     // Show loading screen and initialize settings
-    this.settings = new Setting(settings);
+    this.settings = new Setting(map, players, local);
 
     // Load all game assets
     this.loadAssets();

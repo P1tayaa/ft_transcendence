@@ -30,11 +30,8 @@ def get_config_game_room(request):
 			'status': 'success',
 			'room_id': game_room.id,
 			'room_name': game_room.name,
-			'config': {
-				'mode': 'networked',
-				'map_style': game_room.map,
-				'player_count': game_room.player_count,
-			}
+			'map': game_room.map,
+			'playercount': game_room.player_count,
 		})
 
 	except json.JSONDecodeError:

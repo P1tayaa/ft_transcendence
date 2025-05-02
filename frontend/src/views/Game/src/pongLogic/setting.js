@@ -29,13 +29,12 @@ export function intToPlayerSide(last_winner) {
 }
 
 export class Setting {
-  constructor(setting_json) {
-    console.log("Setting constructor called with JSON:", setting_json);
-    // Parse the JSON and fill in the settings
-    this.mode = this.parseMode(setting_json.mode) || Mode.NETWORKED;
-    this.playercount = setting_json.player_count;
-    this.mapStyle = this.parseMapStyle(setting_json["map_style"]);
-    this.playerSide = this.playercount === 2 ? ["left", "right"] : ["left", "right", "bottom", "top"];
+  constructor(map, playercount, local) {
+    console.log("Initializing settings...", map, playercount, local);
+    this.mode = local ? Mode.LOCAL : Mode.NETWORKED;
+    this.playercount = playercount;
+    this.mapStyle = this.parseMapStyle(map);
+    this.playerSide = playercount === 2 ? ["left", "right"] : ["left", "right", "bottom", "top"];
     this.paddleSize = {};
     this.paddleLoc = {};
     this.playerSide.forEach(side => {
@@ -48,15 +47,6 @@ export class Setting {
     });
 
     console.log("Parsed settings:", this);
-  }
-
-  // Helper function to parse 'mode' and return valid options
-  parseMode(mode) {
-    if (Object.values(Mode).includes(mode)) {
-      return mode;
-    }
-    console.error("Invalid mode, defaulting to 'local'");
-    return Mode.LOCAL;
   }
 
   // Helper function to parse map styles and ensure validity

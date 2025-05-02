@@ -10,10 +10,15 @@ class Game {
 	constructor() {
 		// Initialize class member variables
 		this.socket = null;
-		this.config = null;
 		this.isHost = false;
 		this.isReady = false;
+
+		this.local = false;
 		this.roomName = '';
+		this.map = '';
+		this.playercount = 0;
+
+		this.game = null;
 	}
 
 	render() {
@@ -57,49 +62,125 @@ class Game {
 		 // Reset state when loading a new game view
 		this.isHost = false;
 		this.isReady = false;
-		this.config = null;
-
-		// Get match ID from URL parameter
-		this.roomName = window.location.pathname.split('/').pop();
 
 		// Set up event listener for leaving the game
 		const leaveBtn = document.getElementById('leave-btn');
-		leaveBtn.addEventListener('click', () => this.handleLeaveClick());
+		leaveBtn.addEventListener('click', () => {
+			router.navigate('/');
+		});
 
-		// First fetch game configuration
-		const configLoaded = await this.fetchGameConfig();
-		if (!configLoaded) {
-			console.error("Failed to load game configuration");
+		const path = window.location.pathname;
 
+		try {
+			this.game = new PongGame();
+
+			if (path === '/game/local') {
+				await this.initLocalGame();
+			} else {
+				await this.initOnlineGame();
+			}
+		} catch (error) {
+			console.error('Error initializing game:', error);
 			return;
 		}
-
-		this.game = new PongGame();
-		const success = await this.game.initialize(this.config);
-
-		if (!success) {
-			console.error("Failed to initialize game");
-			return;
-		}
-
-		this.setupWebSocket();
 
 		// Set up event listener for start button
 		this.startBtn = document.getElementById('start-btn');
 		this.startBtn.addEventListener('click', () => this.handleStartClick());
 	}
 
-	// Fetch game configuration from API
-	async fetchGameConfig() {
-		try {
-			const response = await api.getGameInfo(this.roomName);
-			console.log('Game config response:', response);
-			this.config = response.config;
-			return true;
-		} catch (error) {
-			console.error('Error loading game config from API:', error);
-			return false;
+	async initLocalGame() {
+		this.local = true;
+		this.roomName = 'local';
+
+		const map = sessionStorage.getItem('map');
+
+		if (!map) {
+			console.error("No map found in session storage");
+			return;
 		}
+
+		const playercount = sessionStorage.getItem('playercount');
+
+		if (!playercount) {
+			console.error("No player count found in session storage");
+			return;
+		}
+
+		this.map = map;
+		this.playercount = parseInt(playercount);
+
+		await this.game.initialize(this.map, this.playercount);
+		
+		// Show start button for local game
+		this.startBtn = document.getElementById('start-btn');
+		if (this.startBtn) {
+			this.startBtn.style.display = 'block';
+			this.startBtn.disabled = false;
+		}
+		
+		// Create and display local players
+		this.createLocalPlayersList();
+	}
+	
+	// Create player cards for local game
+	createLocalPlayersList() {
+		const playerList = document.getElementById('player-list');
+		if (!playerList)
+			return;
+		
+		// Clear existing player list
+		playerList.innerHTML = '';
+		
+		// Create player cards for local game based on player count
+		const players = [];
+		for (let i = 1; i <= this.playercount; i++) {
+			players.push({
+				name: `Player ${i}`,
+				position: i === 1 ? 'Left' : i === 2 ? 'Right' : i === 3 ? 'Top' : 'Bottom',
+				isReady: true
+			});
+		}
+
+		players.forEach(player => {
+			playerList.innerHTML += `
+				<div class="player-card">
+					<div class="player-avatar-container">
+						<div class="player-avatar">${player.name.charAt(0)}</div>
+						<div class="status-indicator ready"></div>
+					</div>
+					<div class="player-info">
+						<div class="player-name">${player.name}</div>
+						<div class="player-status">${player.position}</div>
+					</div>
+				</div>
+			`;
+		});
+	}
+
+	async initOnlineGame() {
+		this.local = false;
+
+		this.roomName = window.location.pathname.split('/').pop();
+		if (!this.roomName) {
+			console.error("No room name found in URL");
+			return;
+		}
+		console.log('Room name:', this.roomName);
+
+		const response = await api.getGameInfo(this.roomName);
+
+		if (!response) {
+			console.error("No game info found");
+			return;
+		}
+
+		this.map = response.map;
+		this.playercount = response.playercount;
+
+		await this.game.initialize(response.map, response.playercount, false);
+
+		this.setupWebSocket();
 	}
 
 	// Setup WebSocket connection
@@ -117,7 +198,7 @@ class Game {
 					break;
 				case 'started_game':
 					this.showGameCanvas();
-					this.game.start(this.socket, data.side, this.isHost);
+					this.game.startOnline(this.socket, data.side, this.isHost);
 					break;
 				case 'player_disconnected':
 					// Handle player disconnect
@@ -142,17 +223,12 @@ class Game {
 			canvasElement.height = 720;
 			canvasElement.style.width = '100%';
 			canvasElement.style.height = '100%';
+			}
+		
+		// Hide the start button after game starts
+		if (this.startBtn) {
+			this.startBtn.style.display = 'none';
 		}
-	}
-
-	 // Handle leave button click
-	async handleLeaveClick() {
-		if (this.socket) {
-			this.socket.disconnect();
-			this.socket = null;
-		}
-
-		router.navigate('/');
 	}
 
 	// Update players list in the sidebar
@@ -169,7 +245,6 @@ class Game {
 
 		// Add each player to the list
 		for (const player of players) {
-			console.log('Player:', player);
 			const isCurrentPlayer = player.id === user.id;
 
 			if (isCurrentPlayer) {
@@ -195,12 +270,11 @@ class Game {
 		// Update start button state based on all players ready
 		this.startBtn.style.display = this.isHost ? 'block' : 'none';
 		this.startBtn.disabled = !(this.isHost && this.ready(players));
-		console.log(this.startBtn.disabled);
 	}
 
 	// Check if all players are ready to start the game
 	ready(players) {
-		if (!players || players.length < this.config.player_count) {
+		if (!players || players.length < this.playercount) {
 			return false;
 		}
 
@@ -210,7 +284,14 @@ class Game {
 
 	// Handle start button click
 	handleStartClick() {
-		if (!this.socket || !this.isHost) return;
+		if (this.local) {
+			this.showGameCanvas();
+			this.game.startLocal();
+			return ;
+		}
+
+		if (!this.socket || !this.isHost)
+			return;
 
 		this.socket.send(JSON.stringify({
 			type: 'start_game'

@@ -1,42 +1,40 @@
-
-
 import { Mode, PlayerSide } from "./pongLogic/setting.js";
 
 export const inputKeys = {
-  [PlayerSide.LEFT]: { up: 'w', down: 's' },
-  [PlayerSide.RIGHT]: { up: 'k', down: 'i' },
-  [PlayerSide.TOP]: { up: 'x', down: 'c' },
-  [PlayerSide.BOTTOM]: { up: 'm', down: 'n' },
+	[PlayerSide.LEFT]: { up: 'w', down: 's' },
+	[PlayerSide.RIGHT]: { up: 'k', down: 'i' },
+	[PlayerSide.TOP]: { up: 'x', down: 'c' },
+	[PlayerSide.BOTTOM]: { up: 'm', down: 'n' },
 };
 
 export default class ControlHandler {
-  constructor(settings) {
-    this.settings = settings; // Get player sides from settings
-    this.paddleSpeeds = {}; // Store paddle speeds dynamically
-    this.acceleration = 0.2; // Default acceleration
+	constructor(settings) {
+		this.settings = settings; // Get player sides from settings
+		this.paddleSpeeds = {}; // Store paddle speeds dynamically
+		this.acceleration = 0.2; // Default acceleration
 
-	this.side = null; // Initialize side to null
-  }
-
-  async Init(mySide = null) {
-    // Initialize paddle speeds for active players
-	this.settings.playerSide.forEach(side => {
-	this.paddleSpeeds[side] = 0;
-	});
-
-	if (mySide) {
-		this.side = mySide;
+		this.side = null; // Initialize side to null
 	}
 
-    this.setupControls();
-  }
+	async Init(mySide = null) {
+		// Initialize paddle speeds for active players
+		this.settings.playerSide.forEach(side => {
+			this.paddleSpeeds[side] = 0;
+		});
 
-  setupControls() {
-    window.addEventListener('keydown', this.onKeyDown.bind(this));
-    window.addEventListener('keyup', this.onKeyUp.bind(this));
-  }
+		if (mySide) {
+			this.side = mySide;
+		}
 
-  onKeyDown(event) {
+		this.setupControls();
+	}
+
+	setupControls() {
+		window.addEventListener('keydown', this.onKeyDown.bind(this));
+		window.addEventListener('keyup', this.onKeyUp.bind(this));
+	}
+
+	onKeyDown(event) {
 	if (this.settings.mode === Mode.NETWORKED) {
 		if (event.key === inputKeys[this.side].up) {
 			this.paddleSpeeds[this.side] = this.acceleration;
@@ -54,7 +52,7 @@ export default class ControlHandler {
 	}
   }
 
-  onKeyUp(event) {
+	onKeyUp(event) {
 	if (this.settings.mode === Mode.NETWORKED) {
 		if (event.key === inputKeys[this.side].up || event.key === inputKeys[this.side].down) {
 			this.paddleSpeeds[this.side] = 0;
@@ -69,8 +67,8 @@ export default class ControlHandler {
 	}
   }
 
-  getPaddleSpeeds() {
-    return this.paddleSpeeds;
-  }
+	getPaddleSpeeds() {
+		return this.paddleSpeeds;
+	}
 }
 

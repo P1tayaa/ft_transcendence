@@ -15,34 +15,35 @@ export default class Game {
 		this.animate = this.animate.bind(this);
 	}
 
-	async initialize(config) {
-		try {
-			// Initialize everything except the socket connection
-			await this.init.initialize(config);
-			this.pongLogic = this.init.pongLogic;
-			this.score = this.init.score;
-			this.gameScene = this.init.gameScene;
+	async initialize(map, playercount, local = true) {
+		await this.init.initialize(map, playercount, local);
+		this.pongLogic = this.init.pongLogic;
+		this.score = this.init.score;
+		this.gameScene = this.init.gameScene;
 
-			return true;
-		} catch (error) {
-			console.error('Initialization failed:', error);
-			return false;
-		}
+		return true;
 	}
-	
-	async start(socket, side, isHost) {
-		if (this.init.settings.mode === Mode.NETWORKED && socket) {
-			this.init.pongLogic.socket.init(socket, side);
-			this.pongLogic.isHost = isHost;
-		}
+
+	async startOnline(socket, side, isHost) {
+		this.init.pongLogic.socket.init(socket, side);
+		this.pongLogic.isHost = isHost;
 
 		this.init.controlHandler.Init(side);
 		this.setupRenderer();
-		
-		// Start the animation loop
-		console.log("Game starting!");
 
 		this.renderer.setAnimationLoop(this.animate);
+
+		console.log("Game starting in online mode!");
+	}
+
+	async startLocal() {
+		this.setupRenderer();
+
+		this.init.controlHandler.Init();
+
+		this.renderer.setAnimationLoop(this.animate);
+
+		console.log("Game starting in local mode!");
 	}
 
 	setupRenderer() {

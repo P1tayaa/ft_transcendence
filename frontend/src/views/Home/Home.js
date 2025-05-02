@@ -330,6 +330,8 @@ class Home {
 				router.navigate('/game/' + room.room_name);
 			}
 			else {
+				sessionStorage.setItem('map', selection.map);
+				sessionStorage.setItem('playercount', selection.players);
 				router.navigate('/game/local');
 			}
 			
