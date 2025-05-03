@@ -2,12 +2,11 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import transaction
-import logging
 from apps.game.models.game import GameRoom, GameResult
-import uuid
-import random
 
+import logging
 logger = logging.getLogger(__name__)
+
 
 class Tournament(models.Model):
 	"""

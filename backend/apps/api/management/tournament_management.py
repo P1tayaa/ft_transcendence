@@ -17,7 +17,7 @@ def create_tournament(request):
 
 		 # Generate a tournament name
 		import uuid
-		name = f"tournament-{request.user.username}-{str(uuid.uuid4())}"
+		name = f"tournament-{request.user.username}-{str(uuid.uuid4())[:5]}"
 		
 		# Use the Tournament.create class method instead of direct creation
 		tournament = Tournament.create(

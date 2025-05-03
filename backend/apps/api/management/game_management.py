@@ -53,9 +53,8 @@ def create_game_room(request):
 		
 		logger.info(f"Creating game room with config: {config_data}")
 
-		# Create GameRoom directly with parameters from config_data
 		import uuid
-		room_name = f"game-{request.user.username}-{str(uuid.uuid4())}"
+		room_name = f"game-{request.user.username}-{str(uuid.uuid4())[:5]}"
 		
 		game_room = GameRoom.objects.create(
 			name=room_name,
