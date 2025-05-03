@@ -105,7 +105,7 @@ export default class Game {
 	}
 
 	game_done() {
-		if (this.renderer) {
+		if (!this.renderer) {
 			return;
 		}
 

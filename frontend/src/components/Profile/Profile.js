@@ -96,7 +96,7 @@ export default class Profile {
 				</div>
 				<div class="profile-user-info">
 					<div class="profile-avatar-container">
-						<img src="${this.profileData.avatar || 'default-avatar.png'}" alt="${this.profileData.username}'s Avatar" class="profile-avatar">
+						<img src="${this.profileData.avatar || '/default-avatar.png'}" alt="${this.profileData.username}'s Avatar" class="profile-avatar">
 						<span class="status-indicator ${this.profileData.status === 'online' ? 'online' : ''}"></span>
 					</div>
 					<div class="profile-details">

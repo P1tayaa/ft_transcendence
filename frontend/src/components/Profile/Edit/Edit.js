@@ -30,7 +30,7 @@ export default class EditProfileModal {
 				<div class="edit-profile-form">
 					<div class="avatar-upload">
 						<div class="avatar-preview" id="avatar-preview-container">
-							<img src="${this.profileData.avatar || 'default-avatar.png'}" alt="Avatar Preview" id="avatar-preview">
+							<img src="${this.profileData.avatar || '/default-avatar.png'}" alt="Avatar Preview" id="avatar-preview">
 						</div>
 						<div class="avatar-buttons">
 							<input type="file" id="avatar-upload" accept="image/*" style="display: none;">
@@ -100,7 +100,7 @@ export default class EditProfileModal {
 		// Add delete avatar button handler
 		document.getElementById('delete-avatar-btn').addEventListener('click', () => {
 			// Set preview to default avatar
-			avatarPreview.src = 'default-avatar.png';
+			avatarPreview.src = '/default-avatar.png';
 			// Clear file input
 			fileInput.value = '';
 			// Set a flag to indicate avatar deletion
