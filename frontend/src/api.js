@@ -286,10 +286,12 @@ class ApiManager {
 	 * Send a message to a user
 	 * @param {string} userId - The recipient user ID
 	 * @param {string} message - The message content
+	 * @param {string} type - The message type [text / invite]
 	 * @returns {Promise} A promise that resolves with the response data
 	 */
-	async sendMessage(userId, message) {
+	async sendMessage(userId, message, type = 'text') {
 		return this.post(this.endpoints.chat.sendMessage, {
+			type: type,
 			recipient_id: userId,
 			content: message
 		});

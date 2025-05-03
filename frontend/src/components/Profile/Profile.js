@@ -41,7 +41,7 @@ export default class Profile {
 			
 			// Initialize chat if not viewing own profile and not blocked
 			if (!this.isCurrentUserProfile) {
-				this.chat = new Chat(this.userId, 'chat-container');
+				this.chat = new Chat(this.userId, 'chat-container', this);
 
 				if (this.isBlocked) {
 					this.chat.block();

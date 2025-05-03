@@ -1,11 +1,14 @@
 import api from '../../../api.js';
 import user from '../../../User.js';
 import Socket from '../../../socket.js';
+import router from '../../../router.js';
 
 import './Chat.css';
 
 export default class Chat {
-	constructor(userId, containerId) {
+	constructor(userId, containerId, profile) {
+		this.profile = profile;
+
 		this.userId = userId;
 
 		this.containerId = containerId;
@@ -43,32 +46,41 @@ export default class Chat {
 		if (!this.containerElement)
 			return;
 
+		const isEmpty = messages && messages.length === 0;
+		const isInvitable = this.isInvitable();
+
 		this.containerElement.innerHTML = `
 			<div class="chat-container">
 				<div class="chat-messages" id="chat-messages">
-					${this.renderChatHistory(messages)}
+					${isEmpty ? '' : '<div class="empty-chat">No earlier chat history available...</div>'}
 				</div>
 				<div class="chat-input-container">
 					<input type="text" id="chat-message-input" placeholder="Type a message...">
-					<button id="send-message-btn"><i class="fas fa-paper-plane"></i></button>
+					<button id="send-message-btn">
+						<i class="fas fa-paper-plane"></i>
+					</button>
+					<button id="send-invite-btn" ${isInvitable ? '' : 'disabled='} title="${isInvitable ? 'Invite to game' : 'Cannot invite to game'}">
+							<i class="fas fa-gamepad"></i>
+					</button>
 				</div>
 			</div>
 		`;
+
+		messages.forEach(message => {
+			if (message.type === 'invite') {
+				this.addInvite(message);
+			} else {
+				this.addMessage(message);
+			}
+		});
 	}
 
-	renderChatHistory(chatHistory) {
-		if (!chatHistory || chatHistory.length === 0) {
-			return '<div class="empty-chat">No chat history available</div>';
-		}
+	isInvitable() {
+		const currentPath = window.location.pathname;
+		const isGamePage = currentPath.startsWith('/game/') && !currentPath.includes('/local');
+		const isTournamentPage = currentPath.startsWith('/tournament/');
 
-		return chatHistory.map(message => `
-			<div class="chat-message ${message.sender === user.username ? 'sent' : 'received'}">
-				<div class="message-content">
-					<div class="message-text">${message.content}</div>
-					<div class="message-time">${new Date(message.timestamp).toLocaleTimeString()}</div>
-				</div>
-			</div>
-		`).join('');
+		return (isGamePage || isTournamentPage);
 	}
 
 	setupEventListeners() {
@@ -82,6 +94,21 @@ export default class Chat {
 					this.sendMessage(msgInput.value);
 				}
 			});
+		}
+
+		// Setup invite button
+		const inviteBtn = document.getElementById('send-invite-btn');
+		if (inviteBtn) {
+			inviteBtn.addEventListener('click', () => this.sendInvite());
+		}
+	}
+
+	async sendInvite() {
+		try {
+			const currentPath = window.location.pathname;
+			await api.sendMessage(this.userId, currentPath, 'invite');
+		} catch (error) {
+			console.error('Failed to send invite:', error);
 		}
 	}
 
@@ -98,23 +125,60 @@ export default class Chat {
 		}
 	}
 
-	addMessageToChat(message) {
+	addMessage(message) {
 		const chatMessages = document.getElementById('chat-messages');
-		if (!chatMessages) return;
+		if (!chatMessages)
+			return;
 
 		const isCurrentUser = message.sender === user.username;
 		const messageEl = document.createElement('div');
-		messageEl.className = `chat-message ${isCurrentUser ? 'sent' : 'received'}`;
 
 		messageEl.innerHTML = `
-			<div class="message-content">
-				<div class="message-text">${message.content}</div>
-				<div class="message-time">${new Date(message.timestamp).toLocaleTimeString()}</div>
+			<div class="chat-message ${isCurrentUser ? 'sent' : 'received'}">
+				<div class="message-content">
+					<div class="message-text">${message.content}</div>
+					<div class="message-time">${new Date(message.timestamp).toLocaleTimeString()}</div>
+				</div>
 			</div>
 		`;
 
-		chatMessages.appendChild(messageEl);
+		chatMessages.appendChild(messageEl.firstElementChild);
+
 		chatMessages.scrollTop = chatMessages.scrollHeight;
+	}
+
+	addInvite(message) {
+		const chatMessages = document.getElementById('chat-messages');
+		if (!chatMessages)
+			return;
+
+		const isCurrentUser = message.sender === user.username;
+		const messageEl = document.createElement('div');
+
+		messageEl.innerHTML = `
+			<div class="chat-message invite ${isCurrentUser ? 'sent' : 'received'}">
+				<div class="message-content">
+					<i class="fas fa-gamepad invite-icon"></i>
+					${isCurrentUser ? 'You sent a game invitation' : 'Invited you to a game'}
+					<div class="message-time">${new Date(message.timestamp).toLocaleTimeString()}</div>
+				</div>
+			</div>
+		`;
+
+		const element = messageEl.firstElementChild;
+
+		chatMessages.appendChild(element);
+
+		chatMessages.scrollTop = chatMessages.scrollHeight;
+
+		// Add click event for invite button if it's not from the current user
+		if (!isCurrentUser) {
+			element.addEventListener('click', () => {
+				this.disconnect();
+				this.profile.close();
+				router.navigate(message.content);
+			});
+		}
 	}
 
 	connectSocket() {
@@ -126,7 +190,11 @@ export default class Chat {
 		this.socket = new Socket(`chat/${this.chatId}`);
 		this.socket.handleMessage = (data) => {
 			console.log('Received chat message:', data);
-			this.addMessageToChat(data.message);
+			if (data.message.type === 'invite') {
+				this.addInvite(data.message);
+			} else {
+				this.addMessage(data.message);
+			}
 		};
 		this.socket.connect();
 	}

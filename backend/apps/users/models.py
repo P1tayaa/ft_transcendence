@@ -80,6 +80,7 @@ class Profile(models.Model):
 				"messages": [
 					{
 						"id": msg.id,
+						"type": msg.type,
 						"content": msg.content,
 						"sender": msg.sender.username,
 						"sender_id": msg.sender.id,
@@ -134,6 +135,7 @@ class Message(models.Model):
 	content = models.TextField(default="")
 	timestamp = models.DateTimeField(auto_now_add=True)
 	is_read = models.BooleanField(default=False)
+	type = models.CharField(max_length=20, default='text')
 
 	class Meta:
 		ordering = ["timestamp"]

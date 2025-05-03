@@ -47,7 +47,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 			"chat": event["chat"]
 		})
 
-
 	async def error(self, message):
 		await self.send_json({
 			"type": "error",

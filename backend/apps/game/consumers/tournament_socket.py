@@ -138,12 +138,12 @@ class TournamentConsumer(BaseConsumer):
 		"""Process messages from client"""
 		try:
 			data = json.loads(text_data)
-			message_type = data.get('type')
+			type = data.get('type')
 
-			if message_type == 'start_tournament':
+			if type == 'start_tournament':
 				await self.handle_start_tournament()
 			else:
-				logger.warning(f"Unknown message type: {message_type}")
+				logger.warning(f"Unknown message type: {type}")
 
 		except json.JSONDecodeError:
 			logger.warning("Received invalid JSON data")
