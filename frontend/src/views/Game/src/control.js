@@ -11,7 +11,7 @@ export default class ControlHandler {
 	constructor(settings) {
 		this.settings = settings; // Get player sides from settings
 		this.paddleSpeeds = {}; // Store paddle speeds dynamically
-		this.acceleration = 0.2; // Default acceleration
+		this.acceleration = 0.8; // Default acceleration
 
 		this.side = null; // Initialize side to null
 	}

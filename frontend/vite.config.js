@@ -27,5 +27,6 @@ export default defineConfig({
     // Expose to network (important for Docker)
     host: '0.0.0.0',
     port: 5173,
+    allowedHosts : ['*', 'f1r3s5']
   }
 });

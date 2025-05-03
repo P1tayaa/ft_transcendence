@@ -7,7 +7,7 @@ import Score from './pongLogic/score.js';
 import { Mode, MapStyle, Setting } from "./pongLogic/setting.js";
 var assetsPath = window.location.protocol + '//' + window.location.host + "/assets/models/"; // add dynamic path?
 
-import { loadClassicMap, loadBathMap, loadCircleMap, loadRectangleMap } from "./init/loadMap.js";
+import { loadClassicMap, loadBathMap, loadBeachMap, loadLavaMap } from "./init/loadMap.js";
 import { spawnPadles } from './init/loadPadle.js';
 
 
@@ -34,11 +34,11 @@ export default class Init {
       case MapStyle.BATH:
         loadBathMap(assetsPath, this);
         break;
-      case MapStyle.CIRCLE:
-        loadCircleMap(assetsPath, this);
+      case MapStyle.Beach:
+        loadBeachMap(assetsPath, this);
         break;
-      case MapStyle.RECTANGLE:
-        loadRectangleMap(assetsPath, this);
+      case MapStyle.Lava:
+        loadLavaMap(assetsPath, this);
         break;
       default:
         console.error(`Unknown map style: map`);

@@ -86,7 +86,7 @@ export class MyWebSocket {
   }
 
   resetRound(pongLogic) {
-
+    console.log("reset round request sent")
     let request = {
       type: "reset_round",
       lastWinner: intToPlayerSide(pongLogic.lastWinner),
@@ -96,7 +96,6 @@ export class MyWebSocket {
       request.lastLoser = intToPlayerSide(3 - pongLogic.lastWinner);
     } else {
       request.lastLoser = intToPlayerSide(pongLogic.lastWinner);
-
     }
     console.log(request)
     this.socket.send(JSON.stringify(request));

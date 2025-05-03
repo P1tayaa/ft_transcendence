@@ -6,8 +6,8 @@ export const Mode = {
 export const MapStyle = {
   CLASSIC: "classic",
   BATH: "bath",
-  CIRCLE: "circle",
-  RECTANGLE: "rectangle",
+  Lava: "lava",
+  Beach: "beach",
 };
 
 export const PlayerSide = {

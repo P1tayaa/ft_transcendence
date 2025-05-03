@@ -2,7 +2,7 @@
 
 
 import { PlayerSide, Mode, intToPlayerSide } from "./setting.js";
-import { getNewPosition, getRightSpeed, posSpawn } from "../init/loadPadle.js"
+import { getNewPosition, getRightSpeed, checkBounderyPadle } from "../init/loadPadle.js"
 import { MyWebSocket } from "./websocket.js"
 
 
@@ -70,7 +70,7 @@ class Pong {
 				position: gameScene.getAssetPossition(side),
 				size: this.settings.paddleSize[side],
 			}));
-
+		console.log("colision func called")
 		const ballBox = this.createBoundingBox(this.ballPos, this.ballSize);
 		this.paddle_collided = false;
 		this.reset_ball = false;
@@ -102,6 +102,7 @@ class Pong {
 
 		// Check if ball is out of bounds (left & right bounds)
 		if (Math.abs(this.ballPos.x) >= this.playArea.width / 2) {
+			console.log(this.ballPos)
 			this.handleBallOutOfBounds(this.ballPos);
 		}
 		// Cap the Y speed
@@ -244,6 +245,11 @@ class Pong {
 			});
 
 			if (input[this.socket.mySide] !== 0) {
+				// this.settings.playerSide.forEach(Padle => {
+				if (checkBounderyPadle(this.settings, this.socket.mySide, this, input[this.socket.mySide]) === false) {
+					input[this.socket.mySide] = 0;
+				}
+				// });
 				this.socket.sendPaddlePosition(input, this.settings);
 			}
 		} else if (this.mode === Mode.LOCAL) {

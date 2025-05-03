@@ -12,6 +12,9 @@ export function loadClassicMap(assetsPath, init) {
     init.assetsLoaded++;
     init.pongLogic.playArea = { width: 100, depth: 60 };
   });
+  const ambiantLight = new THREE.PointLight(BATHLIGHT, 10000, 10000)
+  ambiantLight.position.set(120, -90, -6);
+  init.gameScene.scene.add(ambiantLight);
 };
 
 const BATHLIGHT = 0xffffff;
@@ -32,24 +35,30 @@ export function loadBathMap(assetsPath, init) {
   init.gameScene.scene.add(ambiantLight);
 };
 
-export function loadCircleMap(assetsPath, init) {
-  init.gameScene.loadModel('Floor', `${assetsPath}CircleFloor.glb`, (model) => {
-    console.log('Circle Floor model loaded.');
+export function loadBeachMap(assetsPath, init) {
+  init.gameScene.loadModel('Floor', `${assetsPath}beachMap.glb`, (model) => {
+    console.log('beach Map model loaded.');
     init.gameScene.moveAsset('Floor', { x: 0, y: 100, z: -3 });
     init.gameScene.rotateAsset('Floor', 'x', Math.PI / 2);
     init.gameScene.rotateAsset('Floor', 'y', Math.PI / 2);
     init.assetsLoaded++;
   });
+  const ambiantLight = new THREE.PointLight(BATHLIGHT, 10000, 10000)
+  ambiantLight.position.set(120, -90, -6);
+  init.gameScene.scene.add(ambiantLight);
 };
 
-export function loadRectangleMap(assetsPath, init) {
-  init.gameScene.loadModel('Floor', `${assetsPath}RectangleFloor.glb`, (model) => {
+export function loadLavaMap(assetsPath, init) {
+  init.gameScene.loadModel('Floor', `${assetsPath}Lava map.glb`, (model) => {
     console.log('Rectangle Floor model loaded.');
     init.gameScene.moveAsset('Floor', { x: 0, y: 0, z: -3 });
     init.gameScene.rotateAsset('Floor', 'x', Math.PI / 2);
     init.gameScene.rotateAsset('Floor', 'y', Math.PI / 2);
     init.assetsLoaded++;
   });
+  const ambiantLight = new THREE.PointLight(BATHLIGHT, 10000, 10000)
+  ambiantLight.position.set(120, -90, -6);
+  init.gameScene.scene.add(ambiantLight);
 };
 
 function loadMap(model, init) {

@@ -13,7 +13,7 @@ const COLORS = {
 
 
 export function updateLightsForActivePlayers(lightManager, gameScene, playerSides, last_winner) {
-  const positions = { ball: gameScene.getAssetPossition('Ball') };
+  var positions = { ball: gameScene.getAssetPossition('Ball') };
   const colorChanges = { ball: false };
 
   playerSides.forEach(side => {

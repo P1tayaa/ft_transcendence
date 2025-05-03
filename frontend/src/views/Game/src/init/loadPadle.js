@@ -62,7 +62,7 @@ export function getNewPosition(side, mapStyle, position) {
   }
 }
 
-function checkBounderyPadle(settings, name, pongLogic, speed) {
+export function checkBounderyPadle(settings, name, pongLogic, speed) {
   if (name === PlayerSide.LEFT || name == PlayerSide.RIGHT) {
     if ((Math.abs(settings.paddleLoc[name] + speed) + settings.paddleSize[name].y / 2) >= pongLogic.playArea.depth / 2) {
       return false;

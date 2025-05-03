@@ -69,7 +69,7 @@ export default class Game {
 				if (this.pongLogic.socket.gameOver) {
 					this.game_done()
 				}
-
+				console.log("this.pongLogic.paddleLoc", this.pongLogic.paddleLoc)
 				const newBallPos = { x: this.pongLogic.ballPos.x, y: this.pongLogic.ballPos.y, z: 0 };
 				// console.log(newBallPos)
 				this.gameScene.moveAsset('Ball', newBallPos);
@@ -78,6 +78,14 @@ export default class Game {
 			const input = this.init.controlHandler.getPaddleSpeeds();
 			if (this.pongLogic.socket.didReset || this.init.settings.mode !== Mode.NETWORKED) {
 				this.pongLogic.update(input, this.gameScene);
+			}
+			if (this.pongLogic.isHost){
+				this.pongLogic.update(input, this.gameScene);
+				if (this.pongLogic.resetBall && this.pongLogic.isHost) {
+					console.log("does go in reset")
+					this.pongLogic.resetBall = false
+					this.pongLogic.reset(this.init)
+				}
 			}
 
 			this.pongLogic.settings.playerSide.forEach(side => {
