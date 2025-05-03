@@ -155,16 +155,65 @@ class GameConsumer(BaseConsumer):
 			if position in self.game_state['score']:
 				player_id_scores[str(player['id'])] = self.game_state['score'][position]
 
-		logger.info(f"Final scores: {player_id_scores}")
+		result = await self.get_game_result(player_id_scores)
 
-		await database_sync_to_async(self.game_room.end)(player_id_scores)
+		# Get winner from game result
+		winner = None
+		for player_result in result['players']:
+			if player_result['is_winner']:
+				winner = player_result
 
+		# Send game_over notification
+		await self.channel_layer.group_send(
+			self.room_group_name, {
+			'type': 'game_over',
+			'result': result,
+			'winner': winner,
+			'tournament': await self.get_tournament_info(),
+		})
+		
 		# Cancel game loop
 		self.running = False
 		if hasattr(self, 'game_loop') and self.game_loop:
 			self.game_loop.cancel()
 
 		del GameConsumer.active_games[self.room_name]
+
+	# End the game in the database - this returns the game result
+	@database_sync_to_async
+	def get_game_result(self, player_id_scores):
+		"""End the game in the database and return the game result"""
+		result = None
+
+		if hasattr(self, 'game_room'):
+			result = self.game_room.end(player_id_scores)
+
+		if not result:
+			raise ValidationError("Game result not found")
+		
+		result = result.get_results()
+
+		if not result:
+			raise ValidationError("Game result not found")
+
+		return result
+
+	@database_sync_to_async
+	def get_tournament_info(self):
+		"""Get tournament information if this game is part of a tournament"""
+		try:
+			if hasattr(self.game_room, 'tournament_match'):
+				tournament_match = self.game_room.tournament_match
+				if tournament_match:
+					return {
+						'id': tournament_match.tournament.id,
+						'name': tournament_match.tournament.name,
+						'match_id': tournament_match.id,
+						'round': tournament_match.round
+					}
+		except Exception as e:
+			logger.error(f"Error getting tournament info: {str(e)}")
+		return None
 
 	async def leave(self):
 		"""Handle a player leaving the game"""
@@ -276,8 +325,6 @@ class GameConsumer(BaseConsumer):
 			await self.handle_update_score(data)
 		elif type == 'reset_round':
 			await self.handle_reset_round(data)
-		elif type == 'game_end':
-			await self.handle_game_end()
 		elif type == 'start_game':
 			await self.handle_start_game()
 		else:
@@ -347,70 +394,6 @@ class GameConsumer(BaseConsumer):
 				'traceback': traceback.format_exc()
 			}))
 
-	async def handle_game_end(self):
-		if not self.running:
-			return
-
-		logger.info(f"Game over triggered by {self.user.username} (ID: {self.user.id})")
-
-		# Stop the game loop
-		self.running = False
-		if hasattr(self, 'game_loop') and self.game_loop:
-			self.game_loop.cancel()
-
-		try:
-			# Convert position-based scores to player ID-based scores for the database
-			player_id_scores = {}
-			for player in self.game_state['players']:
-				position = player['position']
-				if position in self.game_state['score']:
-					player_id_scores[str(player['id'])] = self.game_state['score'][position]
-
-			# Save the game result using the model's end method
-			game_result = await database_sync_to_async(self.game_room.end)(player_id_scores)
-
-			if not game_result:
-				logger.warning("Game end failed, no result created")
-				return
-
-			logger.info(f"Game ended successfully, created result ID: {game_result.id}")
-
-			highest_score = -1
-			winner_position = None
-			for position, score in self.game_state['score'].items():
-				if score > highest_score:
-					highest_score = score
-					winner_position = position
-
-			winner_id = None
-			for player in self.game_state['players']:
-				if player['position'] == winner_position:
-					winner_id = str(player['id'])
-					break
-
-			await self.channel_layer.group_send(
-				self.room_group_name,
-				{
-					'type': 'game_over',
-					'winner': winner_id,
-					'winner_position': winner_position,
-					'game_result_id': game_result.id,
-					'tournament_id': self.game_room.tournament.id if self.game_room.tournament else None
-				}
-			)
-
-			# Remove the game from active games
-			if self.room_name in GameConsumer.active_games:
-				del GameConsumer.active_games[self.room_name]
-
-		except Exception as e:
-			import traceback
-			logger.error(f"Error ending game: {str(e)}\n{traceback.format_exc()}")
-			await self.send(text_data=json.dumps({
-				'type': 'error',
-				'message': f"Error ending game: {str(e)}"
-			}))
-
 	async def broadcast_game_state(self, extra=None):
 		"""Send game state to all clients in the room"""
 		event = {
@@ -449,6 +432,15 @@ class GameConsumer(BaseConsumer):
 		await self.send(text_data = json.dumps({
 			'type': 'which_paddle',
 			'position': event['position']
+		}))
+		
+	async def game_over(self, event):
+		"""Send game over notification to clients"""
+		await self.send(text_data=json.dumps({
+			'type': 'game_over',
+			'result': event['result'],
+			'winner': event['winner'],
+			'tournament': event['tournament']
 		}))
 
 	async def started_game(self, event):

@@ -104,14 +104,12 @@ export default class Game {
 		}
 	}
 
-
-	async game_done() {
-		this.renderer.setAnimationLoop(null);
-
-		if (this.pongLogic.settings.mode === Mode.NETWORKED) {
-			await this.socket.endGame()
+	game_done() {
+		if (this.renderer) {
+			return;
 		}
 
-		// router.navigate('/');
+		this.renderer.setAnimationLoop(null);
+		this.renderer.dispose();
 	}
 }
