@@ -63,12 +63,6 @@ class Game {
 		this.isHost = false;
 		this.isReady = false;
 
-		// Set up event listener for leaving the game
-		const leaveBtn = document.getElementById('leave-btn');
-		leaveBtn.addEventListener('click', () => {
-			router.navigate('/');
-		});
-
 		const path = window.location.pathname;
 
 		try {
@@ -83,6 +77,12 @@ class Game {
 			console.error('Error initializing game:', error);
 			return;
 		}
+
+		// Set up event listener for leaving the game
+		const leaveBtn = document.getElementById('leave-btn');
+		leaveBtn.addEventListener('click', () => {
+			router.navigate('/');
+		});
 
 		// Set up event listener for start button
 		this.startBtn = document.getElementById('start-btn');
