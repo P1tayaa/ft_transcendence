@@ -38,9 +38,11 @@ export function loadBathMap(assetsPath, init) {
 export function loadBeachMap(assetsPath, init) {
   init.gameScene.loadModel('Floor', `${assetsPath}beachMap.glb`, (model) => {
     console.log('beach Map model loaded.');
-    init.gameScene.moveAsset('Floor', { x: 0, y: 100, z: -3 });
+    init.gameScene.moveAsset('Floor', { x: 0, y: 0, z: -10 });
     init.gameScene.rotateAsset('Floor', 'x', Math.PI / 2);
     init.gameScene.rotateAsset('Floor', 'y', Math.PI / 2);
+    init.gameScene.setScale('Floor', 4)
+
     init.assetsLoaded++;
   });
   const ambiantLight = new THREE.PointLight(BATHLIGHT, 10000, 10000)
@@ -54,6 +56,7 @@ export function loadLavaMap(assetsPath, init) {
     init.gameScene.moveAsset('Floor', { x: 0, y: 0, z: -3 });
     init.gameScene.rotateAsset('Floor', 'x', Math.PI / 2);
     init.gameScene.rotateAsset('Floor', 'y', Math.PI / 2);
+    init.gameScene.setScale('Floor', 7)
     init.assetsLoaded++;
   });
   const ambiantLight = new THREE.PointLight(BATHLIGHT, 10000, 10000)

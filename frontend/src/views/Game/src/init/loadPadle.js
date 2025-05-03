@@ -14,11 +14,11 @@ export function posSpawn(map, position) {
       distanceToCenter = 40;
       ration_map = 0.5;
       break;
-    case MapStyle.CIRCLE:
+    case MapStyle.Lava:
       distanceToCenter = 40;
       ration_map = 0.6;
       break;
-    case MapStyle.RECTANGLE:
+    case MapStyle.Beach:
       distanceToCenter = 40;
       ration_map = 0.6;
       break;
@@ -64,16 +64,30 @@ export function getNewPosition(side, mapStyle, position) {
 
 export function checkBounderyPadle(settings, name, pongLogic, speed) {
   if (name === PlayerSide.LEFT || name == PlayerSide.RIGHT) {
-    if ((Math.abs(settings.paddleLoc[name] + speed) + settings.paddleSize[name].y / 2) >= pongLogic.playArea.depth / 2) {
+    if ((Math.abs(settings.paddleLoc[name] + speed) - settings.paddleSize[name].y / 2) >= pongLogic.playArea.depth / 2) {
       return false;
     }
   } else {
-    if ((Math.abs(settings.paddleLoc[name] + speed) + settings.paddleSize[name].x / 2) >= pongLogic.playArea.width / 2) {
+    if ((Math.abs(settings.paddleLoc[name] + speed) - settings.paddleSize[name].x / 2) >= pongLogic.playArea.width / 2) {
       return false;
     }
   }
   return true;
 }
+
+export function checkBounderyPadlePos(position, settings, name, pongLogic, speed) {
+  if (name === PlayerSide.LEFT || name == PlayerSide.RIGHT) {
+    if ((Math.abs(position.y + speed) - settings.paddleSize[name].y / 2) >= pongLogic.playArea.depth / 2) {
+      return false;
+    }
+  } else {
+    if ((Math.abs(position.x + speed) - settings.paddleSize[name].x / 2) >= pongLogic.playArea.width / 2) {
+      return false;
+    }
+  }
+  return true;
+}
+
 
 
 export function getRightSpeed(position, speed, settings, pongLogic) {

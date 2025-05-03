@@ -4,7 +4,6 @@ __pycache__/
 
 backend/static
 frontend/dist
-frontend/public/assets
 frontend/node_modules
 
 Makefile

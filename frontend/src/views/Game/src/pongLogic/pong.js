@@ -2,7 +2,7 @@
 
 
 import { PlayerSide, Mode, intToPlayerSide } from "./setting.js";
-import { getNewPosition, getRightSpeed, checkBounderyPadle } from "../init/loadPadle.js"
+import { getNewPosition, getRightSpeed, checkBounderyPadlePos } from "../init/loadPadle.js"
 import { MyWebSocket } from "./websocket.js"
 
 
@@ -245,11 +245,12 @@ class Pong {
 			});
 
 			if (input[this.socket.mySide] !== 0) {
-				// this.settings.playerSide.forEach(Padle => {
-				if (checkBounderyPadle(this.settings, this.socket.mySide, this, input[this.socket.mySide]) === false) {
-					input[this.socket.mySide] = 0;
-				}
-				// });
+				this.settings.playerSide.forEach(Padle => {
+					if (checkBounderyPadlePos(gameScene.getAssetPossition(Padle), this.settings, Padle, this, input[Padle]) === false) {
+						input[Padle] = 0;
+						// console.log("checkBounderyPadlePos == false")
+					}
+				});
 				this.socket.sendPaddlePosition(input, this.settings);
 			}
 		} else if (this.mode === Mode.LOCAL) {

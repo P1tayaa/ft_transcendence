@@ -65,6 +65,12 @@ class Game {
 
 		const path = window.location.pathname;
 
+		// Set up event listener for leaving the game
+		const leaveBtn = document.getElementById('leave-btn');
+		leaveBtn.addEventListener('click', () => {
+			router.navigate('/');
+		});
+
 		try {
 			this.game = new PongGame();
 
@@ -78,15 +84,12 @@ class Game {
 			return;
 		}
 
-		// Set up event listener for leaving the game
-		const leaveBtn = document.getElementById('leave-btn');
-		leaveBtn.addEventListener('click', () => {
-			router.navigate('/');
-		});
-
 		// Set up event listener for start button
 		this.startBtn = document.getElementById('start-btn');
-		this.startBtn.addEventListener('click', () => this.handleStartClick());
+
+		if (this.startBtn) {
+			this.startBtn.addEventListener('click', () => this.handleStartClick());
+		}
 	}
 
 	async initLocalGame() {
@@ -299,11 +302,16 @@ class Game {
 	}
 
 	onUnload() {
-		console.log('Cleaning up game resources', this.socket);
 		if (this.socket) {
 			console.log('Cleaning up game socket connection');
 			this.socket.disconnect();
 			this.socket = null;
+		}
+
+		if (this.game) {
+			console.log('Cleaning up game instance');
+			this.game.game_done();
+			this.game = null;
 		}
 	}
 }

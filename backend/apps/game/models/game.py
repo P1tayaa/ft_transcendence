@@ -188,10 +188,6 @@ class GameRoom(Room):
 				# Delete the game room after saving results
 				self.delete()
 
-				logger.info(f"Game ended successfully: {game_record.get_results()}")
-				logger.info(f"Total number of games in database: {GameResult.objects.count()}")
-				logger.info(f"All game results: {GameResult.objects.all().values('id')}")
-
 				return game_record
 		except ValidationError as e:
 			logger.error(f"Error ending game: {e}")
@@ -237,7 +233,7 @@ class GameResult(models.Model):
 		"""Get formatted game results"""
 		return {
 			'id': self.id,
-			'date': self.date,
+			'date': self.date.isoformat(),
 			'players': [
 				{
 					'user_id': result.user.id,

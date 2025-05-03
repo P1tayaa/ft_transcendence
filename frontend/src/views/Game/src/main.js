@@ -87,6 +87,10 @@ export default class Game {
 					this.pongLogic.reset(this.init)
 				}
 			}
+			if (this.init.settings.mode !== Mode.NETWORKED && this.pongLogic.resetBall){
+				this.pongLogic.resetBall = false
+				this.pongLogic.reset(this.init)
+			}
 
 			this.pongLogic.settings.playerSide.forEach(side => {
 				this.score.updateScoreDisplay(side)
@@ -112,14 +116,13 @@ export default class Game {
 		}
 	}
 
-
-	async game_done() {
+	game_done() {
+		if (!this.renderer) {
+			return;
+		}
 		this.renderer.setAnimationLoop(null);
 
-		if (this.pongLogic.settings.mode === Mode.NETWORKED) {
-			await this.socket.endGame()
-		}
 
-		// router.navigate('/');
+		this.renderer.dispose();
 	}
 }
