@@ -23,7 +23,7 @@ class Authenticate {
 				<h2>Welcome Back</h2>
 				<form>
 					<div class="form-group">
-						<label for="login-username">Username (8 max)</label>
+						<label for="login-username">Username</label>
 						<input type="text" id="login-username" class="form-input" placeholder="Enter your username" maxlength="8" required>
 					</div>
 					<div class="form-group">
