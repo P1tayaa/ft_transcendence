@@ -8,7 +8,6 @@ class Tournament {
 		// Initialize class member variables
 		this.socket = null;
 		this.tournamentData = null;
-		this.isCreator = false;
 		this.tournamentName = '';
 	}
 
@@ -35,7 +34,6 @@ class Tournament {
 	async onLoad() {
 		// Reset state
 		this.tournamentData = null;
-		this.isCreator = false;
 
 		// Get tournament name from URL
 		this.tournamentName = window.location.pathname.split('/').pop();
@@ -74,16 +72,14 @@ class Tournament {
 	}
 
 	updateTournamentState(state) {
-		if (!state) return;
+		if (!state)
+			return;
 
 		// Update tournament data
 		this.tournamentData = state;
 
 		// Update title
 		document.getElementById('tournament-title').textContent = state.name;
-
-		// Check if current user is the creator
-		this.isCreator = state.creator && state.creator.id === user.id;
 
 		// Show winner if tournament is completed
 		if (state.status === 'completed' && state.winner) {
@@ -94,7 +90,7 @@ class Tournament {
 
 		// Update start button visibility
 		const startBtn = document.getElementById('start-btn');
-		if (this.isCreator && state.status === 'waiting' && state.players.length === state.max_players) {
+		if (state.status === 'waiting' && state.players.length === state.max_players) {
 			startBtn.style.display = 'block';
 			startBtn.disabled = false;
 		} else {

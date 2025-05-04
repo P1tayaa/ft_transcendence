@@ -24,20 +24,22 @@ class TournamentConsumer(BaseConsumer):
 			await self.close()
 			return
 
-		await self.channel_layer.group_add(
-			self.group_name,
-			self.channel_name
-		)
-		await self.accept()
-		logger.info(f"User {self.user.username} (ID: {self.user.id}) connected to tournament {self.tournament_name}")
-
 		# Join or reconnect to the tournament
 		tournament_data = await self.join_tournament()
 
 		if not tournament_data:
-			logger.warning(f"User {self.user.username} failed to join tournament {self.tournament_name}")
 			await self.close()
 			return
+
+		await self.channel_layer.group_add(
+			self.group_name,
+			self.channel_name
+		)
+
+		await self.accept()
+		self.connected = True
+
+		logger.info(f"User {self.user.username} (ID: {self.user.id}) connected to tournament {self.tournament_name}")
 
 		await self.broadcast_tournament_state()
 
@@ -86,8 +88,9 @@ class TournamentConsumer(BaseConsumer):
 		# If tournament hasn't started yet (is in waiting state), leave the tournament
 		if tournament.status == 'waiting':
 			logger.info(f"User {self.user.username} leaving tournament {self.tournament_name} on disconnect")
-			await self.leave_tournament()
-			await self.broadcast_tournament_state()
+			if self.connected:
+				await self.leave_tournament()
+				await self.broadcast_tournament_state()
 
 		# Remove from channel group
 		if hasattr(self, 'group_name'):
@@ -132,7 +135,6 @@ class TournamentConsumer(BaseConsumer):
 				'state': state
 			}
 		)
-
 
 	async def receive(self, text_data):
 		"""Process messages from client"""

@@ -284,7 +284,11 @@ class Tournament(models.Model):
 			'winner': {
 				'id': self.winner.id,
 				'username': self.winner.username
-			} if self.winner else None
+			} if self.winner else None,
+			'creator': {
+				'id': self.creator.id,
+				'username': self.creator.username
+			}
 		}
 
 class TournamentPlayer(models.Model):
