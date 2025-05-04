@@ -99,6 +99,11 @@ class Tournament {
 
 		// Render the tournament bracket
 		this.renderTournamentBracket();
+
+		// Check if tournament has already started
+		if (state.status === 'in_progress') {
+			this.handleTournamentStarted();
+		}
 	}
 
 	renderTournamentBracket() {
@@ -190,7 +195,50 @@ class Tournament {
 
 			// Hide start button
 			document.getElementById('start-btn').style.display = 'none';
+
+			// Check if the current user is playing in one of the matches
+			const currentUserMatch = this.findUserMatch();
+			if (currentUserMatch && currentUserMatch.game_room) {
+				// Show popup notification
+				this.showPopupNotification(`Your match is starting! You'll be redirected to the game room in 3 seconds.`);
+				
+				// Set timeout for redirection
+				setTimeout(() => {
+					router.navigate(`/game/${currentUserMatch.game_room}`);
+				}, 3000);
+			}
 		}
+	}
+
+	findUserMatch() {
+		// Find a match where the current user is playing
+		if (!this.tournamentData || !this.tournamentData.matches)
+			return null;
+
+		const currentUserId = user.id;
+		return this.tournamentData.matches.find(match => 
+			(match.player1 && match.player1.id === currentUserId) || 
+			(match.player2 && match.player2.id === currentUserId)
+		);
+	}
+
+	showPopupNotification(message) {
+		// Create popup element
+		const popup = document.createElement('div');
+		popup.className = 'tournament-popup';
+		popup.innerHTML = `
+			<div class="tournament-popup-content">
+				<div class="tournament-popup-message">${message}</div>
+			</div>
+		`;
+		document.querySelector('.tournament-container').appendChild(popup);
+		
+		// Auto-remove after 5 seconds (longer than redirect time)
+		setTimeout(() => {
+			if (popup && popup.parentNode) {
+				popup.parentNode.removeChild(popup);
+			}
+		}, 5000);
 	}
 
 	handleStartTournament() {
