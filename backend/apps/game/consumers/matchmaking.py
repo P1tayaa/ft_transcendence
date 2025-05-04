@@ -6,8 +6,8 @@ from apps.game.models.tournament import Tournament
 
 @database_sync_to_async
 def get_game_rooms():
-    # Get regular game rooms
-    game_rooms = GameRoom.objects.filter(status='waiting')
+    # Get regular game rooms (exclude those associated with tournaments)
+    game_rooms = GameRoom.objects.filter(status='waiting', tournament__isnull=True)
     tournaments = Tournament.objects.filter(status='waiting')
     
     # Prepare combined rooms list with type identifier
