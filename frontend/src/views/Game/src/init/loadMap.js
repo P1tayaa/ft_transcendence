@@ -5,7 +5,7 @@ import Init from '../init.js';  // Import Init class
 // Define the individual map loading functions
 export function loadClassicMap(assetsPath, init) {
   init.gameScene.loadModel('Floor', `${assetsPath}Floor.glb`, (model) => {
-    console.log('Classic Floor model loaded.');
+    console.debug('Classic Floor model loaded.');
     init.gameScene.moveAsset('Floor', { x: 0, y: 0, z: -3 });
     init.gameScene.rotateAsset('Floor', 'x', Math.PI / 2);
     init.gameScene.rotateAsset('Floor', 'y', Math.PI / 2);
@@ -23,7 +23,7 @@ const BATHLIGHT = 0xffffff;
 export function loadBathMap(assetsPath, init) {
   // init.gameScene.loadCharacter('Floor', `${assetsPath}Bath.glb`, (model) => {
   init.gameScene.loadModel('Floor', `${assetsPath}Bath.glb`, (model) => {
-    console.log('Bath Floor model loaded.');
+    console.debug('Bath Floor model loaded.');
     init.gameScene.moveAsset('Floor', { x: 0, y: 0, z: -13 });
     init.gameScene.rotateAsset('Floor', 'x', Math.PI / 2);
     init.gameScene.rotateAsset('Floor', 'y', Math.PI / 2);
@@ -37,7 +37,7 @@ export function loadBathMap(assetsPath, init) {
 
 export function loadBeachMap(assetsPath, init) {
   init.gameScene.loadModel('Floor', `${assetsPath}beachMap.glb`, (model) => {
-    console.log('beach Map model loaded.');
+    console.debug('beach Map model loaded.');
     init.gameScene.moveAsset('Floor', { x: 0, y: 0, z: -10 });
     init.gameScene.rotateAsset('Floor', 'x', Math.PI / 2);
     init.gameScene.rotateAsset('Floor', 'y', Math.PI / 2);
@@ -52,7 +52,7 @@ export function loadBeachMap(assetsPath, init) {
 
 export function loadLavaMap(assetsPath, init) {
   init.gameScene.loadModel('Floor', `${assetsPath}Lava map.glb`, (model) => {
-    console.log('Rectangle Floor model loaded.');
+    console.debug('Rectangle Floor model loaded.');
     init.gameScene.moveAsset('Floor', { x: 0, y: 0, z: -3 });
     init.gameScene.rotateAsset('Floor', 'x', Math.PI / 2);
     init.gameScene.rotateAsset('Floor', 'y', Math.PI / 2);
@@ -66,7 +66,7 @@ export function loadLavaMap(assetsPath, init) {
 
 function loadMap(model, init) {
   init.gameScene.loadModel('Floor', model, (model) => {
-    console.log(`${model} model loaded.`);
+    console.debug(`${model} model loaded.`);
     init.gameScene.moveAsset('Floor', { x: 0, y: 0, z: -3 });
     init.gameScene.rotateAsset('Floor', 'x', Math.PI / 2);
     init.gameScene.rotateAsset('Floor', 'y', Math.PI / 2);

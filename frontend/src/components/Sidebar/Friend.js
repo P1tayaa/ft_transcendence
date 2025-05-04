@@ -51,7 +51,6 @@ export default class Friend {
 	}
 
 	setStatus = (status) => {
-		console.log(`User ${this.username} is now ${status}`);
 		this.status = status;
 		this.render();
 	}

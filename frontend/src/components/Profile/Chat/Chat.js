@@ -26,7 +26,6 @@ export default class Chat {
 		try {
 			// Get chat history which should include the chat ID
 			const chat = await api.getChatHistory(this.userId);
-			console.log('chat:', chat);
 			this.chatId = chat.chat_id;
 			
 			// Render initial chat
@@ -117,8 +116,7 @@ export default class Chat {
 
 		const msgInput = document.getElementById('chat-message-input');
 		try {
-			const response = await api.sendMessage(this.userId, message);
-			console.log('Message sent:', response);
+			await api.sendMessage(this.userId, message);
 			msgInput.value = '';
 		} catch (error) {
 			console.error('Failed to send message:', error);
@@ -189,7 +187,6 @@ export default class Chat {
 
 		this.socket = new Socket(`chat/${this.chatId}`);
 		this.socket.handleMessage = (data) => {
-			console.log('Received chat message:', data);
 			if (data.message.type === 'invite') {
 				this.addInvite(data.message);
 			} else {

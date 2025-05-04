@@ -113,7 +113,6 @@ export function getRightSpeed(position, speed, settings, pongLogic) {
       break;
   }
   settings.paddleLoc[position] += speed;
-  console.log(settings.paddleLoc[position]);
   return vector_speed;
 }
 
@@ -142,9 +141,8 @@ export function getRightRotation(name, gameScene) {
 
 
 export function SpawnPadle(init, name, assetsPath, map) {
-
   init.gameScene.loadModel(name, `${assetsPath}padle.glb`, (model) => {
-    console.log(`Padle ${name} loaded.`);
+    console.debug(`Padle ${name} loaded.`);
 
     init.gameScene.moveAsset(name, posSpawn(map, name));
 

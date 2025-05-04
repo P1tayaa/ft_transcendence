@@ -12,8 +12,6 @@ class Router {
 		this.routes = routes;
 		this.currentRoute = null;
 
-		console.log('Router initialized, routes:', this.routes);
-
 		window.addEventListener('popstate', () => {
 			this.navigate(window.location.pathname, false);
 		});
@@ -39,9 +37,7 @@ class Router {
 	 * @param {string} path - path of the route
 	 */
 	navigate(path, history = true) {
-		console.log('Navigating to:', path);
 		const route = this.matchRoute(path);
-		console.log('Matched route:', route);
 
 		if (!route) {
 			this.rootElement.innerHTML = `<h1>404 Not Found</h1>`;

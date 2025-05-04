@@ -92,8 +92,6 @@ export default class Profile {
 
 		const matchHistory = await api.getMatchHistory(this.userId);
 
-		console.log('Match history:', matchHistory);
-
 		const wins = matchHistory.wins || 0;
 		const totalGames = matchHistory.total || 0;
 
@@ -116,8 +114,6 @@ export default class Profile {
 				
 			actionButtons = `${friendButton}${blockButton}`;
 		}
-
-		console.log('Rendering profile:', this.profileData);
 
 		this.element.innerHTML = `
 		<div class="profile-page">

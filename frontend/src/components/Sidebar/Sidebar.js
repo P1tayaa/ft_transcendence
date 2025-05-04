@@ -18,7 +18,7 @@ class Sidebar {
 
 		// Listen for user login and logout events
 		window.addEventListener('user:login', () => {
-			console.log('User logged in, initializing sidebar');
+			console.debug('User logged in, initializing sidebar');
 			this.init();
 			
 			 // Initialize and connect to presence socket after login
@@ -49,18 +49,16 @@ class Sidebar {
 				return;
 			}
 
-			console.log('Presence socket message:', message);
 
 			switch (message.type) {
 				case 'user_online':
-					console.log('User online:', message.data.user_id);
 					window.dispatchEvent(new CustomEvent(`user:${message.data.user_id}:online`));
 					break;
 				case 'user_offline':
 					window.dispatchEvent(new CustomEvent(`user:${message.data.user_id}:offline`));
 					break;
 				default:
-					console.log('Unknown message type:', message.data.type);
+					console.warn('Unknown message type:', message.data.type);
 			}
 		};
 		

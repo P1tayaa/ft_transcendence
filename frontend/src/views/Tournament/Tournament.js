@@ -54,7 +54,7 @@ class Tournament {
 
 		// Set up message handler
 		this.socket.handleMessage = (data) => {
-			console.log('Tournament socket message:', data);
+			console.debug('Tournament socket message:', data);
 
 			switch (data.type) {
 				case 'tournament_state':

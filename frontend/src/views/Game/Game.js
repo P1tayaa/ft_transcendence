@@ -169,7 +169,6 @@ class Game {
 			console.error("No room name found in URL");
 			return;
 		}
-		console.log('Room name:', this.roomName);
 
 		const response = await api.getGameInfo(this.roomName);
 
@@ -193,7 +192,7 @@ class Game {
 		this.socket.connect();
 
 		this.socket.handleMessage = (data) => {
-			console.log('WebSocket message:', data);
+			console.debug('WebSocket message:', data);
 
 			switch (data.type) {
 				case 'game_state_update':
@@ -205,7 +204,7 @@ class Game {
 					break;
 				case 'player_disconnected':
 					// Handle player disconnect
-					console.log('Player disconnected:', data.user_id);
+					console.debug('Player disconnected:', data.user_id);
 					break;
 			}
 		};
@@ -301,13 +300,13 @@ class Game {
 
 	onUnload() {
 		if (this.socket) {
-			console.log('Cleaning up game socket connection');
+			console.debug('Cleaning up game socket connection');
 			this.socket.disconnect();
 			this.socket = null;
 		}
 
 		if (this.game) {
-			console.log('Cleaning up game instance');
+			console.debug('Cleaning up game instance');
 			this.game.game_done();
 			this.game = null;
 		}

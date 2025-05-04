@@ -13,7 +13,6 @@ export class MyWebSocket {
 	}
 
 	init(socket, side) {
-		console.log("Overwriting socket for side", side);
 		this.socket = socket;
 		this.mySide = side;
 
@@ -21,10 +20,10 @@ export class MyWebSocket {
 			if (data.type === "game_state_update") {
 				this.serverState = data.state;
 			} else if (data.type === "reset_round") {
-				console.log("Resetting round");
+				console.debug("Resetting round");
 				this.didReset = true;
 			} else if (data.type === "game_over") {
-				console.log("Game over received:", data);
+				console.debug("Game over received:", data);
 				this.gameOver = true;
 				this.gameResult = {
 					result: data.result,
@@ -32,13 +31,13 @@ export class MyWebSocket {
 					tournament: data.tournament
 				};
 			} else {
-				console.log("Unknown message type received:", data.type);
+				console.warn("Unknown message type received:", data.type);
 			}
 		};
 
 		socket.onclose = (event) => {
 			this.gameOver = true;
-			console.warn('WebSocket connection closed', event);
+			console.debug('WebSocket connection closed', event);
 		};
 	}
 
@@ -80,7 +79,6 @@ export class MyWebSocket {
 			x: ballPos.x,
 			y: ballPos.y
 		}
-		console.log(ballVelocityRequest);
 		this.socket.send(ballVelocityRequest);
 	}
 
@@ -90,13 +88,13 @@ export class MyWebSocket {
 			lastWinner: intToPlayerSide(pongLogic.lastWinner),
 			lastLoser: "",
 		}
+
 		if (!pongLogic.lastLoser) {
 			request.lastLoser = intToPlayerSide(3 - pongLogic.lastWinner);
 		} else {
 			request.lastLoser = intToPlayerSide(pongLogic.lastWinner);
-
 		}
-		console.log(request)
+
 		this.socket.send(request);
 	}
 

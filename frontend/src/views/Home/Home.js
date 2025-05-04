@@ -155,11 +155,7 @@ class Home {
 		this.socket = socket; // Store in home instance for cleanup
 
 		socket.handleMessage = (data) => {
-			console.log("matchmaking event:", data);
-
 			if (data.type === 'room_list') {
-				console.log('Received room list:', data.rooms);
-
 				if (data.rooms.length === 0) {
 					noRoomsMessage.classList.remove('hidden');
 				} else {
@@ -174,7 +170,8 @@ class Home {
 			}
 
 			if (data.type === 'room_created') {
-				console.log('Room created:', data.room);
+				console.debug('New room created:', data.room);
+
 				const roomElement = createRoomElement(data.room);
 				roomsContainer.appendChild(roomElement);
 				noRoomsMessage.classList.add('hidden');
@@ -186,8 +183,6 @@ class Home {
 
 		// Create a room element by rendering HTML
 		function createRoomElement(room) {
-			console.log('Creating room element:', room);
-
 			// Create a div element for the room
 			const roomElement = document.createElement('div');
 			roomElement.dataset.roomName = room.name;
@@ -203,7 +198,6 @@ class Home {
 
 			// Make the entire room item clickable to join the game
 			roomElement.addEventListener('click', () => {
-				console.log(room.settings);
 				socket.disconnect();
 
 				// Join the game room or tournament based on type

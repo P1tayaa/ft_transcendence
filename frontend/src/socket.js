@@ -23,11 +23,11 @@ export default class WebSocketManager {
 	**/
 	connect() {
 		try {
-			console.log('Connecting to socket ', this.url);
+			console.debug('Connecting to socket ', this.url);
 			this.socket = new WebSocket(this.url);
 
 			this.socket.onopen = () => {
-				console.log('Connected to socket ', this.url);
+				console.debug('Connected to socket ', this.url);
 			};
 
 			this.socket.onmessage = (event) => {
@@ -36,7 +36,14 @@ export default class WebSocketManager {
 			};
 
 			this.socket.onclose = (event) => {
-				console.log('Socket closed with code:', event.code, event.reason || ': No reason was given');
+				if (event.code === 1000) {
+					console.debug('Socket closed normally');
+				}
+				else if (event.code === 1006) {
+					console.error('Socket closed unexpectedly:', event.reason);
+				} else {
+					console.warn('Socket closed with code:', event.code);
+				}
 			};
 
 			this.socket.onerror = (error) => {

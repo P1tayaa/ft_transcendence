@@ -48,7 +48,7 @@ export default class Init {
     spawnPadles(this.settings, this, assetsPath)
 
     this.gameScene.loadModel('Ball', `${assetsPath}Ball.glb`, (model) => {
-      console.log('Ball model loaded.');
+      console.debug('Ball model loaded.');
       this.gameScene.moveAsset('Ball', { x: 0, y: 0, z: 0 });
       this.gameScene.rotateAsset('Ball', 'x', Math.PI / 2);
       this.gameScene.rotateAsset('Ball', 'y', Math.PI / 2);
@@ -61,7 +61,7 @@ export default class Init {
         const id = setInterval(() => {
 
         if (this.assetsLoaded === this.totalAssets) {
-          console.log("Assets finished loading");
+          console.debug("Assets finished loading");
 
           clearInterval(id);
 

@@ -36,7 +36,7 @@ class Pong {
 	initialize(settings) {
 		this.settings = settings;
 		this.mode = this.settings.mode;
-		console.log(`Pong object initialized in ${this.mode} mode.`);
+		console.debug(`Pong object initialized in ${this.mode} mode.`);
 	}
 
 	createBoundingBox(position, size) {
@@ -70,7 +70,6 @@ class Pong {
 				position: gameScene.getAssetPossition(side),
 				size: this.settings.paddleSize[side],
 			}));
-		console.log("colision func called")
 		const ballBox = this.createBoundingBox(this.ballPos, this.ballSize);
 		this.paddle_collided = false;
 		this.reset_ball = false;
@@ -79,7 +78,6 @@ class Pong {
 		activePaddles.forEach(({ side, position, size }) => {
 			const paddleBox = this.createBoundingBox(position, size);
 
-			// console.log(side, position, size);
 			if (this.intersectsBox(ballBox, paddleBox)) {
 				this.handlePaddleCollision(side, this.ballPos, position);
 				this.socket.sendBallVelocity(this.ballSpeed);
@@ -102,7 +100,6 @@ class Pong {
 
 		// Check if ball is out of bounds (left & right bounds)
 		if (Math.abs(this.ballPos.x) >= this.playArea.width / 2) {
-			console.log(this.ballPos)
 			this.handleBallOutOfBounds(this.ballPos);
 		}
 		// Cap the Y speed
@@ -192,7 +189,6 @@ class Pong {
 
 
 	handleBallOutOfBounds(ballPosition) {
-		console.log("out of bound");
 		this.resetBall = true;
 		if (this.settings.playercount == 2) {
 			if (Math.abs(ballPosition.x) >= this.playArea.width / 2) {
@@ -248,7 +244,6 @@ class Pong {
 				this.settings.playerSide.forEach(Padle => {
 					if (checkBounderyPadlePos(gameScene.getAssetPossition(Padle), this.settings, Padle, this, input[Padle]) === false) {
 						input[Padle] = 0;
-						// console.log("checkBounderyPadlePos == false")
 					}
 				});
 				this.socket.sendPaddlePosition(input, this.settings);
@@ -265,9 +260,7 @@ class Pong {
 	}
 
 	reset(init) {
-		// console.log(this.ballPos)
 		if (this.settings.mode === Mode.NETWORKED) {
-			// init.score.incrementScore(intToPlayerSide(this.lastWinner));
 			this.socket.resetRound(this);
 			this.socket.updateScore(this)
 			this.settings.ballSpeed = this.initBallVelocity();
@@ -281,9 +274,9 @@ class Pong {
 
 	destroy() {
 		if (this.socket) {
-			this.socket.close();
+			this.socket.socket.close();
 			this.socket = null;
-			console.log('WebSocket connection terminated.');
+			console.debug('WebSocket connection terminated.');
 		}
 	}
 }
