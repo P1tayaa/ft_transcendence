@@ -13,6 +13,24 @@ export default class EditProfileModal {
 		this.formData = new FormData();
 	}
 
+	// Helper method to display error messages
+	showError(message) {
+		const errorElement = document.getElementById('edit-profile-error');
+		if (errorElement) {
+			errorElement.textContent = message;
+			errorElement.style.display = 'block';
+		}
+	}
+	
+	// Helper method to clear error messages
+	clearError() {
+		const errorElement = document.getElementById('edit-profile-error');
+		if (errorElement) {
+			errorElement.textContent = '';
+			errorElement.style.display = 'none';
+		}
+	}
+
 	show() {
 		// Create a modal overlay for editing profile
 		this.element = document.createElement('div');
@@ -59,6 +77,7 @@ export default class EditProfileModal {
 							<input type="password" id="confirm-password">
 						</div>
 					</div>
+					<div class="error-message" id="edit-profile-error"></div>
 				</div>
 			</div>
 			<div class="modal-footer">
@@ -110,6 +129,13 @@ export default class EditProfileModal {
 		fileInput.addEventListener('change', (e) => {
 			const file = e.target.files[0];
 			if (file) {
+				// Validate file size
+				if (file.size > 1024 * 1024) {
+					this.showError('File size exceeds 1MB');
+					fileInput.value = '';
+					return;
+				}
+				
 				const reader = new FileReader();
 				reader.onload = (e) => {
 					avatarPreview.src = e.target.result;
@@ -126,6 +152,9 @@ export default class EditProfileModal {
 
 	async save() {
 		try {
+			 // Clear previous errors
+			this.clearError();
+			
 			// Get form values
 			const newUsername = document.getElementById('edit-username').value.trim();
 			const fileInput = document.getElementById('avatar-upload');
@@ -157,7 +186,7 @@ export default class EditProfileModal {
 			
 			// Check if any changes were made
 			if (!hasChanges) {
-				alert('No changes to save');
+				this.showError('No changes to save');
 				return;
 			}
 
@@ -178,7 +207,7 @@ export default class EditProfileModal {
 			this.close();
 		} catch (error) {
 			console.error('Failed to update profile:', error);
-			alert('Failed to update profile: ' + (error.message || 'Unknown error'));
+			this.showError(error.message || 'Failed to update profile');
 
 			// Reset button state
 			const saveBtn = document.getElementById('save-profile-btn');
@@ -197,12 +226,12 @@ export default class EditProfileModal {
 		
 		// Username validation
 		if (!newUsername) {
-			alert('Username cannot be empty');
+			this.showError('Username cannot be empty');
 			return false;
 		}
 
 		if (newUsername.length > 8) {
-			alert('Username cannot be longer than 8 characters');
+			this.showError('Username cannot be longer than 8 characters');
 			return false;
 		}
 		
@@ -235,22 +264,22 @@ export default class EditProfileModal {
 		
 		// Password validation
 		if (!currentPassword) {
-			alert('Please enter your current password');
+			this.showError('Please enter your current password');
 			return false;
 		}
 
 		if (!newPassword) {
-			alert('Please enter your new password');
+			this.showError('Please enter your new password');
 			return false;
 		}
 
 		if (newPassword !== confirmPassword) {
-			alert('New password and confirmation do not match');
+			this.showError('New password and confirmation do not match');
 			return false;
 		}
 
 		if (newPassword.length < 8) {
-			alert('New password must be at least 8 characters long');
+			this.showError('New password must be at least 8 characters long');
 			return false;
 		}
 		
