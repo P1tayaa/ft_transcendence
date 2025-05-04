@@ -121,30 +121,24 @@ class Tournament(models.Model):
 	def leave(self, user):
 		"""Player leaves the tournament"""
 		with transaction.atomic():
-			try:
-				player = self.players.filter(user=user).first()
-				if not player:
-					raise ValidationError("Player not in this tournament")
+			player = self.players.filter(user=user).first()
+			if not player:
+				raise ValidationError("Player not in this tournament")
 
-				# Only allow leaving if tournament hasn't started
-				if self.status != 'waiting':
-					raise ValidationError("Cannot leave tournament in progress")
+			# Only allow leaving if tournament hasn't started
+			if self.status != 'waiting':
+				raise ValidationError("Cannot leave tournament in progress")
 
-				# Remove player from any match slots
-				for match in self.matches.all():
-					if match.player1 == player:
-						match.player1 = None
-						match.save()
-					if match.player2 == player:
-						match.player2 = None
-						match.save()
+			# Remove player from any match slots
+			for match in self.matches.all():
+				if match.player1 == player:
+					match.player1 = None
+					match.save()
+				if match.player2 == player:
+					match.player2 = None
+					match.save()
 
-				player.delete()
-
-				return True
-			except Exception as e:
-				logger.error(f"Error leaving tournament: {e}")
-				return False
+			player.delete()
 
 	def start(self):
 		"""Start the tournament and create game rooms for first round"""
