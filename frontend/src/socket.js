@@ -60,7 +60,7 @@ export default class WebSocketManager {
 	 */
 	send(message) {
 		if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-			this.socket.send(message);
+			this.socket.send(JSON.stringify(message));
 		} else {
 			console.error('Socket is not open. Cannot send message:', message);
 		}
