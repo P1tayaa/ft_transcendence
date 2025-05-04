@@ -2,6 +2,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 import json
 from django.contrib.auth.models import User
+from apps.users.models import Profile
 
 class PresenceConsumer(AsyncWebsocketConsumer):
     online_users = set()
@@ -13,6 +14,8 @@ class PresenceConsumer(AsyncWebsocketConsumer):
             return
 
         PresenceConsumer.online_users.add(user.id)
+
+        await self.update_online_status(user.id, True)
         # join presence group
         await self.channel_layer.group_add('presence', self.channel_name)
         await self.accept()
@@ -37,6 +40,8 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         user = self.scope['user']
         if user.is_authenticated:
             PresenceConsumer.online_users.discard(user.id)
+
+            await self.update_online_status(user.id, False)
             # leave presence group
             await self.channel_layer.group_discard('presence', self.channel_name)
             await self.channel_layer.group_send(
@@ -47,6 +52,16 @@ class PresenceConsumer(AsyncWebsocketConsumer):
                     'username': user.username
                 }
             )
+    
+    @database_sync_to_async
+    def update_online_status(self, user_id, is_online):
+        try:
+            profile = Profile.objects.get(user_id=user_id)
+            profile.online = is_online
+            profile.save(update_fields=['online'])
+            return True
+        except Profile.DoesNotExist:
+            return False
 
         
     @database_sync_to_async

@@ -14,6 +14,7 @@ class Profile(models.Model):
 		null=True,
 		blank=True,
 	)
+	online = models.BooleanField(default=False)
 
 	def get_avatar(self):
 		if self.avatar:
