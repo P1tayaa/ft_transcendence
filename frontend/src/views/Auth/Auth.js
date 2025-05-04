@@ -23,13 +23,14 @@ class Authenticate {
 				<h2>Welcome Back</h2>
 				<form>
 					<div class="form-group">
-						<label for="login-username">Username</label>
-						<input type="text" id="login-username" class="form-input" placeholder="Enter your username" required>
+						<label for="login-username">Username (8 max)</label>
+						<input type="text" id="login-username" class="form-input" placeholder="Enter your username" maxlength="8" required>
 					</div>
 					<div class="form-group">
 						<label for="login-password">Password</label>
 						<input type="password" id="login-password" class="form-input" placeholder="Enter your password" required>
 					</div>
+					<div class="error-message" id="login-error"></div>
 					<button type="submit" class="submit-btn">Login</button>
 				</form>
 			</div>
@@ -48,17 +49,18 @@ class Authenticate {
 						</div>
 					</div>
 					<div class="form-group">
-						<label for="register-username">Username</label>
-						<input type="text" id="register-username" class="form-input" placeholder="Choose a username" required>
+						<label for="register-username">Username (8 max)</label>
+						<input type="text" id="register-username" class="form-input" placeholder="Choose a username" maxlength="8" required>
 					</div>
 					<div class="form-group">
-						<label for="register-password">Password</label>
+						<label for="register-password">Password (8 min)</label>
 						<input type="password" id="register-password" class="form-input" placeholder="Create a password" required>
 					</div>
 					<div class="form-group">
 						<label for="confirm-password">Confirm Password</label>
 						<input type="password" id="confirm-password" class="form-input" placeholder="Confirm your password" required>
 					</div>
+					<div class="error-message" id="register-error"></div>
 					<button type="submit" class="submit-btn">Register</button>
 				</form>
 			</div>
@@ -66,8 +68,26 @@ class Authenticate {
 		`;
 	}
 
+	// Helper method to display error messages
+	showError(formType, message) {
+		const errorElement = document.getElementById(`${formType}-error`);
+		errorElement.textContent = message;
+		errorElement.style.display = 'block';
+	}
+	
+	// Helper method to clear error messages
+	clearError(formType) {
+		const errorElement = document.getElementById(`${formType}-error`);
+		errorElement.textContent = '';
+		errorElement.style.display = 'none';
+	}
+
 	// Tab switching handler
 	handleTabSwitch = (event) => {
+		// Clear any displayed errors when switching tabs
+		this.clearError('login');
+		this.clearError('register');
+		
 		const tabButtons = document.querySelectorAll('.tab-btn');
 		const authForms = document.querySelectorAll('.auth-form');
 		
@@ -102,7 +122,7 @@ class Authenticate {
 		if (image) {
 			// Validate file size
 			if (image.size > 1024 * 1024) {
-				alert('File size exceeds 1MB');
+				this.showError('register', 'File size exceeds 1MB');
 				profileImage.value = '';
 				return;
 			}
@@ -126,6 +146,7 @@ class Authenticate {
 	// Login form submission handler
 	handleLoginSubmit = async (event) => {
 		event.preventDefault();
+		this.clearError('login');
 
 		const loginUsername = document.getElementById('login-username');
 		const loginPassword = document.getElementById('login-password');
@@ -133,8 +154,19 @@ class Authenticate {
 		const username = loginUsername.value;
 		const password = loginPassword.value;
 
-		if (!username || !password) {
-			alert('Please enter both username and password');
+		// Validate form
+		if (!username) {
+			this.showError('login', 'Username cannot be empty');
+			return;
+		}
+
+		if (username.length > 8) {
+			this.showError('login', 'Username cannot be longer than 8 characters');
+			return;
+		}
+
+		if (!password) {
+			this.showError('login', 'Please enter your password');
 			return;
 		}
 
@@ -146,13 +178,14 @@ class Authenticate {
 			router.navigate('/');
 		} catch (error) {
 			console.error('Login error:', error.message);
-			alert(error.message);
+			this.showError('login', error.message);
 		}
 	}
 
 	// Registration form submission handler
 	handleRegisterSubmit = async (event) => {
 		event.preventDefault();
+		this.clearError('register');
 
 		const registerUsername = document.getElementById('register-username');
 		const registerPassword = document.getElementById('register-password');
@@ -165,13 +198,28 @@ class Authenticate {
 		const image = profileImage.files[0];
 
 		// Validate form
-		if (!username || !password) {
-			alert('Please provide both username and password');
+		if (!username) {
+			this.showError('register', 'Username cannot be empty');
+			return;
+		}
+
+		if (username.length > 8) {
+			this.showError('register', 'Username cannot be longer than 8 characters');
+			return;
+		}
+
+		if (!password) {
+			this.showError('register', 'Please enter your password');
+			return;
+		}
+
+		if (password.length < 8) {
+			this.showError('register', 'Password must be at least 8 characters long');
 			return;
 		}
 
 		if (password !== confirm) {
-			alert('Passwords do not match');
+			this.showError('register', 'New password and confirmation do not match');
 			return;
 		}
 
@@ -190,7 +238,7 @@ class Authenticate {
 			router.navigate('/');
 		} catch (error) {
 			console.error('Registration error:', error.message);
-			alert(error.message);
+			this.showError('register', error.message);
 		}
 	}
 

@@ -160,3 +160,23 @@ label {
 .upload-btn:hover {
 	background-color: var(--border-color);
 }
+
+/* Error message styling */
+.error-message {
+  display: none;
+  color: var(--red);
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
