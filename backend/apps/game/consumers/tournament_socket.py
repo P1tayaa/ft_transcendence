@@ -16,6 +16,8 @@ class TournamentConsumer(BaseConsumer):
 	async def connect(self):
 		await super().connect()
 
+		self.connected = False
+
 		self.tournament_name = self.scope['url_route']['kwargs']['tournament_name']
 		self.group_name = f'tournament_{self.tournament_name}'
 
@@ -155,18 +157,13 @@ class TournamentConsumer(BaseConsumer):
 	@database_sync_to_async
 	def start_tournament(self):
 		"""Start the tournament if conditions are met"""
+		logger.info(f"Starting tournament {self.tournament_name}")
 		try:
 			tournament = Tournament.objects.get(name=self.tournament_name)
 
-			# Check if user is the creator
-			if tournament.creator_id != self.user.id:
-				return {
-					'success': False,
-					'error': 'Only the tournament creator can start the tournament'
-				}
-
 			# Try to start the tournament
 			result = tournament.start()
+			logger.info(f"Tournament {self.tournament_name} started with result: {result}")
 			if result:
 				return {'success': True}
 			else:
