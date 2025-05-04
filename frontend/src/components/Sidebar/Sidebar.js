@@ -1,10 +1,10 @@
 import './Sidebar.css';
 import api from '../../api.js';
 
-import Friend from './Friend.js';
 import user from '../../User.js';
 import List from './List.js';
 import Profile from '../Profile/Profile.js';
+import Socket from '../../socket.js';
 
 class Sidebar {
 	/**
@@ -14,14 +14,23 @@ class Sidebar {
 		this.visible = false;
 		this.element = null;
 		this.list = null;
+		this.presenceSocket = null;
 
 		// Listen for user login and logout events
 		window.addEventListener('user:login', () => {
 			console.log('User logged in, initializing sidebar');
 			this.init();
+			
+			 // Initialize and connect to presence socket after login
+			this.initPresenceSocket();
 		});
 		window.addEventListener('user:logout', () => {
 			this.destroy();
+			
+			// Disconnect from presence socket on logout
+			if (this.presenceSocket) {
+				this.presenceSocket.disconnect();
+			}
 		});
 		// Add event listener for friends update
 		window.addEventListener('friends:update', () => {
@@ -29,6 +38,33 @@ class Sidebar {
 				this.list.showFriends();
 			}
 		});
+	}
+
+	initPresenceSocket() {
+		this.presenceSocket = new Socket('presence');
+		
+		// Set the handleMessage function directly
+		this.presenceSocket.handleMessage = (message) => {
+			if (!message || !message.type || !message.data) {
+				return;
+			}
+
+			console.log('Presence socket message:', message);
+
+			switch (message.type) {
+				case 'user_online':
+					console.log('User online:', message.data.user_id);
+					window.dispatchEvent(new CustomEvent(`user:${message.data.user_id}:online`));
+					break;
+				case 'user_offline':
+					window.dispatchEvent(new CustomEvent(`user:${message.data.user_id}:offline`));
+					break;
+				default:
+					console.log('Unknown message type:', message.data.type);
+			}
+		};
+		
+		this.presenceSocket.connect();
 	}
 
 	/**
@@ -62,6 +98,11 @@ class Sidebar {
 	destroy() {
 		this.visible = false;
 
+		if (this.presenceSocket) {
+			this.presenceSocket.disconnect();
+			this.presenceSocket = null;
+		}
+
 		if (this.list) {
 			this.list.destroy();
 			this.list = null;
@@ -71,7 +112,6 @@ class Sidebar {
 			this.element.remove();
 			this.element = null;
 		}
-
 	}
 	
 	/**

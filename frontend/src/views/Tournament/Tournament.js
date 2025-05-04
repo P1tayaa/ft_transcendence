@@ -198,11 +198,10 @@ class Tournament {
 	}
 
 	handleStartTournament() {
-		if (!this.socket) return;
+		if (!this.socket)
+			return;
 
-		this.socket.send(JSON.stringify({
-			type: 'start_tournament'
-		}));
+		this.socket.send({type: 'start_tournament'});
 	}
 
 	handleLeave() {

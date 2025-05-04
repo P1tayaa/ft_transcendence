@@ -16,6 +16,10 @@ export default class FriendList {
 	}
 
 	destroy() {
+		this.items.forEach(item => {
+			item.destroy();
+		});
+		
 		this.items = [];
 		this.element.innerHTML = '';
 		this.element.remove();

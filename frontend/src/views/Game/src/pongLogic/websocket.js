@@ -43,7 +43,7 @@ export class MyWebSocket {
 	}
 
 	startGame() {
-		this.socket.send(JSON.stringify({'type': 'start_game'}));
+		this.socket.send({'type': 'start_game'});
 	}
 
 	getPaddlePosition() {
@@ -64,7 +64,7 @@ export class MyWebSocket {
 			rotation: rotation,
 		}
 
-		this.socket.send(JSON.stringify(paddleInfo))
+		this.socket.send(paddleInfo)
 	}
 
 	getBallPosition() {
@@ -81,7 +81,7 @@ export class MyWebSocket {
 			y: ballPos.y
 		}
 		console.log(ballVelocityRequest);
-		this.socket.send(JSON.stringify(ballVelocityRequest));
+		this.socket.send(ballVelocityRequest);
 	}
 
 	resetRound(pongLogic) {
@@ -97,7 +97,7 @@ export class MyWebSocket {
 
 		}
 		console.log(request)
-		this.socket.send(JSON.stringify(request));
+		this.socket.send(request);
 	}
 
 	update(pongLogic, scores, settings) {
@@ -125,7 +125,7 @@ export class MyWebSocket {
 			type: 'update_score',
 			scoring_position: intToPlayerSide(pongLogic.lastWinner)
 		}
-		this.socket.send(JSON.stringify(request))
+		this.socket.send(request);
 	}
 }
 

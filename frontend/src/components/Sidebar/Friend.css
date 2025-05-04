@@ -31,10 +31,14 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background-color: #555;
-    border: 2px solid var(--card-color);
-    bottom: -2px;
-    right: -2px;
+    background-color: var(--background-color);
+    border: 1px solid var(--card-color);
+    bottom: -1px;
+    right: -1px;
+}
+
+.friend-item .status-indicator.online {
+    background-color: var(--secondary-color);
 }
 
 .friend-item .username {

@@ -1,90 +1,62 @@
-from channels.generic.websocket import AsyncWebsocketConsumer
+from apps.game.consumers.consumers import BaseConsumer
 from channels.db import database_sync_to_async
 import json
-from django.contrib.auth.models import User
-from apps.users.models import Profile
 
-class PresenceConsumer(AsyncWebsocketConsumer):
-    online_users = set()
+class PresenceConsumer(BaseConsumer):
+	async def connect(self):
+		await super().connect()
 
-    async def connect(self):
-        user = self.scope['user']
-        if not user.is_authenticated:
-            await self.close()
-            return
+		if not self.user:
+			await self.close()
+			return
 
-        PresenceConsumer.online_users.add(user.id)
+		await self.accept()
 
-        await self.update_online_status(user.id, True)
-        # join presence group
-        await self.channel_layer.group_add('presence', self.channel_name)
-        await self.accept()
+		await self.update_online_status(True)
 
-        await self.channel_layer.group_send(
-                'presence',
-                {
-                    'type': 'user_online',
-                    'user_id': user.id,
-                    'username': user.username
-                }
-            )
+		await self.channel_layer.group_send(
+			'presence', {
+				'type': 'user_online',
+				'data': {
+					'user_id': self.user.id,
+					'username': self.user.username
+				}
+			}
+		)
 
-        # send current online users to new connected user
-        await self.send(json.dumps({
-               'type': 'online_users',
-               'users': [await self.get_user_info(user_id) for user_id in PresenceConsumer.online_users]
-           }))
+		await self.channel_layer.group_add('presence', self.channel_name)
 
+	async def disconnect(self, close_code):
+		if not self.user:
+			return
 
-    async def disconnect(self, close_code):
-        user = self.scope['user']
-        if user.is_authenticated:
-            PresenceConsumer.online_users.discard(user.id)
+		await self.update_online_status(False)
 
-            await self.update_online_status(user.id, False)
-            # leave presence group
-            await self.channel_layer.group_discard('presence', self.channel_name)
-            await self.channel_layer.group_send(
-                'presence',
-                {
-                    'type': 'user_offline',
-                    'user_id': user.id,
-                    'username': user.username
-                }
-            )
-    
-    @database_sync_to_async
-    def update_online_status(self, user_id, is_online):
-        try:
-            profile = Profile.objects.get(user_id=user_id)
-            profile.online = is_online
-            profile.save(update_fields=['online'])
-            return True
-        except Profile.DoesNotExist:
-            return False
+		await self.channel_layer.group_discard('presence', self.channel_name)
 
-        
-    @database_sync_to_async
-    def get_user_info(self, user_id):
-        try:
-            user = User.objects.get(id=user_id)
-            return {
-                'user_id': user.id,
-                'username': user.username
-            }
-        except User.DoesNotExist:
-            return None
+		await self.channel_layer.group_send(
+			'presence', {
+				'type': 'user_offline',
+				'data': {
+					'user_id': self.user.id,
+					'username': self.user.username
+				}
+			}
+		)
 
-    async def user_online(self, event):
-        await self.send(json.dumps({
-               'type': 'user_online',
-               'user_id': event['user_id'],
-               'username': event['username']
-           }))
+	@database_sync_to_async
+	def update_online_status(self, is_online):
+		self.user.profile.online = is_online
+		self.user.profile.save(update_fields=['online'])
 
-    async def user_offline(self, event):
-        await self.send(json.dumps({
-               'type': 'user_offline',
-               'user_id': event['user_id'],
-               'username': event['username']
-           }))
+	async def user_online(self, event):
+		await self.send(json.dumps({
+			'type': 'user_online',
+			'data': event['data'],
+		}))
+
+	async def user_offline(self, event):
+		await self.send(json.dumps({
+			'type': 'user_offline',
+			'data': event['data'],
+		}))

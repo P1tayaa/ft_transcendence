@@ -104,6 +104,10 @@
     height: 18px;
 }
 
+.profile-avatar-container .status-indicator.online {
+    background-color: var(--secondary-color);
+}
+
 .profile-details {
     flex: 1;
 }

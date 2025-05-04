@@ -128,7 +128,6 @@ class GameConsumer(BaseConsumer):
 	async def disconnect(self, close_code):
 		if hasattr(self, 'game_room') and hasattr(self, 'user'):
 			try:
-				 				# If game is in progress, end it with current scores
 				if self.running:
 					await self.end_game()
 				else:

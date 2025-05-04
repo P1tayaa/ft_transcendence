@@ -15,6 +15,37 @@ export default class Profile {
 		this.isFriend = false;
 		this.isBlocked = false;
 		this.chat = null;
+		
+		// Add specific event listeners for this user's status
+		this.onlineListener = this.handleOnline.bind(this);
+		this.offlineListener = this.handleOffline.bind(this);
+		
+		window.addEventListener(`user:${this.userId}:online`, this.onlineListener);
+		window.addEventListener(`user:${this.userId}:offline`, this.offlineListener);
+	}
+
+	handleOnline() {
+		if (this.profileData && this.element) {
+			this.profileData.online = true;
+			
+			// Update only the status indicator
+			const statusIndicator = this.element.querySelector('.status-indicator');
+			if (statusIndicator) {
+				statusIndicator.className = 'status-indicator online';
+			}
+		}
+	}
+	
+	handleOffline() {
+		if (this.profileData && this.element) {
+			this.profileData.online = false;
+			
+			// Update only the status indicator
+			const statusIndicator = this.element.querySelector('.status-indicator');
+			if (statusIndicator) {
+				statusIndicator.className = 'status-indicator offline';
+			}
+		}
 	}
 
 	async init() {
@@ -97,7 +128,7 @@ export default class Profile {
 				<div class="profile-user-info">
 					<div class="profile-avatar-container">
 						<img src="${this.profileData.avatar || '/default-avatar.png'}" alt="${this.profileData.username}'s Avatar" class="profile-avatar">
-						<span class="status-indicator ${this.profileData.status === 'online' ? 'online' : ''}"></span>
+						<span class="status-indicator ${this.profileData.online ? 'online' : 'offline'}"></span>
 					</div>
 					<div class="profile-details">
 						<h2>${this.profileData.username}</h2>
@@ -307,6 +338,10 @@ export default class Profile {
 
 		if (this.element) {
 			this.element.remove();
-		}
+		 }
+		
+		// Clean up event listener
+		window.removeEventListener(`user:${this.userId}:online`, this.onlineListener);
+		window.removeEventListener(`user:${this.userId}:offline`, this.offlineListener);
 	}
 }

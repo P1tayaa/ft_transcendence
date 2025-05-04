@@ -296,9 +296,7 @@ class Game {
 		if (!this.socket || !this.isHost)
 			return;
 
-		this.socket.send(JSON.stringify({
-			type: 'start_game'
-		}));
+		this.socket.send({type: 'start_game'});
 	}
 
 	onUnload() {
