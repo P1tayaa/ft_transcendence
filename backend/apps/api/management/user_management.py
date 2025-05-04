@@ -19,6 +19,7 @@ def serialize_user(user, viewer):
 		"id": user.id,
 		"username": user.username,
 		"avatar": user.profile.get_avatar(),
+		"online": user.profile.online,
 	}
 
 	if viewer != user:
