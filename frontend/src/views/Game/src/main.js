@@ -3,10 +3,6 @@ import * as THREE from 'three';
 import Init from './init.js';
 import { Mode } from "./pongLogic/setting.js";
 import { updateLightsForActivePlayers } from "./modelLoading/light_manage.js";
-import { botControl } from './bot.js';
-import router from '../../../router.js';
-
-var gameEnded = false
 
 export default class Game {
 	constructor() {
