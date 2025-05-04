@@ -24,11 +24,11 @@ class Authenticate {
 				<form>
 					<div class="form-group">
 						<label for="login-username">Username</label>
-						<input type="text" id="login-username" class="form-input" placeholder="Enter your username" maxlength="8" required>
+						<input type="text" id="login-username" class="form-input" placeholder="Enter your username" maxlength="8" autocomplete="on" required>
 					</div>
 					<div class="form-group">
 						<label for="login-password">Password</label>
-						<input type="password" id="login-password" class="form-input" placeholder="Enter your password" required>
+						<input type="password" id="login-password" class="form-input" placeholder="Enter your password" autocomplete="on" required>
 					</div>
 					<div class="error-message" id="login-error"></div>
 					<button type="submit" class="submit-btn">Login</button>
@@ -50,15 +50,15 @@ class Authenticate {
 					</div>
 					<div class="form-group">
 						<label for="register-username">Username (8 max)</label>
-						<input type="text" id="register-username" class="form-input" placeholder="Choose a username" maxlength="8" required>
+						<input type="text" id="register-username" class="form-input" placeholder="Choose a username" maxlength="8" autocomplete="on" required>
 					</div>
 					<div class="form-group">
 						<label for="register-password">Password (8 min)</label>
-						<input type="password" id="register-password" class="form-input" placeholder="Create a password" required>
+						<input type="password" id="register-password" class="form-input" placeholder="Create a password" autocomplete="on" required>
 					</div>
 					<div class="form-group">
 						<label for="confirm-password">Confirm Password</label>
-						<input type="password" id="confirm-password" class="form-input" placeholder="Confirm your password" required>
+						<input type="password" id="confirm-password" class="form-input" placeholder="Confirm your password" autocomplete="on" required>
 					</div>
 					<div class="error-message" id="register-error"></div>
 					<button type="submit" class="submit-btn">Register</button>
