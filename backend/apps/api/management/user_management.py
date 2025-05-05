@@ -45,11 +45,17 @@ def register_user(request):
 
 		if not all([username, password]):
 			return JsonResponse({"success": False, "message": "Username and password are required."},status=status.HTTP_400_BAD_REQUEST)
+		
+		if len(username) > 12:
+			return JsonResponse({"success": False, "message": "Username is too long."}, status=status.HTTP_400_BAD_REQUEST)
+		
+		if not username.isalnum():
+			return JsonResponse({"success": False, "message": "Username cannot contain non-alphanumerical characters"}, status=status.HTTP_400_BAD_REQUEST)
 
-		# try:
-		#     validate_password(password, request.user)
-		# except ValidationError as e:
-		#     return JsonResponse({"success": False, "message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+		try:
+			validate_password(password, request.user)
+		except ValidationError as e:
+			return JsonResponse({"success": False, "message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 		if User.objects.filter(username=username).exists():
 			return JsonResponse({"success": False, "message": "Username already exists."}, status=status.HTTP_400_BAD_REQUEST)
