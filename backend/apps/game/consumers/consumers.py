@@ -62,9 +62,9 @@ class GameConsumer(BaseConsumer):
 			self.room_group_name,
 			self.channel_name
 		)
+
 		await self.accept()
 		logger.info(f"User {self.user.username} (ID: {self.user.id}) connected to room {self.room_name}")
-
 
 		self.player_id = str(self.user.id)
 		self.player_position = None
@@ -113,6 +113,7 @@ class GameConsumer(BaseConsumer):
 			}))
 
 			# Send initial game state
+			logger.info("Sending initial game state")
 			await self.broadcast_game_state()
 
 		except Exception as e:

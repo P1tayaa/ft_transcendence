@@ -39,8 +39,13 @@ class Tournament {
 		this.tournamentName = window.location.pathname.split('/').pop();
 
 		// Set up event listeners
-		document.getElementById('leave-btn').addEventListener('click', () => this.handleLeave());
-		document.getElementById('start-btn').addEventListener('click', () => this.handleStartTournament());
+		document.getElementById('leave-btn').addEventListener('click', () => {
+			router.navigate('/')
+		});
+
+		document.getElementById('start-btn').addEventListener('click', () => {
+			this.socket.send({type: 'start_tournament'});
+		});
 
 		// Connect to socket
 		this.connectToSocket();
@@ -57,9 +62,6 @@ class Tournament {
 			switch (data.type) {
 				case 'tournament_state':
 					this.updateTournamentState(data.state);
-					break;
-				case 'tournament_started':
-					this.handleTournamentStarted();
 					break;
 				case 'error':
 					this.showError(data.message);
@@ -102,7 +104,7 @@ class Tournament {
 
 		// Check if tournament has already started
 		if (state.status === 'in_progress') {
-			this.handleTournamentStarted();
+			this.startTournament();
 		}
 	}
 
@@ -187,7 +189,7 @@ class Tournament {
 		alert(`Tournament error: ${message}`);
 	}
 
-	handleTournamentStarted() {
+	startTournament() {
 		// Update UI for tournament started
 		if (this.tournamentData) {
 			this.tournamentData.status = 'in_progress';
@@ -239,18 +241,6 @@ class Tournament {
 				popup.parentNode.removeChild(popup);
 			}
 		}, 5000);
-	}
-
-	handleStartTournament() {
-		if (!this.socket)
-			return;
-
-		this.socket.send({type: 'start_tournament'});
-	}
-
-	handleLeave() {
-		// Navigate back to main page
-		router.navigate('/');
 	}
 
 	onUnload() {

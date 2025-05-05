@@ -181,13 +181,6 @@ class TournamentConsumer(BaseConsumer):
 			# Broadcast updated state to all clients
 			await self.broadcast_tournament_state()
 
-			# Send tournament started message to everyone
-			await self.channel_layer.group_send(
-				self.group_name,
-				{
-					'type': 'tournament_started'
-				}
-			)
 		else:
 			# Send error back to client
 			await self.send(text_data=json.dumps({
@@ -202,10 +195,3 @@ class TournamentConsumer(BaseConsumer):
 			'type': 'tournament_state',
 			'state': event['state']
 		}))
-
-	async def tournament_started(self, event):
-		"""Handle tournament started event"""
-		await self.send(text_data=json.dumps({
-			'type': 'tournament_started'
-		}))
-
