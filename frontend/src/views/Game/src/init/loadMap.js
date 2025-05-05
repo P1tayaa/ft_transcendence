@@ -14,6 +14,12 @@ export function loadClassicMap(assetsPath, init) {
   });
   const ambiantLight = new THREE.PointLight(BATHLIGHT, 10000, 10000)
   ambiantLight.position.set(120, -90, -6);
+  const ambianLight2 = new THREE.PointLight(BATHLIGHT, 10000, 10000)
+  ambianLight2.position.set(120, 90, 6);
+  init.gameScene.scene.add(ambianLight2);
+  const ambianLight3 = new THREE.PointLight(BATHLIGHT, 10000, 10000)
+  ambianLight3 .position.set(-120, 90, 6);
+  init.gameScene.scene.add(ambianLight3);
   init.gameScene.scene.add(ambiantLight);
 };
 
@@ -28,7 +34,7 @@ export function loadBathMap(assetsPath, init) {
     init.gameScene.rotateAsset('Floor', 'x', Math.PI / 2);
     init.gameScene.rotateAsset('Floor', 'y', Math.PI / 2);
     init.assetsLoaded++;
-    init.pongLogic.playArea = { width: 100, depth: 60 };
+    init.pongLogic.playArea = { width: 100, depth: 30 };
   });
   const ambiantLight = new THREE.PointLight(BATHLIGHT, 10000, 10000)
   ambiantLight.position.set(120, -90, -6);
@@ -38,11 +44,11 @@ export function loadBathMap(assetsPath, init) {
 export function loadBeachMap(assetsPath, init) {
   init.gameScene.loadModel('Floor', `${assetsPath}beachMap.glb`, (model) => {
     console.debug('beach Map model loaded.');
-    init.gameScene.moveAsset('Floor', { x: 0, y: 0, z: -10 });
+    init.gameScene.moveAsset('Floor', { x: 0, y: 0, z: -20 });
     init.gameScene.rotateAsset('Floor', 'x', Math.PI / 2);
     init.gameScene.rotateAsset('Floor', 'y', Math.PI / 2);
-    init.gameScene.setScale('Floor', 4)
-
+    init.gameScene.setScale('Floor', 6)
+    init.pongLogic.playArea = { width: 100, depth: 100 };
     init.assetsLoaded++;
   });
   const ambiantLight = new THREE.PointLight(BATHLIGHT, 10000, 10000)
@@ -53,10 +59,11 @@ export function loadBeachMap(assetsPath, init) {
 export function loadLavaMap(assetsPath, init) {
   init.gameScene.loadModel('Floor', `${assetsPath}Lava map.glb`, (model) => {
     console.debug('Rectangle Floor model loaded.');
-    init.gameScene.moveAsset('Floor', { x: 0, y: 0, z: -3 });
+    init.gameScene.moveAsset('Floor', { x: 0, y: 0, z: -13 });
     init.gameScene.rotateAsset('Floor', 'x', Math.PI / 2);
     init.gameScene.rotateAsset('Floor', 'y', Math.PI / 2);
     init.gameScene.setScale('Floor', 7)
+    init.pongLogic.playArea = { width: 90, depth: 90 };
     init.assetsLoaded++;
   });
   const ambiantLight = new THREE.PointLight(BATHLIGHT, 10000, 10000)

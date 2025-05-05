@@ -16,11 +16,11 @@ export function posSpawn(map, position) {
       break;
     case MapStyle.Lava:
       distanceToCenter = 40;
-      ration_map = 0.6;
+      ration_map = 1;
       break;
     case MapStyle.Beach:
       distanceToCenter = 40;
-      ration_map = 0.6;
+      ration_map = 1;
       break;
     default:
       console.error(`Unknown map style: ${map}`);
