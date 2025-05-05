@@ -347,8 +347,8 @@ class GameConsumer(BaseConsumer):
 			self.game_state['score'][scoring_position] += 1
 
 		# Check if the game is over
-		if self.game_state['score'][scoring_position] >= 5:
-			self.end_game()
+		if self.game_state['score'][scoring_position] == 5:
+			await self.end_game()
 
 	async def handle_ball_velocity(self, data):
 		self.game_state['pongLogic']['ballSpeed'] = {
