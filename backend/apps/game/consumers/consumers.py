@@ -341,6 +341,7 @@ class GameConsumer(BaseConsumer):
 
 	async def handle_update_score(self, data):
 		scoring_position = data.get('scoring_position')
+		logger.info(f"Updating score for position: {scoring_position}, current score: {self.game_state['score']}")
 		# Directly update score by position
 		if scoring_position in self.game_state['score']:
 			self.game_state['score'][scoring_position] += 1
