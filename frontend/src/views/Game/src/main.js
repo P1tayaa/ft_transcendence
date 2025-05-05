@@ -113,8 +113,8 @@ export default class Game {
 		if (!this.renderer) {
 			return;
 		}
-		this.renderer.setAnimationLoop(null);
 
+		this.renderer.setAnimationLoop(null);
 
 		this.renderer.dispose();
 	}
