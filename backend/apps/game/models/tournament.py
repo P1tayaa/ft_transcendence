@@ -164,10 +164,7 @@ class Tournament(models.Model):
 		matches = self.matches.filter(round=round_number, game_room__isnull=True)
 
 		for match in matches:
-			# Skip matches without both players assigned yet
-			if not match.player1 or not match.player2:
-				continue
-
+			
 			# Create a game room for this match
 			game_name = f"tournament_{self.id}_r{round_number}_m{match.match_number}"
 			game_room = GameRoom.objects.create(
