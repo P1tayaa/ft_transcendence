@@ -92,8 +92,12 @@ export default class Game {
 			})
 
 			this.score.playerSides.forEach(side => {
-				if (this.score.scores[side] > 11) {
+				if (this.score.scores[side] >= 5) {
 					this.game_done();
+
+					if (this.init.settings.mode === Mode.LOCAL) {
+						router.navigate('/');
+					}
 				}
 			});
 
