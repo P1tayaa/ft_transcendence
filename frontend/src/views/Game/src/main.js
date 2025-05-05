@@ -116,22 +116,6 @@ export default class Game {
 			return;
 		}
 
-		if (this.pongLogic.socket) {
-			const gameResults = this.pongLogic.socket.gameResult;
-
-			if (!gameResults) {
-				console.error("Game results not available.");
-				return;
-			}
-
-			console.debug("Game results:", gameResults);
-
-			if (gameResults.tournament) {
-				console.debug("Tournament match complete:", gameResults.tournament);
-				router.navigate(`/tournament/${gameResults.tournament.name}`);
-			}
-		}
-
 		this.renderer.setAnimationLoop(null);
 
 		this.renderer.dispose();

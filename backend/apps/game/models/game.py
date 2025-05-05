@@ -42,7 +42,7 @@ class GameRoom(Room):
 	"""
 	# If this game is part of a tournament
 	tournament = models.ForeignKey('Tournament', on_delete=models.SET_NULL,
-								  null=True, blank=True, related_name='tournament_games')
+								null=True, blank=True, related_name='tournament_games')
 
 	# Game room is automatically closed when completed
 	is_active = models.BooleanField(default=True)
@@ -84,6 +84,7 @@ class GameRoom(Room):
 				'room': room,
 				'player': player_data,
 				'status': room.status,
+				'tournament': room.tournament
 			}
 		except (cls.DoesNotExist, ValidationError) as e:
 			logger.error(f"Error joining game room: {e}")

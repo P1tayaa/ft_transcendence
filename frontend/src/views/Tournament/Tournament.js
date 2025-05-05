@@ -200,10 +200,11 @@ class Tournament {
 
 			// Check if the current user is playing in one of the matches
 			const currentUserMatch = this.findUserMatch();
+			console.debug("user match: ", currentUserMatch);
 			if (currentUserMatch && currentUserMatch.game_room) {
 				// Show popup notification
 				this.showPopupNotification(`Your match is starting! You'll be redirected to the game room in 3 seconds.`);
-				
+
 				// Set timeout for redirection
 				setTimeout(() => {
 					router.navigate(`/game/${currentUserMatch.game_room}`);
@@ -217,11 +218,23 @@ class Tournament {
 		if (!this.tournamentData || !this.tournamentData.matches)
 			return null;
 
-		const currentUserId = user.id;
-		return this.tournamentData.matches.find(match => 
-			(match.player1 && match.player1.id === currentUserId) || 
-			(match.player2 && match.player2.id === currentUserId)
-		);
+		for (const match of this.tournamentData.matches) {
+			if (match.winner) {
+				continue ;
+			}
+
+			if (!match.player1 || !match.player2) {
+				continue ;
+			}
+
+			if (match.player1 && match.player1.id == user.id) {
+				return match;
+			}
+
+			if (match.player2 && match.player2.id == user.id) {
+				return match;
+			}
+		}
 	}
 
 	showPopupNotification(message) {
