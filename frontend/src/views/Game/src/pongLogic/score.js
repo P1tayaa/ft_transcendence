@@ -46,10 +46,10 @@ class Score {
   // Get score position based on the player's side
   getScorePosition(side) {
     const positions = {
-      [PlayerSide.LEFT]: new THREE.Vector3(-15, 25, 0),
-      [PlayerSide.RIGHT]: new THREE.Vector3(15, 25, 0),
-      [PlayerSide.TOP]: new THREE.Vector3(0, -30, 0),
-      [PlayerSide.BOTTOM]: new THREE.Vector3(0, 30, 0),
+      [PlayerSide.LEFT]: new THREE.Vector3(-30, 0, 10),
+      [PlayerSide.RIGHT]: new THREE.Vector3(30, 0, 10),
+      [PlayerSide.TOP]: new THREE.Vector3(0, -30, 10),
+      [PlayerSide.BOTTOM]: new THREE.Vector3(0, 30, 10),
     };
     return positions[side] || new THREE.Vector3(0, 0, 0);
   }
