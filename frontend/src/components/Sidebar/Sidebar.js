@@ -49,7 +49,6 @@ class Sidebar {
 				return;
 			}
 
-
 			switch (message.type) {
 				case 'user_online':
 					window.dispatchEvent(new CustomEvent(`user:${message.data.user_id}:online`));

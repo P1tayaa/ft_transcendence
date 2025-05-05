@@ -54,12 +54,6 @@ ft_transcendence is a web application centered around the classic game of Pong, 
    - 3D rendering of the classic Pong game
    - Immersive gameplay with advanced graphics
    - Modern visual effects and animations
-<!-- 
-7. **Server-Side Pong**:
-   - Game logic implemented on the server
-   - Reduced cheating possibilities
-   - Consistent gameplay experience
-   - API for game state manipulation -->
 
 ### Minor Modules
 
