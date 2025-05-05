@@ -4,6 +4,8 @@ import Init from './init.js';
 import { Mode } from "./pongLogic/setting.js";
 import { updateLightsForActivePlayers } from "./modelLoading/light_manage.js";
 
+import router from '../../../router.js';
+
 export default class Game {
 	constructor() {
 		this.init = new Init();
@@ -112,6 +114,22 @@ export default class Game {
 	game_done() {
 		if (!this.renderer) {
 			return;
+		}
+
+		if (this.pongLogic.socket) {
+			const gameResults = this.pongLogic.socket.gameResult;
+
+			if (!gameResults) {
+				console.error("Game results not available.");
+				return;
+			}
+
+			console.debug("Game results:", gameResults);
+
+			if (gameResults.tournament) {
+				console.debug("Tournament match complete:", gameResults.tournament);
+				router.navigate(`/tournament/${gameResults.tournament.name}`);
+			}
 		}
 
 		this.renderer.setAnimationLoop(null);
