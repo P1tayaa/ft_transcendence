@@ -2,6 +2,8 @@ import { intToPlayerSide } from './setting.js'
 
 import Socket from '../../../../socket.js';
 
+import router from '../../../../router.js'
+
 export class MyWebSocket {
 	constructor() {
 		this.socket = null;
@@ -25,11 +27,16 @@ export class MyWebSocket {
 			} else if (data.type === "game_over") {
 				console.debug("Game over received:", data);
 				this.gameOver = true;
-				this.gameResult = {
-					result: data.result,
-					winner: data.winner,
-					tournament: data.tournament
-				};
+				// this.gameResult = {
+				// 	result: data.result,
+				// 	winner: data.winner,
+				// 	tournament: data.tournament
+				// };
+				if (data.tournament) {
+					router.navigate(`/tournament/${data.tournament.name}`);
+				} else {
+					router.navigate('/');
+				}
 			} else {
 				console.warn("Unknown message type received:", data.type);
 			}

@@ -92,8 +92,12 @@ export default class Game {
 			})
 
 			this.score.playerSides.forEach(side => {
-				if (this.score.scores[side] > 11) {
+				if (this.score.scores[side] >= 5) {
 					this.game_done();
+
+					if (this.init.settings.mode === Mode.LOCAL) {
+						router.navigate('/');
+					}
 				}
 			});
 
@@ -114,22 +118,6 @@ export default class Game {
 	game_done() {
 		if (!this.renderer) {
 			return;
-		}
-
-		if (this.pongLogic.socket) {
-			const gameResults = this.pongLogic.socket.gameResult;
-
-			if (!gameResults) {
-				console.error("Game results not available.");
-				return;
-			}
-
-			console.debug("Game results:", gameResults);
-
-			if (gameResults.tournament) {
-				console.debug("Tournament match complete:", gameResults.tournament);
-				router.navigate(`/tournament/${gameResults.tournament.name}`);
-			}
 		}
 
 		this.renderer.setAnimationLoop(null);

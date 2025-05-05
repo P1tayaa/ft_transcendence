@@ -2,7 +2,7 @@ import { Mode, PlayerSide } from "./pongLogic/setting.js";
 
 export const inputKeys = {
 	[PlayerSide.LEFT]: { up: 'w', down: 's' },
-	[PlayerSide.RIGHT]: { up: 'k', down: 'i' },
+	[PlayerSide.RIGHT]: { up: 'i', down: 'k' },
 	[PlayerSide.TOP]: { up: 'x', down: 'c' },
 	[PlayerSide.BOTTOM]: { up: 'm', down: 'n' },
 };

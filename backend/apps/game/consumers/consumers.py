@@ -84,6 +84,7 @@ class GameConsumer(BaseConsumer):
 
 			self.game_room = join_result['room']
 			player_data = join_result['player']
+			self.tournament = join_result['tournament']
 
 			# Initialize game state or get existing one
 			if self.room_name in GameConsumer.active_games:
@@ -202,18 +203,15 @@ class GameConsumer(BaseConsumer):
 	def get_tournament_info(self):
 		"""Get tournament information if this game is part of a tournament"""
 		try:
-			if hasattr(self.game_room, 'tournament_match'):
-				tournament_match = self.game_room.tournament_match
-				if tournament_match:
-					return {
-						'id': tournament_match.tournament.id,
-						'name': tournament_match.tournament.name,
-						'match_id': tournament_match.id,
-						'round': tournament_match.round
-					}
+			if self.tournament:
+				logger.info(f"Tournament match found: {self.tournament}")
+				return {
+					'id': self.tournament.id,
+					'name': self.tournament.name,
+				}
 		except Exception as e:
 			logger.error(f"Error getting tournament info: {str(e)}")
-		return None
+			return None
 
 	async def leave(self):
 		"""Handle a player leaving the game"""
