@@ -318,8 +318,9 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
+    width: calc(100% - 96px);
     height: 100%;
+    margin-left: 96px;
     background-color: rgba(0, 0, 0, 0.7);
     display: flex;
     justify-content: center;
