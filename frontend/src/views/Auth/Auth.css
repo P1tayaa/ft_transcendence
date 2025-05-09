@@ -127,7 +127,7 @@ label {
 .image-preview {
     width: 128px;
     height: 128px;
-    border-radius: 50%;
+    border-radius: 10px;
     background-color: var(--hover-color);
     display: flex;
     justify-content: center;
