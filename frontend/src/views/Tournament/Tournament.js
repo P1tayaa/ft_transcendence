@@ -9,6 +9,8 @@ class Tournament {
 		this.socket = null;
 		this.tournamentData = null;
 		this.tournamentName = '';
+
+		this.redirecting = false;
 	}
 
 	render() {
@@ -186,6 +188,13 @@ class Tournament {
 			const currentUserMatch = this.findUserMatch();
 			console.debug("user match: ", currentUserMatch);
 			if (currentUserMatch && currentUserMatch.game_room) {
+				console.log("user match room: ", currentUserMatch.game_room, "redirecting to game room? " + this.redirecting);
+				if (this.redirecting) {
+					return ;
+				}
+
+				this.redirecting = true;
+
 				// Show popup notification
 				this.showPopupNotification(`Your match is starting! You'll be redirected to the game room in 3 seconds.`);
 
@@ -219,6 +228,8 @@ class Tournament {
 				return match;
 			}
 		}
+
+		return null;
 	}
 
 	showPopupNotification(message) {
@@ -246,6 +257,11 @@ class Tournament {
 			this.socket.disconnect();
 			this.socket = null;
 		}
+
+		// Reset state
+		this.tournamentData = null;
+		this.tournamentName = '';
+		this.redirecting = false;
 	}
 }
 

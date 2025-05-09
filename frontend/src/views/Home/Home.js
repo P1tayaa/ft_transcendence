@@ -361,5 +361,4 @@ class Home {
 }
 
 // Create and export a single instance
-const home = new Home();
-export default home;
+export default new Home();

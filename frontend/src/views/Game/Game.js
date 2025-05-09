@@ -310,9 +310,17 @@ class Game {
 			this.game.game_done();
 			this.game = null;
 		}
+
+		// Reset game state
+		this.isHost = false;
+		this.isReady = false;
+		this.local = false;
+		this.roomName = '';
+		this.map = '';
+		this.playercount = 0;
+		this.startBtn = null;
 	}
 }
 
 // Create and export a single instance
-const game = new Game();
-export default game;
+export default new Game();

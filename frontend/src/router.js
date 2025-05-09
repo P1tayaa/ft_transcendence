@@ -37,42 +37,48 @@ class Router {
 	 * @param {string} path - path of the route
 	 */
 	navigate(path, history = true) {
-		setTimeout(null, 0);
-
-		const route = this.matchRoute(path);
-
-		if (!route) {
-			this.rootElement.innerHTML = `<h1>404 Not Found</h1>`;
+		if (this.currentRoute && this.currentRoute.path === path) {
 			return;
 		}
 
-		if (!user.authenticated && path !== '/login') {
-			this.navigate('/login');
-			return
-		}
-		if (user.authenticated && path === '/login') {
-			this.navigate('/');
-			return
-		}
+		// Use setTimeout to reset the stack
+		setTimeout(() => {
+			const route = this.matchRoute(path);
 
-		if (history && path !== window.location.pathname) {
-			window.history.pushState({}, '', path);
-		}
+			if (!route) {
+				this.rootElement.innerHTML = `<h1>404 Not Found</h1>`;
+				return;
+			}
 
-		// Clean up the previous component if it exists
-		if (this.currentRoute && this.currentRoute.component.onUnload) {
-			this.currentRoute.component.onUnload();
-		}
+			if (!user.authenticated && path !== '/login') {
+				this.navigate('/login');
+				return;
+			}
+			if (user.authenticated && path === '/login') {
+				this.navigate('/');
+				return;
+			}
 
-		this.currentRoute = route;
+			if (history) {
+				window.history.pushState({}, '', path);
+			}
 
-		// Render the component
-		this.rootElement.innerHTML = route.component.render();
+			// Clean up the previous component if it exists
+			if (this.currentRoute && this.currentRoute.component.onUnload) {
+				this.currentRoute.component.onUnload();
+			}
 
-		// Call the onLoad method if it exists
-		if (route.component.onLoad) {
-			route.component.onLoad();
-		}
+			this.currentRoute = route;
+
+			// Render the component
+			this.rootElement.innerHTML = route.component.render();
+
+			// Call the onLoad method if it exists
+			if (route.component.onLoad) {
+				route.component.onLoad();
+			}
+		}, 0);
+
 	}
 }
 

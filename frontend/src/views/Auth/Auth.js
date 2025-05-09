@@ -282,5 +282,4 @@ class Authenticate {
 }
 
 // Create and export a single instance
-const auth = new Authenticate();
-export default auth;
+export default new Authenticate();
