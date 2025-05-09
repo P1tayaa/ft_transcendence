@@ -37,6 +37,8 @@ class Router {
 	 * @param {string} path - path of the route
 	 */
 	navigate(path, history = true) {
+		setTimeout(null, 0);
+
 		const route = this.matchRoute(path);
 
 		if (!route) {
@@ -44,11 +46,11 @@ class Router {
 			return;
 		}
 
-		if (!user.authenticated && route.path !== '/login') {
+		if (!user.authenticated && path !== '/login') {
 			this.navigate('/login');
 			return
 		}
-		if (user.authenticated && route.path === '/login') {
+		if (user.authenticated && path === '/login') {
 			this.navigate('/');
 			return
 		}
@@ -61,9 +63,9 @@ class Router {
 		if (this.currentRoute && this.currentRoute.component.onUnload) {
 			this.currentRoute.component.onUnload();
 		}
-		
+
 		this.currentRoute = route;
-		
+
 		// Render the component
 		this.rootElement.innerHTML = route.component.render();
 
