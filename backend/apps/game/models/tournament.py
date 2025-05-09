@@ -16,7 +16,7 @@ class Tournament(models.Model):
 	created_at = models.DateTimeField(auto_now_add=True)
 
 	# Tournament settings
-	player_count = models.IntegerField(default=4)  # Will always be 4
+	player_count = 4
 	map = models.CharField(max_length=20, default='classic')
 
 	STATUS_CHOICES = (
@@ -38,11 +38,9 @@ class Tournament(models.Model):
 		Class method to create a tournament with empty bracket structure
 		"""
 		with transaction.atomic():
-			# Create the tournament with fixed player_count=4
 			tournament = cls.objects.create(
 				name=name,
 				creator=creator,
-				player_count=4,
 				map=map,
 				status='waiting'
 			)
@@ -83,8 +81,8 @@ class Tournament(models.Model):
 					'username': user.username
 				}
 
-			# Check if tournament is full (always 4 players)
-			if self.players.count() >= 4:
+			# Check if tournament is full
+			if self.players.count() >= self.player_count:
 				raise ValidationError("Tournament is full")
 
 			# Create tournament player
@@ -146,8 +144,8 @@ class Tournament(models.Model):
 			return False
 
 		with transaction.atomic():
-			# Ensure we have exactly 4 players
-			if self.players.count() != 4:
+			# Check if tournament is full
+			if self.players.count() != self.player_count:
 				return False
 
 			# Set tournament to in_progress
@@ -165,7 +163,7 @@ class Tournament(models.Model):
 
 		for match in matches:
 			# Create a game room for this match
-			game_name = f"tournament_{self.id}_r{round_number}_m{match.match_number}"
+			game_name = f"tournament_{self.id}_game_r{round_number}_m{match.match_number}"
 			game_room = GameRoom.objects.create(
 				name=game_name,
 				map=self.map,
@@ -182,28 +180,22 @@ class Tournament(models.Model):
 		"""Handle a tournament game completion"""
 		try:
 			match = self.matches.get(game_room=game_room)
-			winner = game_result.winner
-
-			if not winner:
-				logger.error("Game completed without a winner")
-				return
+			winner = self.players.get(user=game_result.winner)
 
 			# Record winner in the match
-			match.winner_id = winner.id
+			match.winner = winner
 			match.save()
 
-			# If this was a semifinals match, update finals
+			# Semifinals match
 			if match.round == 1:
 				# Find the next match in the tournament
-				finals_match = self.matches.get(round=2, match_number=1)
+				finals_match = self.matches.get(round=2)
 
-				# Assign the winner to the appropriate position
+				# Assign the winner to the appropriate position in the final
 				if match.match_number == 1:
-					winner_player = self.players.get(user=winner)
-					finals_match.player1 = winner_player
-				else:  # match 2
-					winner_player = self.players.get(user=winner)
-					finals_match.player2 = winner_player
+					finals_match.player1 = winner
+				else:
+					finals_match.player2 = winner
 
 				finals_match.save()
 
@@ -211,9 +203,9 @@ class Tournament(models.Model):
 				if finals_match.player1 and finals_match.player2:
 					self.create_games(2)
 
-			# If this was the finals match, end tournament
+			# Final match
 			if match.round == 2:
-				self.winner = winner
+				self.winner = winner.user
 				self.status = 'completed'
 				self.save()
 
@@ -225,39 +217,6 @@ class Tournament(models.Model):
 
 	def get_status(self):
 		"""Get tournament status including players and matches"""
-		matches = []
-		for match in self.matches.all():
-			match_data = {
-				'id': match.id,
-				'round': match.round,
-				'match_number': match.match_number,
-				'game_room': match.game_room.name if match.game_room else None,
-				'player1': None,
-				'player2': None,
-				'winner': None
-			}
-
-			if match.player1:
-				match_data['player1'] = {
-					'id': match.player1.user.id,
-					'username': match.player1.user.username
-				}
-
-			if match.player2:
-				match_data['player2'] = {
-					'id': match.player2.user.id,
-					'username': match.player2.user.username
-				}
-
-			if match.winner_id:
-				winner = User.objects.get(id=match.winner_id)
-				match_data['winner'] = {
-					'id': winner.id,
-					'username': winner.username
-				}
-
-			matches.append(match_data)
-
 		return {
 			'id': self.id,
 			'name': self.name,
@@ -270,7 +229,7 @@ class Tournament(models.Model):
 					'username': player.user.username
 				} for player in self.players.all()
 			],
-			'matches': matches,
+			'matches': [match.get_match_data() for match in self.matches.all()],
 			'winner': {
 				'id': self.winner.id,
 				'username': self.winner.username
@@ -294,13 +253,48 @@ class TournamentMatch(models.Model):
 	tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='matches')
 	round = models.IntegerField()  # 1 = semifinal, 2 = final
 	match_number = models.IntegerField()  # Which match in the round
+
 	player1 = models.ForeignKey(TournamentPlayer, on_delete=models.SET_NULL,
 							   null=True, blank=True, related_name='matches_as_player1')
 	player2 = models.ForeignKey(TournamentPlayer, on_delete=models.SET_NULL,
 							   null=True, blank=True, related_name='matches_as_player2')
-	winner_id = models.IntegerField(null=True, blank=True)  # User ID of the winner
+	winner = models.ForeignKey(TournamentPlayer, on_delete=models.SET_NULL,
+							   null=True, blank=True, related_name='matches_as_winner')
+
 	game_room = models.OneToOneField(GameRoom, on_delete=models.SET_NULL,
 									null=True, blank=True, related_name='tournament_match')
+
+	def get_match_data(self):
+		"""Return match data in a serializable format"""
+		match_data = {
+			'id': self.id,
+			'round': self.round,
+			'match_number': self.match_number,
+			'game_room': self.game_room.name if self.game_room else None,
+			'player1': None,
+			'player2': None,
+			'winner': None
+		}
+
+		if self.player1:
+			match_data['player1'] = {
+				'id': self.player1.user.id,
+				'username': self.player1.user.username
+			}
+
+		if self.player2:
+			match_data['player2'] = {
+				'id': self.player2.user.id,
+				'username': self.player2.user.username
+			}
+
+		if self.winner:
+			match_data['winner'] = {
+				'id': self.winner.user.id,
+				'username': self.winner.user.username
+			}
+
+		return match_data
 
 	class Meta:
 		unique_together = [

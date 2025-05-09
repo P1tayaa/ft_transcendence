@@ -87,7 +87,7 @@ class TournamentConsumer(BaseConsumer):
 			logger.warning(f"User {self.user.username} disconnected from tournament {self.tournament_name} but tournament does not exist")
 			return
 
-		# If tournament hasn't started yet (is in waiting state), leave the tournament
+		# If tournament hasn't started yet, leave the tournament
 		if tournament.status == 'waiting':
 			logger.info(f"User {self.user.username} leaving tournament {self.tournament_name} on disconnect")
 			if self.connected:
