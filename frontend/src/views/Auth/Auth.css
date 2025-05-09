@@ -1,3 +1,9 @@
+/* Overwrites */
+body #app {
+	width: 100%;
+	margin-left: 0;
+}
+
 /* Card styling */
 .auth-card {
 	background-color: var(--card-color);
