@@ -22,7 +22,6 @@ class Tournament {
 					</div>
 				</div>
 				<div class="tournament-content">
-					<div id="tournament-winner" style="display:none;"></div>
 					<div id="tournament-bracket" class="tournament-bracket">
 						<!-- Tournament bracket will be loaded here -->
 					</div>
@@ -83,14 +82,7 @@ class Tournament {
 		// Update title
 		document.getElementById('tournament-title').textContent = state.name;
 
-		// Show winner if tournament is completed
-		if (state.status === 'completed' && state.winner) {
-			this.showWinner(state.winner);
-		} else {
-			document.getElementById('tournament-winner').style.display = 'none';
-		}
-
-		// Update start button visibility
+		 // Update start button visibility
 		const startBtn = document.getElementById('start-btn');
 		if (state.status === 'waiting' && state.players.length === state.max_players) {
 			startBtn.style.display = 'block';
@@ -142,20 +134,22 @@ class Tournament {
 		}
 
 		// Generate player 1 HTML
-		const player1Class = `tournament-player${match.winner && match.winner.id === match.player1?.id ? ' winner' : ''}${!match.player1 ? ' empty' : ''}`;
+		let isWinner = match.winner && match.winner.id === match.player1?.id;
+		const player1Class = `tournament-player ${isWinner ? 'winner' : ''} ${!match.player1 ? 'empty' : ''}`;
 		const player1HTML = match.player1
-			? `<span class="player-name">${match.player1.username}</span>`
+			? `<span class="player-name">${match.player1.username}${match.round === 2 && isWinner ? ' 🏆' : ''}</span>`
 			: `<span class="player-name">Waiting...</span>`;
 
 		// Generate player 2 HTML
-		const player2Class = `tournament-player${match.winner && match.winner.id === match.player2?.id ? ' winner' : ''}${!match.player2 ? ' empty' : ''}`;
+		isWinner = match.winner && match.winner.id === match.player2?.id;
+		const player2Class = `tournament-player ${isWinner ? 'winner' : ''} ${!match.player2 ? 'empty' : ''}`;
 		const player2HTML = match.player2
-			? `<span class="player-name">${match.player2.username}</span>`
+			? `<span class="player-name">${match.player2.username}${isWinner ? ' 🏆' : ''}</span>`
 			: `<span class="player-name">Waiting...</span>`;
 
 		// Generate match status HTML
 		let statusHTML = '';
-		if (match.game_room) {
+		if (match.game_room || match.winner) {
 			const statusClass = match.winner ? 'match-status completed' : 'match-status in-progress';
 			const statusText = match.winner ? 'Match completed' : 'Match in progress';
 			statusHTML = `<div class="${statusClass}">${statusText}</div>`;
@@ -171,16 +165,6 @@ class Tournament {
 				${statusHTML}
 			</div>
 		`;
-	}
-
-	showWinner(winner) {
-		const winnerElement = document.getElementById('tournament-winner');
-		winnerElement.className = 'tournament-winner';
-		winnerElement.innerHTML = `
-			<div class="trophy-icon">🏆</div>
-			<div>Tournament Champion: ${winner.username}</div>
-		`;
-		winnerElement.style.display = 'flex';
 	}
 
 	showError(message) {
