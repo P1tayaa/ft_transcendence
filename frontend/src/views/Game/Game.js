@@ -43,6 +43,11 @@ class Game {
 								</div>
 							</div>
 						</div>
+						<div id="game-over" class="game-waiting-container" style="display: none;">
+							<div class="waiting-animation">
+								<div class="waiting-subtitle" id="game-result-message">Game Over!</div>
+							</div>
+						</div>
 						<canvas id="pong-game" width="960" height="720">
 							Your browser does not support the canvas element.
 						</canvas>
@@ -213,10 +218,15 @@ class Game {
 	// Show game canvas and hide waiting screen when game starts
 	showGameCanvas() {
 		const waitingElement = document.getElementById('game-waiting');
+		const gameOverElement = document.getElementById('game-over');
 		const canvasElement = document.getElementById('pong-game');
 		
 		if (waitingElement) {
 			waitingElement.style.display = 'none';
+		}
+		
+		if (gameOverElement) {
+			gameOverElement.style.display = 'none';
 		}
 		
 		if (canvasElement) {
@@ -225,7 +235,7 @@ class Game {
 			canvasElement.height = 720;
 			canvasElement.style.width = '100%';
 			canvasElement.style.height = '100%';
-			}
+		}
 		
 		// Hide the start button after game starts
 		if (this.startBtn) {

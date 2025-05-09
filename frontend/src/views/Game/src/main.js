@@ -96,7 +96,7 @@ export default class Game {
 					this.game_done();
 
 					if (this.init.settings.mode === Mode.LOCAL) {
-						router.navigate('/');
+						this.showGameOver(side);
 					}
 				}
 			});
@@ -123,5 +123,29 @@ export default class Game {
 		this.renderer.setAnimationLoop(null);
 
 		this.renderer.dispose();
+	}
+
+	showGameOver(winner) {
+		const waitingElement = document.getElementById('game-waiting');
+		const gameOverElement = document.getElementById('game-over');
+		const canvasElement = document.getElementById('pong-game');
+		const resultMessage = document.getElementById('game-result-message');
+
+		
+		if (waitingElement) {
+			waitingElement.style.display = 'none';
+		}
+		
+		if (canvasElement) {
+			canvasElement.style.display = 'none';
+		}
+		
+		if (gameOverElement) {
+			gameOverElement.style.display = 'flex';
+		}
+		
+		if (resultMessage) {
+			resultMessage.textContent = `Game Over! Player ${winner} wins!`;
+		}
 	}
 }

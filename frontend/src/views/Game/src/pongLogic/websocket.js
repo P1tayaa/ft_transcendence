@@ -27,16 +27,13 @@ export class MyWebSocket {
 			} else if (data.type === "game_over") {
 				console.debug("Game over received:", data);
 				this.gameOver = true;
-				// this.gameResult = {
-				// 	result: data.result,
-				// 	winner: data.winner,
-				// 	tournament: data.tournament
-				// };
+
 				if (data.tournament) {
 					router.navigate(`/tournament/${data.tournament.name}`);
 				} else {
-					router.navigate('/');
+					this.showGameOver(data.winner);
 				}
+
 			} else {
 				console.warn("Unknown message type received:", data.type);
 			}
@@ -131,6 +128,30 @@ export class MyWebSocket {
 			scoring_position: intToPlayerSide(pongLogic.lastWinner)
 		}
 		this.socket.send(request);
+	}
+
+	// Show game over screen when game ends
+	showGameOver(winner) {
+		const waitingElement = document.getElementById('game-waiting');
+		const gameOverElement = document.getElementById('game-over');
+		const canvasElement = document.getElementById('pong-game');
+		const resultMessage = document.getElementById('game-result-message');
+
+		if (waitingElement) {
+			waitingElement.style.display = 'none';
+		}
+		
+		if (canvasElement) {
+			canvasElement.style.display = 'none';
+		}
+		
+		if (gameOverElement) {
+			gameOverElement.style.display = 'flex';
+		}
+		
+		if (resultMessage) {
+			resultMessage.innerText = `Game Over! ${winner.username} wins!`;
+		}
 	}
 }
 
