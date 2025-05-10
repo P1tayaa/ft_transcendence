@@ -2,8 +2,10 @@ from .base import *
 
 DEBUG = False
 
+host_machine = os.environ.get('HOST_MACHINE', 'default_value')
+
 # EVAL: add eval computer as allowed host
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'nginx', 'backend', 'f1r3s5']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'nginx', 'backend', host_machine]
 
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
