@@ -297,7 +297,6 @@ class Pong {
 	}
 
 	reset(init, four_player) {
-		console.log("four_player", four_player)
 		this.settings.ballSpeed = this.initBallVelocity(!four_player);
 		if (this.settings.mode === Mode.NETWORKED) {
 			this.socket.resetRound(this);

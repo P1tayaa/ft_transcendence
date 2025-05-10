@@ -106,7 +106,10 @@ export class MyWebSocket {
 			pongLogic.ballSpeed = this.serverState.pongLogic.ballSpeed;
 			pongLogic.ballSize = this.serverState.pongLogic.ballSize;
 			pongLogic.lastWinner = this.serverState.pongLogic.lastWinner;
-			pongLogic.lastContact = this.serverState.pongLogic.lastContact;
+			// pongLogic.lastContact = this.serverState.pongLogic.lastContact;
+			// if (!pongLogic.lastContact) {
+			// 	pongLogic.lastContact = "null"
+			// }
 			pongLogic.lastLoser = this.serverState.pongLogic.lastLoser;
 
 			// Convert received objects back to maps

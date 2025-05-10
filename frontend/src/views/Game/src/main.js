@@ -88,7 +88,11 @@ export default class Game {
 				if (this.pongLogic.settings.playerSide.length == 4 && this.pongLogic.lastContact === "null"){
 					this.pongLogic.resetMatch(this.init, this.pongLogic.settings.playerSide.length == 4)	
 				} else {
-					this.pongLogic.reset(this.init, this.pongLogic.settings.playerSide.length == 4)
+					if (this.pongLogic.settings.playerSide.length == 4 && this.pongLogic.lastContact === "null") {	
+						this.pongLogic.resetMatch(this.init, this.pongLogic.settings.playerSide.length == 4)	
+					} else {
+						this.pongLogic.reset(this.init, this.pongLogic.settings.playerSide.length == 4)
+					}
 				}
 				this.pongLogic.resetBall = false
 				console.log("rest and set to null")
