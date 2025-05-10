@@ -1,26 +1,8 @@
 import './Home.css';
 
-import api from '../../api.js';
 import WebSocket from '../../socket.js';
 import router from '../../router.js';
-
-class Config {
-	constructor(selection) {
-		this.mode = selection.mode;
-		this.playerCount = selection.players;
-		this.map_style = selection.map;
-	}
-
-	get() {
-		return {
-			mode: this.mode,
-			playerCount: this.playerCount,
-			map_style: this.map_style,
-			playerside: this.playerside,
-			host: this.host,
-		}
-	}
-}
+import CreateGameModal from '../../components/CreateGame/CreateGame.js';
 
 class Home {
 	render() {
@@ -38,118 +20,19 @@ class Home {
 				</div>
 			</div>
 		</div>
-
-		<!-- Create game modal (simplified setup form) -->
-		<div class="modal hidden" id="create-game-modal">
-			<div class="setup-card">
-				<!-- Progress indicator -->
-				<div class="progress-bar">
-					<div class="progress-line active"></div>
-					<div class="progress-line"></div>
-					<div class="progress-line"></div>
-				</div>
-
-				<!-- Step 1: Game Mode Selection -->
-				<div class="setup-step active" id="step-1">
-					<h2>Select Game Mode</h2>
-					<div class="options-container">
-						<button class="option-btn" data-mode="networked">
-							<span>Online</span>
-						</button>
-						<button class="option-btn" data-mode="local">
-							<span>Local Multiplayer</span>
-						</button>
-					</div>
-				</div>
-
-				<!-- Step 2: Player Count Selection -->
-				<div class="setup-step" id="step-2">
-					<h2>Select Players</h2>
-					<div class="options-container">
-						<button class="option-btn" data-players="2">
-							<span class="player-count">2</span>
-							<span>Players</span>
-						</button>
-						<button class="option-btn" data-players="4">
-							<span class="player-count">4</span>
-							<span>Players</span>
-						</button>
-						<button id="tournament-btn" class="option-btn" data-players="8">
-							<span>Tournament</span>
-						</button>
-					</div>
-				</div>
-
-				<!-- Step 3: Map Selection -->
-				<div class="setup-step" id="step-3">
-					<h2>Select Map</h2>
-					<!-- 2-player maps -->
-					<div class="map-container" id="maps-2-player">
-						<div class="map-option" data-map="classic">
-							<div class="map-preview" id="classic-preview"></div>
-							<div class="map-name">Classic</div>
-						</div>
-						<div class="map-option" data-map="bath">
-							<div class="map-preview" id="bath-preview"></div>
-							<div class="map-name">Bath</div>
-						</div>
-					</div>
-					<!-- 4-player maps -->
-					<div class="map-container hidden" id="maps-4-player">
-						<div class="map-option" data-map="lava">
-							<div class="map-preview" id="lava-preview"></div>
-							<div class="map-name">Lava</div>
-						</div>
-						<div class="map-option" data-map="beach">
-							<div class="map-preview" id="beach-preview"></div>
-							<div class="map-name">Beach</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
 		`;
 	}
 
 	constructor() {
 		this.socket = null;
+		this.createGameModal = null;
 	}
 
 	onLoad() {
-		// DOM Elements
-		const modals = document.querySelectorAll('.modal');
-		const setupSteps = document.querySelectorAll('.setup-step');
-		const progressLines = document.querySelectorAll('.progress-line');
-
-		// Step 1: Game Mode Selection
-		const modeButtons = document.querySelectorAll('[data-mode]');
-
-		// Step 2: Player Count Selection
-		const playerButtons = document.querySelectorAll('[data-players]');
-		const tournamentBtn = document.getElementById('tournament-btn');
-
-		// Step 3: Map Selection
-		const maps2Player = document.getElementById('maps-2-player');
-		const maps4Player = document.getElementById('maps-4-player');
-		const mapOptions = document.querySelectorAll('.map-option');
-
-		 // Room list elements
+		// Room list elements
 		const createGameBtn = document.getElementById('create-game-btn');
-		const createGameModal = document.getElementById('create-game-modal');
 		const roomsContainer = document.getElementById('rooms-container');
 		const noRoomsMessage = document.getElementById('no-rooms-message');
-
-		// Initialize class member variables here
-		let selection = {
-			mode: null,
-			players: null,
-			map: null,
-			tournament: false
-		};
-
-		let currentStep = 0;
-		const totalSteps = 3;
 
 		const socket = new WebSocket('matchmaking');
 		this.socket = socket; // Store in home instance for cleanup
@@ -179,7 +62,13 @@ class Home {
 		};
 
 		socket.connect();
-		init();
+		
+		// Open create game modal
+		createGameBtn.addEventListener('click', () => {
+			this.createGameModal = new CreateGameModal();
+			this.createGameModal.init();
+			this.createGameModal.show();
+		});
 
 		// Create a room element by rendering HTML
 		function createRoomElement(room) {
@@ -228,127 +117,6 @@ class Home {
 				<span class="room-players">${room.players}/${room.max_players}</span>
 			`;
 		}
-
-		// Initialize the setup wizard
-		function init() {
-			// Open setup modal
-			createGameBtn.addEventListener('click', function() {
-				createGameModal.classList.remove('hidden');
-			});
-
-			// Set up event listeners for mode selection
-			modeButtons.forEach(button => {
-				button.addEventListener('click', function() {
-					modeButtons.forEach(btn => btn.classList.remove('selected'));
-					this.classList.add('selected');
-
-					const mode = this.getAttribute('data-mode');
-					tournamentBtn.classList.toggle('hidden', mode !== 'networked');
-					selection.mode = mode;
-					
-					// Automatically go to next step
-					updateStep(1);
-				});
-			});
-
-			// Set up event listeners for player selection
-			playerButtons.forEach(button => {
-				button.addEventListener('click', function() {
-					playerButtons.forEach(player => player.classList.remove('selected'));
-					this.classList.add('selected');
-
-					// Reset map selection if player count changed
-					let players = parseInt(this.getAttribute('data-players'));
-					if (selection.map !== null && selection.players !== players) {
-						selection.map = null;
-						mapOptions.forEach(map => map.classList.remove('selected'));
-					}
-
-					if (players === 8) {
-						selection.tournament = true;
-						players = 2;
-					} else {
-						selection.tournament = false;
-						maps2Player.classList.toggle('hidden', players !== 2);
-						maps4Player.classList.toggle('hidden', players !== 4);
-					}
-
-					selection.players = players;
-
-					updateStep(2);
-				});
-			});
-
-			// Set up event listeners for map selection
-			mapOptions.forEach(option => {
-				option.addEventListener('click', function() {
-					mapOptions.forEach(map => map.classList.remove('selected'));
-					this.classList.add('selected');
-
-					selection.map = this.getAttribute('data-map');
-
-					// When map is selected, start the game
-					createGame();
-				});
-			});
-
-			modals.forEach(modal => {
-				modal.addEventListener('click', function(event) {
-					if (event.target === modal) {
-						modal.classList.add('hidden');
-					}
-				});
-			});
-		}
-
-		// Function to start the game with current selections
-		async function createGame() {
-			if (selection.tournament) {
-				const room = await api.createTournament(selection);
-
-				if (!room) {
-					console.error("Failed to create tournament room.");
-					return;
-				}
-
-				router.navigate('/tournament/' + room.name);
-			}
-			else if (selection.mode === "networked") {
-				const room = await api.createGame(selection);
-
-				if (!room) {
-					console.error("Failed to create game room.");
-					return;
-				}
-
-				router.navigate('/game/' + room.room_name);
-			}
-			else {
-				sessionStorage.setItem('map', selection.map);
-				sessionStorage.setItem('playercount', selection.players);
-				router.navigate('/game/local');
-			}
-			
-			// Hide the game creation modal
-			createGameModal.classList.add('hidden');
-		}
-
-		// Update the current step
-		function updateStep(stepNumber) {
-			setupSteps[currentStep].classList.remove('active');
-			setupSteps[stepNumber].classList.add('active');
-
-			// Update progress bar
-			progressLines[currentStep].classList.remove('active');
-			progressLines[stepNumber].classList.add('active');
-			if (stepNumber > currentStep) {
-				progressLines[currentStep].classList.add('completed');
-			} else {
-				progressLines[stepNumber].classList.remove('completed');
-			}
-
-			currentStep = stepNumber;
-		}
 	}
 
 	onUnload() {
@@ -356,6 +124,12 @@ class Home {
 		if (this.socket) {
 			this.socket.disconnect();
 			this.socket = null;
+		}
+
+		// Close the modal if it's open
+		if (this.createGameModal) {
+			this.createGameModal.close();
+			this.createGameModal = null;
 		}
 	}
 }
