@@ -21,6 +21,7 @@ class Pong {
 		this.settings;
 		this.mode;
 		this.isHost = false;
+		this.scores = {};
 
 		// WebSocket
 		this.socket = new MyWebSocket;
@@ -36,6 +37,11 @@ class Pong {
 	initialize(settings) {
 		this.settings = settings;
 		this.mode = this.settings.mode;
+
+		for (const side of this.settings.playerSide) {
+			this.scores[side] = 0;
+		}
+
 		console.debug(`Pong object initialized in ${this.mode} mode.`);
 	}
 
@@ -267,8 +273,9 @@ class Pong {
 			this.socket.sendBallVelocity(this.settings.ballSpeed);
 			this.ballPos = { x: 0, y: 0 };
 		} else {
-			init.score.incrementScore(intToPlayerSide(this.lastWinner));
+			this.scores[intToPlayerSide(this.lastWinner)] += 1;
 		}
+
 		init.gameScene.moveAsset('Ball', { x: 0, y: 0, z: 0 });
 	}
 

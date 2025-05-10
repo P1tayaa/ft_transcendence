@@ -11,12 +11,13 @@ export default class Game {
 		this.init = new Init();
 		this.gameScene = null;
 		this.animate = this.animate.bind(this);
+
+		this.onScoreUpdate = null;
 	}
 
 	async initialize(map, playercount, local = true) {
 		await this.init.initialize(map, playercount, local);
 		this.pongLogic = this.init.pongLogic;
-		this.score = this.init.score;
 		this.gameScene = this.init.gameScene;
 
 		return true;
@@ -63,7 +64,7 @@ export default class Game {
 	animate() {
 		try {
 			if (this.init.settings.mode === Mode.NETWORKED) {
-				this.pongLogic.socket.update(this.pongLogic, this.init.score, this.init.settings);
+				this.pongLogic.socket.update(this.pongLogic, this.init.settings);
 				if (this.pongLogic.socket.gameOver) {
 					this.game_done()
 				}
@@ -87,12 +88,12 @@ export default class Game {
 				this.pongLogic.reset(this.init)
 			}
 
-			this.pongLogic.settings.playerSide.forEach(side => {
-				this.score.updateScoreDisplay(side)
-			})
+			this.init.settings.playerSide.forEach(side => {
+				if (this.onScoreUpdate && this.pongLogic.scores[side] !== undefined) {
+					this.onScoreUpdate(side, this.pongLogic.scores[side]);
+				}
 
-			this.score.playerSides.forEach(side => {
-				if (this.score.scores[side] >= 5) {
+				if (this.pongLogic.scores[side] >= 5) {
 					this.game_done();
 
 					if (this.init.settings.mode === Mode.LOCAL) {

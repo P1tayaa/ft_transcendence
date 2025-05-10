@@ -3,7 +3,6 @@ import GameScene from './modelLoading/loadgltf.js';
 import LightManager from './modelLoading/light_manage.js';
 import ControlHandler from './control.js';
 import Pong from './pongLogic/pong.js';
-import Score from './pongLogic/score.js';
 import { Mode, MapStyle, Setting } from "./pongLogic/setting.js";
 var assetsPath = window.location.protocol + '//' + window.location.host + "/assets/models/"; // add dynamic path?
 
@@ -19,7 +18,6 @@ export default class Init {
     this.lightManager;
     this.controlHandler;
     this.pongLogic = new Pong();
-    this.score;
     this.allPower;
     this.settings;
   }
@@ -89,7 +87,6 @@ export default class Init {
 
     // Setup lights and score display
     this.lightManager = new LightManager(this.gameScene.getScene(), this.settings.playerSide);
-    this.score = new Score(this.gameScene.getScene(), this.settings.playerSide);
 
     this.lightManager.setupLights();
   }

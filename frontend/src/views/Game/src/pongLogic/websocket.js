@@ -102,7 +102,7 @@ export class MyWebSocket {
 		this.socket.send(request);
 	}
 
-	update(pongLogic, scores, settings) {
+	update(pongLogic, settings) {
 		if (this.serverState) {
 			pongLogic.ballPos = this.serverState.pongLogic.ballPos;
 			pongLogic.ballSpeed = this.serverState.pongLogic.ballSpeed;
@@ -117,7 +117,7 @@ export class MyWebSocket {
 			if (this.serverState.settings.paddleLoc)
 				settings.paddleLoc = this.serverState.settings.paddleLoc;
 			if (this.serverState.score) {
-				scores.scores = this.serverState.score;
+				pongLogic.scores = this.serverState.score;
 			}
 		}
 	}

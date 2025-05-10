@@ -146,13 +146,14 @@ class Game {
 			players.push({
 				name: `Player ${i}`,
 				position: i === 1 ? 'Left' : i === 2 ? 'Right' : i === 3 ? 'Top' : 'Bottom',
-				isReady: true
+				isReady: true,
+				score: 0
 			});
 		}
 
 		players.forEach(player => {
 			playerList.innerHTML += `
-				<div class="player-card">
+				<div class="player-card" data-position="${player.position.toLowerCase()}">
 					<div class="player-avatar-container">
 						<div class="player-avatar">${player.name.charAt(0)}</div>
 						<div class="status-indicator ready"></div>
@@ -161,6 +162,7 @@ class Game {
 						<div class="player-name">${player.name}</div>
 						<div class="player-status">${player.position}</div>
 					</div>
+					<div class="player-score">0</div>
 				</div>
 			`;
 		});
@@ -205,6 +207,7 @@ class Game {
 					break;
 				case 'started_game':
 					this.showGameCanvas();
+					this.game.onScoreUpdate = (side, score) => this.updateScoreInSidebar(side, score);
 					this.game.startOnline(this.socket, data.side, this.isHost);
 					break;
 				case 'player_disconnected':
@@ -266,7 +269,7 @@ class Game {
 
 			// Append player card HTML to the player list
 			playerList.innerHTML += `
-				<div class="player-card">
+				<div class="player-card" data-position="${player.position.toLowerCase()}">
 					<div class="player-avatar-container">
 						<div class="player-avatar">${player.username.charAt(0)}</div>
 						<div class="status-indicator ${player.is_ready ? 'ready' : 'not-ready'} ${player.is_host ? 'host' : ''}"></div>
@@ -275,6 +278,7 @@ class Game {
 						<div class="player-name">${player.username}${isCurrentPlayer ? ' (You)' : ''}</div>
 						<div class="player-status">${player.is_host ? 'Host' : `${player.position}`}</div>
 					</div>
+					<div class="player-score">${player.score || 0}</div>
 				</div>
 			`;
 		}
@@ -298,14 +302,36 @@ class Game {
 	handleStartClick() {
 		if (this.local) {
 			this.showGameCanvas();
+			this.game.onScoreUpdate = (side, score) => this.updateScoreInSidebar(side, score);
 			this.game.startLocal();
 			return ;
 		}
-
+		
 		if (!this.socket || !this.isHost)
 			return;
 
 		this.socket.send({type: 'start_game'});
+	}
+
+	// New method to update score in the sidebar
+	updateScoreInSidebar(side, score) {
+		const sideMapping = {
+			'left': 'left',
+			'right': 'right',
+			'top': 'top',
+			'bottom': 'bottom'
+		};
+		
+		const position = sideMapping[side.toLowerCase()];
+		if (!position) return;
+		
+		const playerCard = document.querySelector(`.player-card[data-position="${position}"]`);
+		if (playerCard) {
+			const scoreElement = playerCard.querySelector('.player-score');
+			if (scoreElement) {
+				scoreElement.textContent = score;
+			}
+		}
 	}
 
 	onUnload() {
