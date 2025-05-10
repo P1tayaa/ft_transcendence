@@ -15,11 +15,11 @@ export function posSpawn(map, position) {
       ration_map = 0.5;
       break;
     case MapStyle.Lava:
-      distanceToCenter = 40;
+      distanceToCenter = 35;
       ration_map = 1;
       break;
     case MapStyle.Beach:
-      distanceToCenter = 40;
+      distanceToCenter = 38;
       ration_map = 1;
       break;
     default:

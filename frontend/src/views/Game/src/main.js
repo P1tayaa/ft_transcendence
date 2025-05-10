@@ -78,14 +78,22 @@ export default class Game {
 			}
 			if (this.pongLogic.isHost){
 				this.pongLogic.update(input, this.gameScene);
-				if (this.pongLogic.resetBall && this.pongLogic.isHost) {
-					this.pongLogic.resetBall = false
-					this.pongLogic.reset(this.init)
-				}
+				// if (this.pongLogic.resetBall && this.pongLogic.isHost) {
+				// 	this.pongLogic.resetBall = false
+				// 	this.pongLogic.reset(this.init)
+				// }
 			}
-			if (this.init.settings.mode !== Mode.NETWORKED && this.pongLogic.resetBall){
+			if ((this.init.settings.mode !== Mode.NETWORKED || (this.init.settings.mode === Mode.NETWORKED && this.pongLogic.isHost)) && this.pongLogic.resetBall){
+				console.log("this.pongLogic.lastContact", this.pongLogic.lastContact, this.pongLogic.settings.playerSide.length)
+				if (this.pongLogic.settings.playerSide.length == 4 && this.pongLogic.lastContact === "null"){
+					this.pongLogic.resetMatch(this.init, this.pongLogic.settings.playerSide.length == 4)	
+				} else {
+					this.pongLogic.reset(this.init, this.pongLogic.settings.playerSide.length == 4)
+				}
 				this.pongLogic.resetBall = false
-				this.pongLogic.reset(this.init)
+				console.log("rest and set to null")
+				this.pongLogic.lastContact = "null"
+				this.lastWinner = -1
 			}
 
 			this.init.settings.playerSide.forEach(side => {
