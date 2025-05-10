@@ -1,7 +1,5 @@
 import { intToPlayerSide } from './setting.js'
 
-import Socket from '../../../../socket.js';
-
 import router from '../../../../router.js'
 
 export class MyWebSocket {

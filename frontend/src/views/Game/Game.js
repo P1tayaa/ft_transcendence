@@ -1,4 +1,5 @@
 import './Game.css';
+
 import Socket from '../../socket.js';
 import user from '../../User.js';
 import api from '../../api.js';
@@ -43,6 +44,13 @@ class Game {
 								</div>
 							</div>
 						</div>
+						<div id="game-not-found" class="game-waiting-container" style="display: none;">
+							<div class="waiting-animation">
+								<div class="waiting-title">Game Not Found</div>
+								<div class="waiting-subtitle">The game you're looking for doesn't exist or has ended.</div>
+							</div>
+							<button id="back-to-home" class="btn">Back to Home</button>
+						</div>
 						<div id="game-over" class="game-waiting-container" style="display: none;">
 							<div class="waiting-animation">
 								<div class="waiting-subtitle" id="game-result-message">Game Over!</div>
@@ -82,10 +90,15 @@ class Game {
 			if (path === '/game/local') {
 				await this.initLocalGame();
 			} else {
-				await this.initOnlineGame();
+				const success = await this.initOnlineGame();
+				if (!success) {
+					this.showGameNotFound();
+					return;
+				}
 			}
 		} catch (error) {
 			console.error('Error initializing game:', error);
+			this.showGameNotFound();
 			return;
 		}
 
@@ -174,14 +187,14 @@ class Game {
 		this.roomName = window.location.pathname.split('/').pop();
 		if (!this.roomName) {
 			console.error("No room name found in URL");
-			return;
+			return false;
 		}
 
 		const response = await api.getGameInfo(this.roomName);
 
 		if (!response) {
 			console.error("No game info found");
-			return;
+			return false;
 		}
 
 		this.map = response.map;
@@ -190,6 +203,7 @@ class Game {
 		await this.game.initialize(response.map, response.playercount, false);
 
 		this.setupWebSocket();
+		return true;
 	}
 
 	// Setup WebSocket connection
@@ -241,6 +255,42 @@ class Game {
 		}
 		
 		// Hide the start button after game starts
+		if (this.startBtn) {
+			this.startBtn.style.display = 'none';
+		}
+	}
+
+	// Show game not found message
+	showGameNotFound() {
+		// Hide other game elements
+		const waitingElement = document.getElementById('game-waiting');
+		const gameOverElement = document.getElementById('game-over');
+		const canvasElement = document.getElementById('pong-game');
+		const gameNotFoundElement = document.getElementById('game-not-found');
+		
+		if (waitingElement) {
+			waitingElement.style.display = 'none';
+		}
+		
+		if (gameOverElement) {
+			gameOverElement.style.display = 'none';
+		}
+		
+		if (canvasElement) {
+			canvasElement.style.display = 'none';
+		}
+		
+		if (gameNotFoundElement) {
+			gameNotFoundElement.style.display = 'flex';
+			const backButton = document.getElementById('back-to-home');
+			if (backButton) {
+				backButton.addEventListener('click', () => {
+					router.navigate('/');
+				});
+			}
+		}
+		
+		// Hide the start button
 		if (this.startBtn) {
 			this.startBtn.style.display = 'none';
 		}
