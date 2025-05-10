@@ -1,4 +1,11 @@
+# System files
+.DS_Store
 __pycache__/
-pgdata/
-.secret
-src/static/js/threejs/node_modules/
+
+backend/static
+frontend/dist
+frontend/node_modules
+
+Makefile
+
+transcendence_subject.pdf

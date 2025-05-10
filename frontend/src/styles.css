@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+
+/* Base styling */
+:root {
+    --primary-color: #3b82f6;    /* Vivid blue */
+    --secondary-color: #10b981;  /* Emerald */
+    --red: #ef4444;              /* Red */
+    --background-color: #1e1e1e; /* Very dark blue/gray */
+    --card-color: #262626;       /* Dark blue/gray */
+    --border-color: #595959;     /* Medium gray */
+    --hover-color: #404040;      /* Slightly lighter than card */
+    --disabled-color: #a6a6a6;   /* Medium gray */
+    --text-color: #f2f2f2;       /* Off-white */
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#app {
+    width: calc(100% - 96px);
+    margin-left: 96px;
+    padding: 20px;
+}
+
+h1, h2, h3, h4 {
+    font-weight: 700;
+}
+
+h1 {
+    font-size: 2.5rem;
+}
+
+h2 {
+    font-size: 2rem;
+}
+
+h3 {
+    font-size: 1.75rem;
+}
+
+h4 {
+    font-size: 1.5rem;
+}
+
+p, a, button, label, input {
+    font-weight: 400;
+    font-size: 1rem;
+}
