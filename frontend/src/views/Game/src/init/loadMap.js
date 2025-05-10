@@ -48,7 +48,7 @@ export function loadBeachMap(assetsPath, init) {
     init.gameScene.rotateAsset('Floor', 'x', Math.PI / 2);
     init.gameScene.rotateAsset('Floor', 'y', Math.PI / 2);
     init.gameScene.setScale('Floor', 6)
-    init.pongLogic.playArea = { width: 100, depth: 100 };
+    init.pongLogic.playArea = { width: 87, depth: 87 };
     init.assetsLoaded++;
   });
   const ambiantLight = new THREE.PointLight(BATHLIGHT, 10000, 10000)
@@ -63,7 +63,7 @@ export function loadLavaMap(assetsPath, init) {
     init.gameScene.rotateAsset('Floor', 'x', Math.PI / 2);
     init.gameScene.rotateAsset('Floor', 'y', Math.PI / 2);
     init.gameScene.setScale('Floor', 7)
-    init.pongLogic.playArea = { width: 90, depth: 90 };
+    init.pongLogic.playArea = { width: 75, depth: 75 };
     init.assetsLoaded++;
   });
   const ambiantLight = new THREE.PointLight(BATHLIGHT, 10000, 10000)
