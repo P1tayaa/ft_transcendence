@@ -4,6 +4,7 @@ import Socket from '../../socket.js';
 import user from '../../User.js';
 import api from '../../api.js';
 import router from '../../router.js';
+import Profile from '../../components/Profile/Profile.js';
 
 import PongGame from './src/main.js';
 
@@ -132,27 +133,27 @@ class Game {
 		this.playercount = parseInt(playercount);
 
 		await this.game.initialize(this.map, this.playercount);
-		
+
 		// Show start button for local game
 		this.startBtn = document.getElementById('start-btn');
 		if (this.startBtn) {
 			this.startBtn.style.display = 'block';
 			this.startBtn.disabled = false;
 		}
-		
+
 		// Create and display local players
 		this.createLocalPlayersList();
 	}
-	
+
 	// Create player cards for local game
 	createLocalPlayersList() {
 		const playerList = document.getElementById('player-list');
 		if (!playerList)
 			return;
-		
+
 		// Clear existing player list
 		playerList.innerHTML = '';
-		
+
 		// Create player cards for local game based on player count
 		const players = [];
 		for (let i = 1; i <= this.playercount; i++) {
@@ -166,7 +167,7 @@ class Game {
 
 		players.forEach(player => {
 			const controlKeys = this.getControlKeysForPosition(player.position);
-			
+
 			playerList.innerHTML += `
 				<div class="player-card" data-position="${player.position.toLowerCase()}">
 					<div class="player-avatar-container">
@@ -239,15 +240,15 @@ class Game {
 		const waitingElement = document.getElementById('game-waiting');
 		const gameOverElement = document.getElementById('game-over');
 		const canvasElement = document.getElementById('pong-game');
-		
+
 		if (waitingElement) {
 			waitingElement.style.display = 'none';
 		}
-		
+
 		if (gameOverElement) {
 			gameOverElement.style.display = 'none';
 		}
-		
+
 		if (canvasElement) {
 			canvasElement.style.display = 'block';
 			canvasElement.width = 960;
@@ -255,7 +256,7 @@ class Game {
 			canvasElement.style.width = '100%';
 			canvasElement.style.height = '100%';
 		}
-		
+
 		// Hide the start button after game starts
 		if (this.startBtn) {
 			this.startBtn.style.display = 'none';
@@ -269,19 +270,19 @@ class Game {
 		const gameOverElement = document.getElementById('game-over');
 		const canvasElement = document.getElementById('pong-game');
 		const gameNotFoundElement = document.getElementById('game-not-found');
-		
+
 		if (waitingElement) {
 			waitingElement.style.display = 'none';
 		}
-		
+
 		if (gameOverElement) {
 			gameOverElement.style.display = 'none';
 		}
-		
+
 		if (canvasElement) {
 			canvasElement.style.display = 'none';
 		}
-		
+
 		if (gameNotFoundElement) {
 			gameNotFoundElement.style.display = 'flex';
 			const backButton = document.getElementById('back-to-home');
@@ -291,7 +292,7 @@ class Game {
 				});
 			}
 		}
-		
+
 		// Hide the start button
 		if (this.startBtn) {
 			this.startBtn.style.display = 'none';
@@ -318,31 +319,38 @@ class Game {
 				this.isHost = player.is_host;
 				this.isReady = player.is_ready;
 			}
-            
+
 			// Get the control keys based on position
 			const controlKeys = this.getControlKeysForPosition(player.position);
 
-			// Append player card HTML to the player list
-			playerList.innerHTML += `
-				<div class="player-card" data-position="${player.position.toLowerCase()}">
-					<div class="player-avatar-container">
-						<div class="player-avatar">${player.username.charAt(0)}</div>
-						<div class="status-indicator ${player.is_ready ? 'ready' : 'not-ready'} ${player.is_host ? 'host' : ''}"></div>
-					</div>
-					<div class="player-info">
-						<div class="player-name">${player.username}${isCurrentPlayer ? ' (You)' : ''}</div>
-						<div class="player-status">${player.position}${player.is_host ? ' (Host)' : ''} ${controlKeys}</div>
-					</div>
-					<div class="player-score">${player.score || 0}</div>
+			const newCard = document.createElement('div');
+			newCard.className = 'player-card';
+			newCard.setAttribute('data-position', player.position.toLowerCase());
+			newCard.innerHTML = `
+				<div class="player-avatar-container">
+					<div class="player-avatar">${player.username.charAt(0)}</div>
+					<div class="status-indicator ${player.is_ready ? 'ready' : 'not-ready'} ${player.is_host ? 'host' : ''}"></div>
 				</div>
+				<div class="player-info">
+					<div class="player-name">${player.username}${isCurrentPlayer ? ' (You)' : ''}</div>
+					<div class="player-status">${player.position}${player.is_host ? ' (Host)' : ''} ${controlKeys}</div>
+				</div>
+				<div class="player-score">${player.score || 0}</div>
 			`;
+
+			newCard.addEventListener('click', async () => {
+				const profile = new Profile(player.id);
+				await profile.init();
+			});
+
+			playerList.appendChild(newCard);
 		}
 
 		// Update start button state based on all players ready
 		this.startBtn.style.display = this.isHost ? 'block' : 'none';
 		this.startBtn.disabled = !(this.isHost && this.ready(players));
 	}
-    
+
 	// Helper method to get control keys based on position
 	getControlKeysForPosition(position) {
 		switch(position.toLowerCase()) {
@@ -377,7 +385,7 @@ class Game {
 			this.game.startLocal();
 			return ;
 		}
-		
+
 		if (!this.socket || !this.isHost)
 			return;
 
@@ -392,10 +400,10 @@ class Game {
 			'top': 'top',
 			'bottom': 'bottom'
 		};
-		
+
 		const position = sideMapping[side.toLowerCase()];
 		if (!position) return;
-		
+
 		const playerCard = document.querySelector(`.player-card[data-position="${position}"]`);
 		if (playerCard) {
 			const scoreElement = playerCard.querySelector('.player-score');
