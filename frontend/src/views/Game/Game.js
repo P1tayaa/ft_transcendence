@@ -165,6 +165,8 @@ class Game {
 		}
 
 		players.forEach(player => {
+			const controlKeys = this.getControlKeysForPosition(player.position);
+			
 			playerList.innerHTML += `
 				<div class="player-card" data-position="${player.position.toLowerCase()}">
 					<div class="player-avatar-container">
@@ -173,7 +175,7 @@ class Game {
 					</div>
 					<div class="player-info">
 						<div class="player-name">${player.name}</div>
-						<div class="player-status">${player.position}</div>
+						<div class="player-status">${player.position} ${controlKeys}</div>
 					</div>
 					<div class="player-score">0</div>
 				</div>
@@ -316,6 +318,9 @@ class Game {
 				this.isHost = player.is_host;
 				this.isReady = player.is_ready;
 			}
+            
+			// Get the control keys based on position
+			const controlKeys = this.getControlKeysForPosition(player.position);
 
 			// Append player card HTML to the player list
 			playerList.innerHTML += `
@@ -326,7 +331,7 @@ class Game {
 					</div>
 					<div class="player-info">
 						<div class="player-name">${player.username}${isCurrentPlayer ? ' (You)' : ''}</div>
-						<div class="player-status">${player.is_host ? 'Host' : `${player.position}`}</div>
+						<div class="player-status">${player.position}${player.is_host ? ' (Host)' : ''} ${controlKeys}</div>
 					</div>
 					<div class="player-score">${player.score || 0}</div>
 				</div>
@@ -336,6 +341,22 @@ class Game {
 		// Update start button state based on all players ready
 		this.startBtn.style.display = this.isHost ? 'block' : 'none';
 		this.startBtn.disabled = !(this.isHost && this.ready(players));
+	}
+    
+	// Helper method to get control keys based on position
+	getControlKeysForPosition(position) {
+		switch(position.toLowerCase()) {
+			case 'left':
+				return '(W/S)';
+			case 'right':
+				return '(I/K)';
+			case 'top':
+				return '(X/C)';
+			case 'bottom':
+				return '(M/N)';
+			default:
+				return '';
+		}
 	}
 
 	// Check if all players are ready to start the game

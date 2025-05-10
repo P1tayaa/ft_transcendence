@@ -32,7 +32,6 @@ body {
 
 #app {
     width: calc(100% - 96px);
-    max-width: 1200px;
     margin-left: 96px;
     padding: 20px;
 }
