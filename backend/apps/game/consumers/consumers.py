@@ -313,20 +313,20 @@ class GameConsumer(BaseConsumer):
 
 	async def receive(self, text_data):
 		data = json.loads(text_data)
-		type = data.get('type')
+		message_type = data.get('type')
 
-		if type == 'paddle_move':
+		if message_type == 'paddle_move':
 			await self.handle_paddle_move(data)
-		elif type == 'set_ball_velocity':
+		elif message_type == 'set_ball_velocity':
 			await self.handle_ball_velocity(data)
-		elif type == 'update_score':
+		elif message_type == 'update_score':
 			await self.handle_update_score(data)
-		elif type == 'reset_round':
+		elif message_type == 'reset_round':
 			await self.handle_reset_round(data)
-		elif type == 'start_game':
+		elif message_type == 'start_game':
 			await self.handle_start_game()
 		else:
-			logger.warning(f"Unknown message type: {type}")
+			logger.warning(f"Unknown message type: {message_type}")
 
 	async def handle_reset_round(self, data):
 		self.game_state['pongLogic']['ballPos'] = {'x': 0, 'y': 0}
