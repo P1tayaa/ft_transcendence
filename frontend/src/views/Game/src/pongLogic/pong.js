@@ -9,7 +9,7 @@ import { MyWebSocket } from "./websocket.js"
 class Pong {
 	constructor() {
 		// Game properties
-		this.ballSpeed = { x: 0.5, y: 0 };
+		this.ballSpeed = { x: 0.7, y: 0 };
 		this.ballSize = { x: 1, y: 1 };
 		this.playArea = { width: 100, depth: 60 };
 		this.ySpeedCap = 50;
@@ -35,8 +35,11 @@ class Pong {
 		console.log(verticalOnly)
 		if (verticalOnly) {
 			// Choose between up (90 degrees) or down (-90 degrees)
-			angle = Math.random() < 0.5 ? Math.PI : -Math.PI;
-
+			if (Math.random() < 0.5){
+				return {x: 0.5, y: 0}
+			} else {
+				return {x: -0.5, y: 0}
+			}
 		} else {
 			// Random angle in any direction
 			angle = Math.random() * 2 * Math.PI;
