@@ -26,13 +26,28 @@ class Pong {
 		// WebSocket
 		this.socket = new MyWebSocket;
 
-		this.lastContact;
+		this.lastContact = "null";
 		this.lastLoser;
 	}
 
-	initBallVelocity() {
-		return { x: 0.5, y: 0 }
+	initBallVelocity(verticalOnly) {
+		let angle;
+		console.log(verticalOnly)
+		if (verticalOnly) {
+			// Choose between up (90 degrees) or down (-90 degrees)
+			angle = Math.random() < 0.5 ? Math.PI : -Math.PI;
+
+		} else {
+			// Random angle in any direction
+			angle = Math.random() * 2 * Math.PI;
+		}
+		console.log(angle)
+		return {
+			x: 0.5 * Math.cos(angle),
+			y: 0.5 * Math.sin(angle)
+		};
 	}
+	
 
 	initialize(settings) {
 		this.settings = settings;
@@ -223,10 +238,9 @@ class Pong {
 				this.lastWinner = 4;
 				break;
 			default:
-				console.error(`Unknown player side: ${this.lastContact}`)
+				// console.error(`Unknown player side: ${this.lastContact}`)
 				break;
 		}
-
 	}
 
 	moveBall() {
@@ -265,15 +279,31 @@ class Pong {
 		this.checkCollisions(BallPos, gameScene);
 	}
 
-	reset(init) {
+	resetMatch(init, four_player){
+		console.log("four_player", four_player)
+		this.settings.ballSpeed = this.initBallVelocity(!four_player);
+		if (this.settings.mode === Mode.NETWORKED) {
+			this.socket.resetRound(this);
+			this.socket.sendBallVelocity(this.settings.ballSpeed);
+			this.ballPos = { x: 0, y: 0 };
+		} else {
+			this.ballSpeed = this.settings.ballSpeed
+		}
+		console.log(this.settings.ballSpeed)
+		init.gameScene.moveAsset('Ball', { x: 0, y: 0, z: 0 });
+	}
+
+	reset(init, four_player) {
+		console.log("four_player", four_player)
+		this.settings.ballSpeed = this.initBallVelocity(!four_player);
 		if (this.settings.mode === Mode.NETWORKED) {
 			this.socket.resetRound(this);
 			this.socket.updateScore(this)
-			this.settings.ballSpeed = this.initBallVelocity();
 			this.socket.sendBallVelocity(this.settings.ballSpeed);
 			this.ballPos = { x: 0, y: 0 };
 		} else {
 			this.scores[intToPlayerSide(this.lastWinner)] += 1;
+			this.ballSpeed = this.settings.ballSpeed
 		}
 
 		init.gameScene.moveAsset('Ball', { x: 0, y: 0, z: 0 });
